@@ -5,11 +5,12 @@
 
 # Detection of Somatic Copy Number Alterations from Single-Cell Multiomics Data
 
-<h2 align="left">
-<img src="https://github.com/ICAGEN/muscadet/blob/main/logo.png" width="150" height="150" border="10"/> 
-  muscadet R package, multiomics single-cell copy number alterations detection
-</h2>
+<img align="left" src="https://github.com/ICAGEN/muscadet/blob/main/logo.png" width="150" height="150" border="10"/> 
 
+### *muscadet* R package
+### *multiomics single-cell copy number alterations detection*
+
+<br clear="left"/>
 
 Marie Denoulet<sup>1,2,3</sup>, Mia Cherkaoui<sup>1</sup>, Nils Giordano<sup>1</sup>, Robin Lanée<sup>1</sup>, Elise Douillard<sup>1,4</sup>, Magali Devic<sup>1,4</sup>, Florence Magrangeas<sup>1,4</sup>, Stéphane Minvielle<sup>1,4</sup>, Céline Vallot<sup>5,6</sup>, Eric Letouzé<sup>1,4</sup>
 
