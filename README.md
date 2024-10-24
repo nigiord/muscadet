@@ -5,8 +5,8 @@
 
 # Detection of Somatic Copy Number Alterations from Single-Cell Multiomics Data
 
-
-<img align="left" src="https://github.com/ICAGEN/muscadet/blob/main/logo.png" width="150" height="150" border="10"/> 
+<img src="man/figures/logo.png" align="right" height="139" alt="" />
+<!--- <img align="left" src="https://github.com/ICAGEN/muscadet/blob/main/logo.png" width="150" height="150" border="10"/> -->
 
 ### *muscadet* R package
 ### *multiomics single-cell copy number alterations detection*
