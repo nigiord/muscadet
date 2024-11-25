@@ -127,7 +127,7 @@ methods::setClass(
 #' )
 CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
                                  mat_counts,
-                                 allele_counts,
+                                 allele_counts = NULL,
                                  features,
                                  label.omic = NULL,
                                  label.features = NULL) {
@@ -171,16 +171,16 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
   features <- dplyr::arrange(features, CHROM, start) # sort by chromosome and position
 
   # check number of features is identical in coordinates data frame and in number of rows of matrix
-  stopifnot(
-    "Feature coordinates data frame and count matrix must have the same number of rows." =
-      nrow(features) == nrow(mat_counts)
-  )
+  # stopifnot(
+  #   "Feature coordinates data frame and count matrix must have the same number of rows." =
+  #     nrow(features) == nrow(mat_counts)
+  # )
 
   # check matching cells between coverage (count matrix) and allelic data (allele count df)
-  stopifnot(
-    "Cells in the allele counts data frame must be the same as the ones in matrix counts column names." =
-      unique(allele_counts$cell) %in% colnames(mat_counts)
-  )
+  # stopifnot(
+  #   "Cells in the allele counts data frame must be the same as the ones in matrix counts column names." =
+  #     unique(allele_counts$cell) %in% colnames(mat_counts)
+  # )
 
   # generate table of raw counts by converting matrix to summary data frame
   coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features))) # unique index value
@@ -198,8 +198,13 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
     coord.features = features,
     label.features = label.features
   )
+
   # allelic data
-  allelic <- list(table.counts = data.frame(omic = type.omic, allele_counts))
+  if (!is.null(allele_counts)) {
+      allelic <- list(table.counts = data.frame(omic = type.omic, allele_counts))
+  } else {
+      allelic <- list(table.counts = NULL)
+  }
 
   # create object
   obj <- new(

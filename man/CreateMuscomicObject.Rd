@@ -7,7 +7,7 @@
 CreateMuscomicObject(
   type.omic = c("ATAC", "RNA"),
   mat_counts,
-  allele_counts,
+  allele_counts = NULL,
   features,
   label.omic = NULL,
   label.features = NULL
