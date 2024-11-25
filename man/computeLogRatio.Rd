@@ -40,12 +40,15 @@ method will be applied.
 matrices. \code{TRUE} by default to reduce object size. Setting it to \code{FALSE}
 will keep raw count matrices within the object.}
 
+\item{quiet}{\code{TRUE} or \code{FALSE} (\code{logical}). Whether to turn off messages. By
+default: \code{FALSE}.}
+
 \item{...}{
   Arguments passed on to \code{\link[=computeLogRatioATAC]{computeLogRatioATAC}}, \code{\link[=computeLogRatioRNA]{computeLogRatioRNA}}
   \describe{
-    \item{\code{windowSize}}{Size of windows (\code{integer} value). By default: \code{10e6} (10
+    \item{\code{windowSize}}{Size of windows in base pairs (\code{integer} value). By default: \code{10e6} (10
 Mbp).}
-    \item{\code{slidingSize}}{Distance between start positions of sliding windows
+    \item{\code{slidingSize}}{Distance between start positions of sliding windows in base pairs
 (\code{integer} value). If set to the same value as \code{windowSize}, the windows
 don't overlap. By default: \code{2e6} (2 Mbp).}
     \item{\code{minReads}}{Minimum read average per window (\code{integer} value). By
@@ -83,6 +86,7 @@ muscadet <- computeLogRatio(
   x = muscadet,
   reference = muscadet_ref,
   omic = "ATAC",
+  method = "ATAC",
   minReads = 1, # low value only for the example subsampled datasets
   minPeaks = 10 # low value only for the example subsampled datasets
 )
@@ -91,7 +95,9 @@ muscadet <- computeLogRatio(
 muscadet <- computeLogRatio(
   x = muscadet,
   reference = muscadet_ref,
-  omic = "RNA"
+  omic = "RNA",
+  method = "RNA",
+  refReads = 20
 )
 
 }

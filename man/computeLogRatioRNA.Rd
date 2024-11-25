@@ -112,7 +112,7 @@ obj_rna <- computeLogRatioRNA(
   matRef = matCounts(muscadet_ref)$RNA,
   genesCoord = coordFeatures(muscadet)$RNA,
   genome = slot(muscadet, "genome"),
-  refReads = 20, # low value only for the example subsampled datasets
+  refReads = 20 # low value only for the example subsampled datasets
 )
 table(obj_rna$coord$keep)
 

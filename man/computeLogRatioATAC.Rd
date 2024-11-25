@@ -31,10 +31,10 @@ computeLogRatioATAC(
 \item{genome}{Reference genome name among: "hg38", "hg19" and "mm10"
 (\code{character} string). By default: "hg38".}
 
-\item{windowSize}{Size of windows (\code{integer} value). By default: \code{10e6} (10
+\item{windowSize}{Size of windows in base pairs (\code{integer} value). By default: \code{10e6} (10
 Mbp).}
 
-\item{slidingSize}{Distance between start positions of sliding windows
+\item{slidingSize}{Distance between start positions of sliding windows in base pairs
 (\code{integer} value). If set to the same value as \code{windowSize}, the windows
 don't overlap. By default: \code{2e6} (2 Mbp).}
 

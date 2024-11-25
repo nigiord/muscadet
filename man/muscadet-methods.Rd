@@ -7,6 +7,7 @@
 \alias{Features}
 \alias{coordFeatures}
 \alias{matCounts}
+\alias{matLogRatio}
 \alias{Cells,muscomic-method}
 \alias{Cells,muscadet-method}
 \alias{Features,muscomic-method}
@@ -15,6 +16,8 @@
 \alias{coordFeatures,muscadet-method}
 \alias{matCounts,muscomic-method}
 \alias{matCounts,muscadet-method}
+\alias{matLogRatio,muscomic-method}
+\alias{matLogRatio,muscadet-method}
 \title{\code{\link{muscomic}} and \code{\link{muscadet}} methods}
 \usage{
 Cells(x, ...)
@@ -24,6 +27,8 @@ Features(x, ...)
 coordFeatures(x, ...)
 
 matCounts(x, ...)
+
+matLogRatio(x, ...)
 
 \S4method{Cells}{muscomic}(x)
 
@@ -40,6 +45,10 @@ matCounts(x, ...)
 \S4method{matCounts}{muscomic}(x)
 
 \S4method{matCounts}{muscadet}(x)
+
+\S4method{matLogRatio}{muscomic}(x)
+
+\S4method{matLogRatio}{muscadet}(x)
 }
 \arguments{
 \item{x}{A \code{\link{muscomic}} or \code{\link{muscadet}} object.}
@@ -67,6 +76,12 @@ matCounts(x, ...)
 \itemize{
 \item \code{muscomic}: A \code{\link{dgCMatrix}} \emph{features x cells}.
 \item \code{muscadet}: A list of \code{\link{dgCMatrix}} \emph{features x cells}, one list element per omic.
+}
+
+\code{matLogRatio}:
+\itemize{
+\item \code{muscomic}: A \code{\link{matrix}} \emph{features x cells}.
+\item \code{muscadet}: A list of \code{\link{matrix}} \emph{features x cells}, one list element per omic.
 }
 }
 \description{

@@ -17,8 +17,8 @@ CreateMuscomicObject(
 \item{type.omic}{Type of single cell omic, either "ATAC" or "RNA"
 (\code{character} string).}
 
-\item{mat_counts}{Matrix of raw counts \emph{cells x features} (\code{matrix} or
-\code{dgCMatrix}).}
+\item{mat_counts}{Matrix of raw counts \emph{features x cells} (\code{matrix} or
+\code{dgCMatrix}). Rows are features, and columns are cells.}
 
 \item{allele_counts}{Data frame of allele counts at single nucleotide
 polymorphisms (SNPs) positions per cell (\code{data.frame}).}

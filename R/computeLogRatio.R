@@ -49,6 +49,7 @@
 #'   x = muscadet,
 #'   reference = muscadet_ref,
 #'   omic = "ATAC",
+#'   method = "ATAC",
 #'   minReads = 1, # low value only for the example subsampled datasets
 #'   minPeaks = 10 # low value only for the example subsampled datasets
 #' )
@@ -58,6 +59,7 @@
 #'   x = muscadet,
 #'   reference = muscadet_ref,
 #'   omic = "RNA",
+#'   method = "RNA",
 #'   refReads = 20
 #' )
 #'
@@ -75,20 +77,20 @@ computeLogRatio <- function(x,
 
     # Check omic is in the omics of 'x' and 'reference'
     stopifnot(
-        "`omic` argument must corresponds to an omic name in both muscadet objects `x` and `reference`." =
+        "'omic' argument must corresponds to an omic name in both muscadet objects 'x' and 'reference'." =
             omic %in% names(x@omics) & omic %in% names(reference@omics)
     )
 
   # Check method
   if (is.null(method)) method <- x@omics[[omic]]@type
   stopifnot(
-    "`method` must be either `ATAC` or `RNA`." =
+    "'method' must be either 'ATAC' or 'RNA'." =
       method %in% c("ATAC", "RNA")
   )
 
   # Check raw count matrix in muscadet object
   stopifnot(
-      "Raw count matrix not found in the muscadet `x` object." =
+      "Raw count matrix not found in the muscadet 'x' object." =
           !is.null(x@omics[[omic]]@coverage[["mat.counts"]])
   )
 
@@ -108,7 +110,7 @@ computeLogRatio <- function(x,
       }
 
       if (quiet == FALSE) {
-          message("-- computeLogRatio: Method `ATAC` using computeLogRatioATAC().")
+          message("-- computeLogRatio: Method 'ATAC' using computeLogRatioATAC().")
       }
 
       obj <- computeLogRatioATAC(
@@ -139,7 +141,7 @@ computeLogRatio <- function(x,
     }
 
     if (quiet == FALSE) {
-        message("-- computeLogRatio: Method `RNA` using computeLogRatioRNA().")
+        message("-- computeLogRatio: Method 'RNA' using computeLogRatioRNA().")
     }
 
     obj <- computeLogRatioRNA(
@@ -192,9 +194,9 @@ computeLogRatio <- function(x,
 #'   `end`, `id` (`data.frame`).
 #' @param genome Reference genome name among: "hg38", "hg19" and "mm10"
 #'   (`character` string). By default: "hg38".
-#' @param windowSize Size of windows (`integer` value). By default: `10e6` (10
+#' @param windowSize Size of windows in base pairs (`integer` value). By default: `10e6` (10
 #'   Mbp).
-#' @param slidingSize Distance between start positions of sliding windows
+#' @param slidingSize Distance between start positions of sliding windows in base pairs
 #'   (`integer` value). If set to the same value as `windowSize`, the windows
 #'   don't overlap. By default: `2e6` (2 Mbp).
 #' @param minReads Minimum read average per window (`integer` value). By
@@ -329,13 +331,13 @@ computeLogRatioATAC <- function(matTumor,
 
   # Select genome
   if (genome == "hg38") {
-    genome_chrom <- hg38_chrom
+    genome_chrom <- muscadet:::hg38_chrom
   }
   if (genome == "hg19") {
-    genome_chrom <- hg19_chrom
+    genome_chrom <- muscadet:::hg19_chrom
   }
   if (genome == "mm10") {
-    genome_chrom <- mm10_chrom
+    genome_chrom <- muscadet:::mm10_chrom
   }
 
   # Create windows

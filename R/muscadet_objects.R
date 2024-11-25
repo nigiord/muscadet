@@ -71,8 +71,8 @@ methods::setClass(
 #'
 #' @param type.omic Type of single cell omic, either "ATAC" or "RNA"
 #'   (`character` string).
-#' @param mat_counts Matrix of raw counts *cells x features* (`matrix` or
-#'   `dgCMatrix`).
+#' @param mat_counts Matrix of raw counts *features x cells* (`matrix` or
+#'   `dgCMatrix`). Rows are features, and columns are cells.
 #' @param allele_counts Data frame of allele counts at single nucleotide
 #'   polymorphisms (SNPs) positions per cell (`data.frame`).
 #' @param features Data frame of features (peaks, genes...) coordinates on
@@ -455,7 +455,7 @@ setMethod(
 NULL
 
 #' @rdname muscadet-methods
-#'
+#' @export
 #' @return
 #' `Cells`:
 #' - `muscomic`: A vector of cell names.
@@ -466,7 +466,7 @@ Cells <- function(x, ...) {
 }
 
 #' @rdname muscadet-methods
-#'
+#' @export
 #' @return
 #' `Features`:
 #' - `muscomic`: A vector of feature names.
@@ -477,7 +477,7 @@ Features <- function(x, ...) {
 }
 
 #' @rdname muscadet-methods
-#'
+#' @export
 #' @return
 #' `coordFeatures`:
 #' - `muscomic`: A data frame of feature coordinates.
@@ -488,7 +488,7 @@ coordFeatures <- function(x, ...) {
 }
 
 #' @rdname muscadet-methods
-#'
+#' @export
 #' @return
 #' `matCounts`:
 #' - `muscomic`: A \code{\link{dgCMatrix}} *features x cells*.
@@ -499,12 +499,28 @@ matCounts <- function(x, ...) {
 }
 
 #' @rdname muscadet-methods
+#' @export
+#' @return
+#' `matLogRatio`:
+#' - `muscomic`: A \code{\link{matrix}} *features x cells*.
+#' - `muscadet`: A list of \code{\link{matrix}} *features x cells*, one list element per omic.
+#'
+matLogRatio <- function(x, ...) {
+    UseMethod(generic = "matLogRatio", object = x)
+}
+
+#' @rdname muscadet-methods
 #'
 setMethod(
   f = "Cells",
   signature = signature(x = "muscomic"),
   definition = function(x) {
-    return(colnames(slot(x, "coverage")[["mat.counts"]]))
+    if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
+      cells <- colnames(slot(x, "coverage")[["mat.counts"]])
+    } else if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
+      cells <- colnames(slot(x, "coverage")[["log.ratio"]])
+    }
+    return(cells)
   }
 )
 
@@ -515,7 +531,12 @@ setMethod(
   signature = signature(x = "muscadet"),
   definition = function(x) {
     lapply(slot(x, "omics"), function(omic) {
-      return(colnames(slot(omic, "coverage")[["mat.counts"]]))
+      if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+        cells <- colnames(slot(omic, "coverage")[["mat.counts"]])
+      } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+        cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
+      }
+      return(cells)
     })
   }
 )
@@ -526,7 +547,12 @@ setMethod(
   f = "Features",
   signature = signature(x = "muscomic"),
   definition = function(x) {
-    return(rownames(slot(x, "coverage")[["mat.counts"]]))
+    if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+      features <- rownames(slot(omic, "coverage")[["mat.counts"]])
+    } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+      features <- rownames(slot(omic, "coverage")[["log.ratio"]])
+    }
+    return(features)
   }
 )
 
@@ -537,7 +563,12 @@ setMethod(
   signature = signature(x = "muscadet"),
   definition = function(x) {
     lapply(slot(x, "omics"), function(omic) {
-      return(rownames(slot(omic, "coverage")[["mat.counts"]]))
+      if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+        features <- rownames(slot(omic, "coverage")[["mat.counts"]])
+      } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+        features <- rownames(slot(omic, "coverage")[["log.ratio"]])
+      }
+      return(features)
     })
   }
 )
@@ -584,4 +615,26 @@ setMethod(
       return(slot(omic, "coverage")[["mat.counts"]])
     })
   }
+)
+
+#' @rdname muscadet-methods
+#'
+setMethod(
+    f = "matLogRatio",
+    signature = signature(x = "muscomic"),
+    definition = function(x) {
+        return(slot(x, "coverage")[["log.ratio"]])
+    }
+)
+
+#' @rdname muscadet-methods
+#'
+setMethod(
+    f = "matLogRatio",
+    signature = signature(x = "muscadet"),
+    definition = function(x) {
+        lapply(slot(x, "omics"), function(omic) {
+            return(slot(omic, "coverage")[["log.ratio"]])
+        })
+    }
 )
