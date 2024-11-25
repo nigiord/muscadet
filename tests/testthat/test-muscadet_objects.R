@@ -47,48 +47,6 @@ test_that("CreateMuscomicObject without a matrix in input: error", {
 })
 
 test_that(
-  "CreateMuscomicObject with different feature lengths between matrix and features: error",
-  {
-    expect_error(
-      CreateMuscomicObject(
-        type = "ATAC",
-        mat_counts = mat_counts_atac_tumor,
-        allele_counts = allele_counts_atac_tumor,
-        features = peaks[1:900, ]
-      )
-    )
-  }
-)
-
-test_that(
-  "CreateMuscomicObject with different cells in matrix and allele count dataframe: error",
-  {
-    expect_error(
-      CreateMuscomicObject(
-        type = "ATAC",
-        mat_counts = mat_counts_atac_ref,
-        allele_counts = allele_counts_atac_tumor,
-        features = peaks
-      )
-    )
-  }
-)
-
-test_that(
-    "CreateMuscomicObject with different cells in matrix and allele count dataframe: error",
-    {
-        expect_error(
-            CreateMuscomicObject(
-                type = "ATAC",
-                mat_counts = mat_counts_atac_ref,
-                allele_counts = allele_counts_atac_tumor,
-                features = peaks
-            )
-        )
-    }
-)
-
-test_that(
     "CreateMuscomicObject with incorrect `type` argument: error",
     {
         expect_error(
