@@ -1,5 +1,5 @@
 > [!NOTE]
-> This R package is currently in development
+> This R package is currently in development and therefore is not functional yet
 
 <br>
 
