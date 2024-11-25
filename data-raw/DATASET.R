@@ -60,8 +60,6 @@ barcodes_rna_tumor <- sort(c(common_barcodes_tumor_sub, sample(
   setdiff(barcodes_rna_tumor, common_barcodes_tumor), 87
 )))
 
-usethis::use_data(barcodes_atac_tumor, overwrite = TRUE)
-usethis::use_data(barcodes_rna_tumor, overwrite = TRUE)
 
 # reference
 barcodes_atac_ref <- scan(file.path(dir, "reference.atac.barcodes.txt"), what = "character")
@@ -80,8 +78,7 @@ barcodes_rna_ref <- sort(c(common_barcodes_ref_sub, sample(
   setdiff(barcodes_rna_ref, common_barcodes_ref), 35
 )))
 
-usethis::use_data(barcodes_atac_ref, overwrite = TRUE)
-usethis::use_data(barcodes_rna_ref, overwrite = TRUE)
+
 
 
 ## features coordinates --------------------------------------------------------
@@ -217,7 +214,73 @@ hg38_chrom <- genome_list[["hg38"]]
 hg19_chrom <- genome_list[["hg19"]]
 mm10_chrom <- genome_list[["mm10"]]
 
-usethis::use_data(hg38_chrom, overwrite = TRUE)
-usethis::use_data(hg19_chrom, overwrite = TRUE)
-usethis::use_data(mm10_chrom, overwrite = TRUE)
+usethis::use_data(hg38_chrom, hg19_chrom, mm10_chrom, overwrite = TRUE, internal = TRUE)
+
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# muscadet object --------------------------------------------------------------
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+library("muscadet")
+
+# muscomic objects
+atac <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_tumor,
+  allele_counts = allele_counts_atac_tumor,
+  features = peaks
+)
+rna <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_tumor,
+  allele_counts = allele_counts_rna_tumor,
+  features = genes
+)
+atac_ref <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_ref,
+  allele_counts = allele_counts_atac_ref,
+  features = peaks
+)
+rna_ref <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_ref,
+  allele_counts = allele_counts_rna_ref,
+  features = genes
+)
+
+# raw muscadet objects
+muscadet <- CreateMuscadetObject(
+    omics = list(atac, rna),
+    bulk_lrr = bulk_lrr,
+    bulk.label = "WGS",
+    genome = "hg38"
+)
+muscadet_ref <- CreateMuscadetObject(
+    omics = list(atac_ref, rna_ref),
+    genome = "hg38"
+)
+
+# compute log R ratios for ATAC
+muscadet <- computeLogRatio(
+    x = muscadet,
+    reference = muscadet_ref,
+    omic = "ATAC",
+    method = "ATAC",
+    minReads = 1,
+    minPeaks = 10,
+    remove.raw = F
+)
+# compute log R ratios for RNA
+muscadet <- computeLogRatio(
+    x = muscadet,
+    reference = muscadet_ref,
+    omic = "RNA",
+    method = "RNA",
+    refReads = 20,
+    remove.raw = F
+)
+
+muscadet_obj <- muscadet
+usethis::use_data(muscadet_obj, overwrite = TRUE)
 

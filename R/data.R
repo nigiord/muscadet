@@ -1,39 +1,4 @@
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Cell barcodes ----------------------------------------------------------------
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-#' Cell barcodes
-#'
-#' @description
-#' Character vectors of unique cell barcodes.
-#'
-#' @name barcodes
-#' @rdname barcodes
-#'
-#' @format
-#' A character vector.
-#'
-"barcodes_atac_tumor"
-
-#' @name barcodes
-#' @rdname barcodes
-#' @format NULL
-#'
-"barcodes_atac_ref"
-
-#' @name barcodes
-#' @rdname barcodes
-#' @format NULL
-#'
-"barcodes_rna_tumor"
-
-#' @name barcodes
-#' @rdname barcodes
-#' @format NULL
-#'
-"barcodes_rna_ref"
-
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Feature coordinates ----------------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -195,13 +160,16 @@
 # Genome chromosome sizes -----------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' Genome chromosome sizes
+#' Genome chromosome sizes (internal data)
 #'
 #' @description \code{\link{GRanges}} objects containing chromosomes sizes for
 #'   hg38, hg19 and mm10 genome assemblies.
 #'
 #' @name genome_chrom
+#' @aliases hg38_chrom hg19_chrom mm10_chrom
 #' @rdname genome_chrom
+#'
+#' @keywords internal
 #'
 #' @format A \code{\link{GRanges}} object containing:
 #' \describe{
@@ -216,16 +184,32 @@
 #' - `BSgenome.Hsapiens.UCSC.hg19` version 1.4.3 - `GRCh37.p13`
 #' - `BSgenome.Mmusculus.UCSC.mm10` version 1.4.3 - `GRCm38.p6`
 #'
-"hg38_chrom"
+#' @examples
+#' muscadet:::hg38_chrom
+#' muscadet:::hg19_chrom
+#' muscadet:::mm10_chrom
+NULL
 
-#' @name genome_chrom
-#' @rdname genome_chrom
-#' @format NULL
-#'
-"hg19_chrom"
 
-#' @name genome_chrom
-#' @rdname genome_chrom
-#' @format NULL
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# muscadet object --------------------------------------------------------------
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#' muscadet object
 #'
-"mm10_chrom"
+#' @description A \code{\link{muscadet}} object containing two omic datasets:
+#' scATAC-seq and scRNA-seq.
+#'
+#' @format A \code{\link{muscadet}} with the following slots:
+#' \describe{
+#'   \item{`omics`}{List of \code{\link{muscomic}} objects, one per single-cell omic (`list`).}
+#'   \item{`bulk.data`}{List of objects containing data from paired bulk sequencing (`list`).}
+#'   \item{`clustering`}{ist of objects containing data associated with the
+#'   clustering of cells based on coverage log R ratio values (`list`).}
+#'   \item{`cnacalling`}{List of objects containing data associated with the calling
+#'   of copy number alterations (CNAs) (`list`).}
+#'   \item{`genome`}{Reference genome name among: "hg38", "hg19" and "mm10" (`character`).}
+#' }
+#'
+"muscadet_obj"
+
