@@ -19,16 +19,25 @@ LazyData: true
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 Imports: 
+    BiocGenerics,
     caTools,
+    circlize,
+    cluster,
+    ComplexHeatmap,
     dplyr,
     facets,
+    fastcluster,
     GenomicRanges,
     gtools,
     Matrix,
     matrixStats,
     methods,
+    RANN,
+    Rfast,
     SeuratObject,
+    SNFtool,
     sparseMatrixStats,
+    stats,
     stringr
 Suggests: 
     testthat (>= 3.0.0)
