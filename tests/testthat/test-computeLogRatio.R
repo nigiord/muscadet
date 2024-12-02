@@ -28,7 +28,7 @@ rna_ref <- CreateMuscomicObject(
 
 muscadet <- CreateMuscadetObject(
     omics = list(atac, rna),
-    bulk_lrr = bulk_lrr,
+    bulk.lrr = bulk_lrr,
     bulk.label = "WGS",
     genome = "hg38"
 )
@@ -47,7 +47,7 @@ test_that("ComputeLogRatioATAC gives a correct object as output", {
         peaksCoord = coordFeatures(muscadet)$ATAC,
         genome = slot(muscadet, "genome"),
         minReads = 1,
-        minPeaks = 10,
+        minPeaks = 1,
         quiet = TRUE
     )
 
@@ -61,7 +61,7 @@ test_that("ComputeLogRatioRNA gives a correct object as output", {
         matRef = matCounts(muscadet_ref)$RNA,
         genesCoord = coordFeatures(muscadet)$RNA,
         genome = slot(muscadet, "genome"),
-        refReads = 20,
+        refReads = 2,
         quiet = TRUE
     )
 
@@ -91,7 +91,7 @@ test_that("ComputeLogRatioRNA gives a muscadet object as output", {
         matRef = matCounts(muscadet_ref)$RNA,
         genesCoord = coordFeatures(muscadet)$RNA,
         genome = slot(muscadet, "genome"),
-        refReads = 20,
+        refReads = 2,
         all_steps = TRUE,
         quiet = TRUE
     )
@@ -106,7 +106,7 @@ test_that("ComputeLogRatio gives a correct muscadet object as output", {
         omic = "ATAC",
         method = "ATAC",
         minReads = 1,
-        minPeaks = 10,
+        minPeaks = 1,
         quiet = TRUE
     )
     muscadet <- computeLogRatio(
@@ -114,7 +114,7 @@ test_that("ComputeLogRatio gives a correct muscadet object as output", {
         reference = muscadet_ref,
         omic = "RNA",
         method = "RNA",
-        refReads = 20,
+        refReads = 2,
         quiet = TRUE
     )
     expect_identical(as.character(class(muscadet)), "muscadet")
@@ -132,7 +132,7 @@ test_that(
             omic = "ATAC",
             method = "ATAC",
             minReads = 1,
-            minPeaks = 10,
+            minPeaks = 1,
             quiet = TRUE
         )
         expect_error(
@@ -142,7 +142,7 @@ test_that(
                 omic = "ATAC",
                 method = "ATAC",
                 minReads = 1,
-                minPeaks = 10,
+                minPeaks = 1,
                 quiet = TRUE
             )
         )
