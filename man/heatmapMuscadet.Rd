@@ -19,7 +19,7 @@ heatmapMuscadet(
 }
 \arguments{
 \item{x}{A muscadet object containing LRR data for all omics (with
-\code{\link[=ComputeLogRatio]{ComputeLogRatio()}}) and clustering data (with
+\code{\link[=computeLogRatio]{computeLogRatio()}}) and clustering data (with
 \code{\link[=clusterMuscadet]{clusterMuscadet()}}) (\code{muscadet}).}
 
 \item{filename}{Character string specifying the file path to save the heatmap

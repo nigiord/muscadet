@@ -17,25 +17,18 @@ Prints summary to \code{\link[base]{stdout}} and invisibly returns
 Overview of a \code{\link{muscadet}} object.
 }
 \examples{
-atac <- CreateMuscomicObject(
-  type = "ATAC",
-  mat_counts = mat_counts_atac_tumor,
-  allele_counts = allele_counts_atac_tumor,
-  features = peaks
-)
-rna <- CreateMuscomicObject(
-  type = "RNA",
-  mat_counts = mat_counts_rna_tumor,
-  allele_counts = allele_counts_rna_tumor,
-  features = genes
-)
+# Load muscadej object
+data(muscadet_obj)
 
-muscadet <- CreateMuscadetObject(
-  omics = list(atac, rna),
-  bulk.lrr = bulk.lrr,
-  bulk.label = "WGS",
-  genome = "hg38"
-)
+# Overview of the muscadet object
+show(muscadet_obj)
+
+# Overview of the muscomic objects within
+show(slot(muscadet_obj, "omics"))
+
+# Overview of the first muscomic objects within
+show(slot(muscadet_obj, "omics")[[1]])
+
 }
 \seealso{
 \code{\link{muscadet-class}}, \code{\link[=CreateMuscadetObject]{CreateMuscadetObject()}}

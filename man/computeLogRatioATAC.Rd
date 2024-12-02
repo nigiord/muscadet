@@ -111,13 +111,52 @@ steps:
 }
 }
 \examples{
+# Create muscomic objects
+atac <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_tumor,
+  allele_counts = allele_counts_atac_tumor,
+  features = peaks
+)
+rna <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_tumor,
+  allele_counts = allele_counts_rna_tumor,
+  features = genes
+)
+atac_ref <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_ref,
+  allele_counts = allele_counts_atac_ref,
+  features = peaks
+)
+rna_ref <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_ref,
+  allele_counts = allele_counts_rna_ref,
+  features = genes
+)
+
+# Create muscadet objects
+muscadet <- CreateMuscadetObject(
+  omics = list(atac, rna),
+  bulk.lrr = bulk_lrr,
+  bulk.label = "WGS",
+  genome = "hg38"
+)
+muscadet_ref <- CreateMuscadetObject(
+  omics = list(atac_ref, rna_ref),
+  genome = "hg38"
+)
+
+# Compute log R ratio for ATAC
 obj_atac <- computeLogRatioATAC(
   matTumor = matCounts(muscadet)$ATAC,
   matRef = matCounts(muscadet_ref)$ATAC,
   peaksCoord = coordFeatures(muscadet)$ATAC,
   genome = slot(muscadet, "genome"),
-  minReads = 1, # low value only for the example subsampled datasets
-  minPeaks = 10 # low value only for the example subsampled datasets
+  minReads = 1, # low value for example subsampled datasets
+  minPeaks = 1 # low value for example subsampled datasets
 )
 table(obj_atac$coord$keep)
 
@@ -127,8 +166,8 @@ obj_atac_all <- computeLogRatioATAC(
   matRef = matCounts(muscadet_ref)$ATAC,
   peaksCoord = coordFeatures(muscadet)$ATAC,
   genome = slot(muscadet, "genome"),
-  minReads = 1, # low value only for the example subsampled datasets
-  minPeaks = 10, # low value only for the example subsampled datasets
+  minReads = 1, # low value for example subsampled datasets
+  minPeaks = 1, # low value for example subsampled datasets
   all_steps = TRUE
 )
 names(obj_atac_all)

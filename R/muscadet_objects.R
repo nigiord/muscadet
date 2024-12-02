@@ -90,6 +90,8 @@ methods::setClass(
 #' @importFrom Matrix Matrix
 #' @importFrom stringr str_remove
 #' @importFrom gtools mixedsort
+#' @importFrom methods new
+#' @importFrom rlang .data
 #'
 #' @export
 #'
@@ -168,7 +170,7 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
   features$CHROM <- ordered(features$CHROM,
     levels = gtools::mixedsort(unique(features$CHROM))
   ) # ordered chromosomes
-  features <- dplyr::arrange(features, CHROM, start) # sort by chromosome and position
+  features <- dplyr::arrange(features, "CHROM", "start") # sort by chromosome and position
 
   # check number of features is identical in coordinates data frame and in number of rows of matrix
   # stopifnot(
@@ -186,10 +188,10 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
   coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features))) # unique index value
 
   table_counts <- as.data.frame(Matrix::summary(mat_counts)) %>%
-    dplyr::mutate(cell = colnames(mat_counts)[j], omic = type.omic) %>%
-    dplyr::rename(index = i, DP = x) %>%
+    dplyr::mutate(cell = colnames(mat_counts)[.data$j], omic = type.omic) %>%
+    dplyr::rename(index = "i", DP = "x") %>%
     dplyr::left_join(coord.df, by = "index") %>%
-    dplyr::select(c(omic, cell, id, CHROM, start, end, DP))
+    dplyr::select(c("omic", "cell", "id", "CHROM", "start", "end", "DP"))
 
   # coverage data
   coverage <- list(
@@ -236,6 +238,9 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
 #' @return
 #' A \code{\link{muscadet}} object.
 #'
+#' @importFrom stats setNames ave
+#' @importFrom methods new
+#'
 #' @export
 #'
 #' @note A \code{\link{muscadet}} object can contain several
@@ -247,9 +252,36 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
 #' * \code{\link{muscomic-class}}, \code{\link{muscadet-class}}
 #'
 #' @examples
+#' # Create muscomic objects
+#' atac <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_tumor,
+#'   allele_counts = allele_counts_atac_tumor,
+#'   features = peaks
+#' )
+#' rna <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_tumor,
+#'   allele_counts = allele_counts_rna_tumor,
+#'   features = genes
+#' )
+#' atac_ref <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_ref,
+#'   allele_counts = allele_counts_atac_ref,
+#'   features = peaks
+#' )
+#' rna_ref <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_ref,
+#'   allele_counts = allele_counts_rna_ref,
+#'   features = genes
+#' )
+#'
+#' # Create muscadet objects
 #' muscadet <- CreateMuscadetObject(
 #'   omics = list(atac, rna),
-#'   bulk.lrr = bulk.lrr,
+#'   bulk.lrr = bulk_lrr,
 #'   bulk.label = "WGS",
 #'   genome = "hg38"
 #' )
@@ -363,7 +395,7 @@ setMethod(
       nrow(object@coverage$mat.counts),
       object@coverage$label.features,
       "\n",
-      length(unique(atac@allelic$table.counts$id)),
+      length(unique(object@allelic$table.counts$id)),
       "SNPs",
       "\n"
     )
@@ -379,30 +411,25 @@ setMethod(
 #' @return Prints summary to \code{\link[base]{stdout}} and invisibly returns
 #'   \code{NULL}
 #'
+#' @importFrom methods slot
+#'
 #' @keywords internal
 #'
 #' @seealso \code{\link{muscadet-class}}, [CreateMuscadetObject()]
 #'
 #' @examples
-#' atac <- CreateMuscomicObject(
-#'   type = "ATAC",
-#'   mat_counts = mat_counts_atac_tumor,
-#'   allele_counts = allele_counts_atac_tumor,
-#'   features = peaks
-#' )
-#' rna <- CreateMuscomicObject(
-#'   type = "RNA",
-#'   mat_counts = mat_counts_rna_tumor,
-#'   allele_counts = allele_counts_rna_tumor,
-#'   features = genes
-#' )
+#' # Load muscadej object
+#' data(muscadet_obj)
 #'
-#' muscadet <- CreateMuscadetObject(
-#'   omics = list(atac, rna),
-#'   bulk.lrr = bulk.lrr,
-#'   bulk.label = "WGS",
-#'   genome = "hg38"
-#' )
+#' # Overview of the muscadet object
+#' show(muscadet_obj)
+#'
+#' # Overview of the muscomic objects within
+#' show(slot(muscadet_obj, "omics"))
+#'
+#' # Overview of the first muscomic objects within
+#' show(slot(muscadet_obj, "omics")[[1]])
+#'
 setMethod(
   f = "show",
   signature = signature(object = "muscadet"),
@@ -410,29 +437,69 @@ setMethod(
     cat(
       "A muscadet object",
       "\n",
-      "omics:", paste(names(object@omics), collapse = ", "), "\n",
-      " ", "types:", paste(lapply(object@omics, function(i) {
+      "omics:",
+      paste(names(object@omics), collapse = ", "),
+      "\n",
+      " ",
+      "types:",
+      paste(lapply(object@omics, function(i) {
         i@type
-      }), collapse = ", "), "\n",
-      " ", "labels:", paste(lapply(object@omics, function(i) {
+      }), collapse = ", "),
+      "\n",
+      " ",
+      "labels:",
+      paste(lapply(object@omics, function(i) {
         i@label.omic
-      }), collapse = ", "), "\n",
-      " ", "cells:", paste(lapply(object@omics, function(i) {
+      }), collapse = ", "),
+      "\n",
+      " ",
+      "cells:",
+      paste(lapply(object@omics, function(i) {
         ncol(i@coverage$mat.counts)
-      }), collapse = ", "), "\n",
-      " ", "features:", paste(lapply(object@omics, function(i) {
+      }), collapse = ", "),
+      "\n",
+      " ",
+      "features:",
+      paste(lapply(object@omics, function(i) {
         nrow(i@coverage$mat.counts)
-      }), collapse = ", "), "\n",
-      " ", "feature labels:", paste(lapply(object@omics, function(i) {
+      }), collapse = ", "),
+      "\n",
+      " ",
+      "feature labels:",
+      paste(lapply(object@omics, function(i) {
         i@coverage$label.features
-      }), collapse = ", "), "\n",
-      " ", "SNPs:", paste(lapply(object@omics, function(i) {
+      }), collapse = ", "),
+      "\n",
+      " ",
+      "SNPs:",
+      paste(lapply(object@omics, function(i) {
         length(unique(i@allelic$table.counts$id))
-      }), collapse = ", "), "\n",
-      "data from paired bulk sequencing:", ifelse(is.null(object@bulk.data$label), "None", object@bulk.data$label), "\n",
-      "clustering:", ifelse(length(object@clustering) == 0, "None", object@clustering), "\n",
-      "CNA calling:", ifelse(length(object@cnacalling) == 0, "None", object@cnacalling), "\n",
-      "genome:", object@genome
+      }), collapse = ", "),
+      "\n",
+      "data from paired bulk sequencing:",
+      ifelse(
+        is.null(object@bulk.data$label),
+        "None",
+        object@bulk.data$label
+      ),
+      "\n",
+      "clustering:",
+      ifelse(
+        length(object@clustering) == 0,
+        "None",
+        paste(
+          "k =",
+          paste(names(object@clustering$clusters), collapse = ", "),
+          "; optimal k =",
+          object@clustering$k.opt
+        )
+      ),
+      "\n",
+      "CNA calling:",
+      ifelse(length(object@cnacalling) == 0, "None", object@cnacalling),
+      "\n",
+      "genome:",
+      object@genome
     )
   }
 )
@@ -450,6 +517,8 @@ setMethod(
 #' @rdname muscadet-methods
 #' @aliases muscomic-methods
 #'
+#' @importFrom methods slot
+#'
 #' @param x A \code{\link{muscomic}} or \code{\link{muscadet}} object.
 #'
 #' @seealso \code{\link{muscomic-class}} \code{\link{muscadet-class}}
@@ -463,7 +532,7 @@ NULL
 #' - `muscomic`: A vector of cell names.
 #' - `muscadet`: A list of vectors of cell names, one list element per omic.
 #'
-Cells <- function(x, ...) {
+Cells <- function(x) {
   UseMethod(generic = "Cells", object = x)
 }
 
@@ -474,7 +543,7 @@ Cells <- function(x, ...) {
 #' - `muscomic`: A vector of feature names.
 #' - `muscadet`: A list of vectors of feature names, one list element per omic.
 #'
-Features <- function(x, ...) {
+Features <- function(x) {
   UseMethod(generic = "Features", object = x)
 }
 
@@ -485,7 +554,7 @@ Features <- function(x, ...) {
 #' - `muscomic`: A data frame of feature coordinates.
 #' - `muscadet`: A list of data frames of feature coordinates, one list element per omic.
 #'
-coordFeatures <- function(x, ...) {
+coordFeatures <- function(x) {
   UseMethod(generic = "coordFeatures", object = x)
 }
 
@@ -493,10 +562,10 @@ coordFeatures <- function(x, ...) {
 #' @export
 #' @return
 #' `matCounts`:
-#' - `muscomic`: A \code{\link{dgCMatrix}} *features x cells*.
-#' - `muscadet`: A list of \code{\link{dgCMatrix}} *features x cells*, one list element per omic.
+#' - `muscomic`: A \code{\link{dgCMatrix-class}} *features x cells*.
+#' - `muscadet`: A list of \code{\link{dgCMatrix-class}} *features x cells*, one list element per omic.
 #'
-matCounts <- function(x, ...) {
+matCounts <- function(x) {
   UseMethod(generic = "matCounts", object = x)
 }
 
@@ -507,7 +576,7 @@ matCounts <- function(x, ...) {
 #' - `muscomic`: A \code{\link{matrix}} *features x cells*.
 #' - `muscadet`: A list of \code{\link{matrix}} *features x cells*, one list element per omic.
 #'
-matLogRatio <- function(x, ...) {
+matLogRatio <- function(x) {
     UseMethod(generic = "matLogRatio", object = x)
 }
 

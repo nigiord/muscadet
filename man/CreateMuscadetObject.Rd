@@ -38,9 +38,36 @@ A \code{\link{muscadet}} object can contain several
 \code{type}) but they can't have identical labels (slot \code{label.omic}).
 }
 \examples{
+# Create muscomic objects
+atac <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_tumor,
+  allele_counts = allele_counts_atac_tumor,
+  features = peaks
+)
+rna <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_tumor,
+  allele_counts = allele_counts_rna_tumor,
+  features = genes
+)
+atac_ref <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_ref,
+  allele_counts = allele_counts_atac_ref,
+  features = peaks
+)
+rna_ref <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_ref,
+  allele_counts = allele_counts_rna_ref,
+  features = genes
+)
+
+# Create muscadet objects
 muscadet <- CreateMuscadetObject(
   omics = list(atac, rna),
-  bulk.lrr = bulk.lrr,
+  bulk.lrr = bulk_lrr,
   bulk.label = "WGS",
   genome = "hg38"
 )

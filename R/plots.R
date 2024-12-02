@@ -9,11 +9,8 @@
 #' values from bulk sequencing data can be plotted as an annotation under the
 #' heatmaps.
 #'
-#' @import ComplexHeatmap
-#' @importFrom circlize colorRamp2
-#'
 #' @param x A muscadet object containing LRR data for all omics (with
-#'   [muscadet::ComputeLogRatio()]) and clustering data (with
+#'   [muscadet::computeLogRatio()]) and clustering data (with
 #'   [muscadet::clusterMuscadet()]) (`muscadet`).
 #'
 #' @param filename Character string specifying the file path to save the heatmap
@@ -51,6 +48,13 @@
 #' @param quiet Logical value indicating whether to suppress messages. Default is `FALSE`.
 #'
 #' @return A heatmap plot object saved as a png image using the provided file name.
+#'
+#' @import ComplexHeatmap
+#' @importFrom circlize colorRamp2
+#' @importFrom methods slot
+#' @importFrom stats median
+#' @importFrom grDevices pdf png palette dev.off
+#' @importFrom grid gpar unit grid.rect grid.text
 #'
 #' @export
 #'
@@ -144,7 +148,7 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
         message("---- Heatmap Parameters ----")
         message("Omics in the muscadet object: ", paste(sapply(slot(x, "omics"), function(n) slot(n, "label.omic")), collapse = ", "))
         omic_dims <- sapply(slot(x, "omics"), function(m) {
-            paste0(m@label.omic, ": ", nrow(muscadet::matLogRatio(m)), " cells × ", ncol(muscadet::matLogRatio(m)), " features")
+            paste0(m@label.omic, ": ", nrow(muscadet::matLogRatio(m)), " cells x ", ncol(muscadet::matLogRatio(m)), " features")
         })
         message("Omics log R ratio data dimensions:\n  ", paste(omic_dims, collapse = "\n  "))
 
@@ -226,7 +230,7 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
         # Add bulk LRR data as annotation
         if (add_bulk_lrr == TRUE) {
             # Retrieve bulk lrr values on features
-            bulk_df <- muscadet:::.getLogRatioBulk(muscomic, x@bulk.data$log.ratio)
+            bulk_df <- muscadet::getLogRatioBulk(muscomic, x@bulk.data$log.ratio)
             # Define color scale
             bulk_col <- list(circlize::colorRamp2(c(min(bulk_df$bulk.lrr), median(bulk_df$bulk.lrr), max(bulk_df$bulk.lrr)),
                                                   c("#00008E", "white", "#630000")))
@@ -289,8 +293,8 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
 
     # Save complete plot of heatmaps as PNG
     png(filename = filename,
-        width = ComplexHeatmap:::width(ht_all),
-        height = ComplexHeatmap:::height(ht_all),
+        width = ht_all@ht_list_param[["width"]],
+        height = ht_all@ht_list_param[["height"]],
         units = "mm", res = 300)
 
     # Print plot
@@ -299,7 +303,7 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
     # Add annotation: number of cells per cluster
     for(i in 1:length(n_cells)) {
         ComplexHeatmap::decorate_annotation("ncells", slice = i, envir = environment(), {
-            grid.rect(x = 1, width = unit(2, "mm"), gp = gpar(fill = pal_clusters[i], col = NA), just = "right")
+            grid.rect(x = 1, width = unit(2, "mm"), gp = gpar(fill = colors[i], col = NA), just = "right")
             grid.text(n_cells[i], x = 0.7, just = "right", gp = gpar(cex = 0.75))
         })
     }

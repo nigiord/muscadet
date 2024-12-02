@@ -42,7 +42,7 @@
 #' @rdname mat_counts
 #'
 #' @format
-#' A `dgCMatrix` matrix of numeric values with the following dimensions:
+#' A `dgCMatrix` (\code{\link{dgCMatrix-class}}) of numeric values with the following dimensions:
 #' \describe{
 #'   \item{`rows`}{Features (peaks, genes).}
 #'   \item{`columns`}{Cell barcodes.}
@@ -179,10 +179,14 @@
 #'   \item{`strand`}{Strand information * (`Rle`).}
 #' }
 #'
-#' @note Data obtained from assemblies provided by the [BSgenome] package.
+#' @note Data obtained from assemblies provided by the `BSgenome` package.
 #' - `BSgenome.Hsapiens.UCSC.hg38` version 1.4.5 - `GRCh38.p14`
 #' - `BSgenome.Hsapiens.UCSC.hg19` version 1.4.3 - `GRCh37.p13`
 #' - `BSgenome.Mmusculus.UCSC.mm10` version 1.4.3 - `GRCm38.p6`
+#'
+#' @references Pagès H (2024). BSgenome: Software infrastructure for efficient
+#'   representation of full genomes and their SNPs.
+#'   [https://bioconductor.org/packages/BSgenome](https://bioconductor.org/packages/BSgenome).
 #'
 #' @examples
 #' muscadet:::hg38_chrom

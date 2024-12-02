@@ -20,7 +20,7 @@ A \code{\link{GRanges}} object containing:
 hg38, hg19 and mm10 genome assemblies.
 }
 \note{
-Data obtained from assemblies provided by the \link{BSgenome} package.
+Data obtained from assemblies provided by the \code{BSgenome} package.
 \itemize{
 \item \code{BSgenome.Hsapiens.UCSC.hg38} version 1.4.5 - \code{GRCh38.p14}
 \item \code{BSgenome.Hsapiens.UCSC.hg19} version 1.4.3 - \code{GRCh37.p13}
@@ -31,5 +31,10 @@ Data obtained from assemblies provided by the \link{BSgenome} package.
 muscadet:::hg38_chrom
 muscadet:::hg19_chrom
 muscadet:::mm10_chrom
+}
+\references{
+Pagès H (2024). BSgenome: Software infrastructure for efficient
+representation of full genomes and their SNPs.
+\url{https://bioconductor.org/packages/BSgenome}.
 }
 \keyword{internal}

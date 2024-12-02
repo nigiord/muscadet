@@ -71,6 +71,7 @@
 #' @importFrom stats as.dist
 #' @importFrom fastcluster hclust
 #' @importFrom cluster silhouette
+#' @importFrom methods slot slot<-
 #'
 #' @export
 #'
@@ -395,6 +396,7 @@ weightedSNF <- function(
     }
 
     # Calculate the local transition matrix using .dominateset() from SNFtool package
+    newW <- vector("list", n)
     for(i in 1:n){
         newW[[i]] <- .dominateset(Wall[[i]], K)
     }

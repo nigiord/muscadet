@@ -39,7 +39,7 @@ muscadet_ref <- CreateMuscadetObject(
 
 
 
-test_that("ComputeLogRatioATAC gives a correct object as output", {
+test_that("computeLogRatioATAC gives a correct object as output", {
 
     obj_atac <- computeLogRatioATAC(
         matTumor = matCounts(muscadet)$ATAC,

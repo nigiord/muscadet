@@ -81,12 +81,47 @@ Log R ratios computation steps are described in \code{\link[=computeLogRatioATAC
 and \code{\link[=computeLogRatioRNA]{computeLogRatioRNA()}} functions.
 }
 \examples{
-# Load example data
-data(muscadet_obj)
+# Create muscomic objects
+atac <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_tumor,
+  allele_counts = allele_counts_atac_tumor,
+  features = peaks
+)
+rna <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_tumor,
+  allele_counts = allele_counts_rna_tumor,
+  features = genes
+)
+atac_ref <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_ref,
+  allele_counts = allele_counts_atac_ref,
+  features = peaks
+)
+rna_ref <- CreateMuscomicObject(
+  type = "RNA",
+  mat_counts = mat_counts_rna_ref,
+  allele_counts = allele_counts_rna_ref,
+  features = genes
+)
+
+# Create muscadet objects
+muscadet <- CreateMuscadetObject(
+  omics = list(atac, rna),
+  bulk.lrr = bulk_lrr,
+  bulk.label = "WGS",
+  genome = "hg38"
+)
+muscadet_ref <- CreateMuscadetObject(
+  omics = list(atac_ref, rna_ref),
+  genome = "hg38"
+)
 
 # compute log R ratios for ATAC
-muscadet_obj <- computeLogRatio(
-  x = muscadet_obj,
+muscadet <- computeLogRatio(
+  x = muscadet,
   reference = muscadet_ref,
   omic = "ATAC",
   method = "ATAC",
@@ -102,6 +137,9 @@ muscadet_obj <- computeLogRatio(
   method = "RNA",
   refReads = 2 # low value for example subsampled datasets
 )
+
+# Load example muscadet object data
+data(muscadet_obj)
 
 }
 \seealso{

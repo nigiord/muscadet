@@ -20,15 +20,15 @@
 \alias{matLogRatio,muscadet-method}
 \title{\code{\link{muscomic}} and \code{\link{muscadet}} methods}
 \usage{
-Cells(x, ...)
+Cells(x)
 
-Features(x, ...)
+Features(x)
 
-coordFeatures(x, ...)
+coordFeatures(x)
 
-matCounts(x, ...)
+matCounts(x)
 
-matLogRatio(x, ...)
+matLogRatio(x)
 
 \S4method{Cells}{muscomic}(x)
 
@@ -74,8 +74,8 @@ matLogRatio(x, ...)
 
 \code{matCounts}:
 \itemize{
-\item \code{muscomic}: A \code{\link{dgCMatrix}} \emph{features x cells}.
-\item \code{muscadet}: A list of \code{\link{dgCMatrix}} \emph{features x cells}, one list element per omic.
+\item \code{muscomic}: A \code{\link{dgCMatrix-class}} \emph{features x cells}.
+\item \code{muscadet}: A list of \code{\link{dgCMatrix-class}} \emph{features x cells}, one list element per omic.
 }
 
 \code{matLogRatio}:

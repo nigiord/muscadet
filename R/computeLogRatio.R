@@ -41,15 +41,53 @@
 #'
 #' @family computeLogRatio
 #'
+#' @importFrom methods formalArgs
+#' @importFrom stats quantile
+#'
 #' @export
 #'
 #' @examples
-#' # Load example data
-#' data(muscadet_obj)
+#' # Create muscomic objects
+#' atac <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_tumor,
+#'   allele_counts = allele_counts_atac_tumor,
+#'   features = peaks
+#' )
+#' rna <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_tumor,
+#'   allele_counts = allele_counts_rna_tumor,
+#'   features = genes
+#' )
+#' atac_ref <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_ref,
+#'   allele_counts = allele_counts_atac_ref,
+#'   features = peaks
+#' )
+#' rna_ref <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_ref,
+#'   allele_counts = allele_counts_rna_ref,
+#'   features = genes
+#' )
+#'
+#' # Create muscadet objects
+#' muscadet <- CreateMuscadetObject(
+#'   omics = list(atac, rna),
+#'   bulk.lrr = bulk_lrr,
+#'   bulk.label = "WGS",
+#'   genome = "hg38"
+#' )
+#' muscadet_ref <- CreateMuscadetObject(
+#'   omics = list(atac_ref, rna_ref),
+#'   genome = "hg38"
+#' )
 #'
 #' # compute log R ratios for ATAC
-#' muscadet_obj <- computeLogRatio(
-#'   x = muscadet_obj,
+#' muscadet <- computeLogRatio(
+#'   x = muscadet,
 #'   reference = muscadet_ref,
 #'   omic = "ATAC",
 #'   method = "ATAC",
@@ -65,6 +103,9 @@
 #'   method = "RNA",
 #'   refReads = 2 # low value for example subsampled datasets
 #' )
+#'
+#' # Load example muscadet object data
+#' data(muscadet_obj)
 #'
 computeLogRatio <- function(x,
                             reference,
@@ -156,8 +197,8 @@ computeLogRatio <- function(x,
     )
   }
 
-  if (exists("all_steps")) {
-      if (all_steps == TRUE) {
+  if ("all_steps" %in% names(dots)) {
+      if (dots$all_steps == TRUE) {
           obj <- list(
               matTumor = obj$step08$matTumor,
               matRef = obj$step08$matRef,
@@ -260,6 +301,7 @@ computeLogRatio <- function(x,
 #' @importFrom GenomicRanges GRanges
 #' @importFrom GenomicRanges slidingWindows
 #' @importFrom GenomicRanges findOverlaps
+#' @importFrom stats sd
 #'
 #' @export
 #'
@@ -275,13 +317,52 @@ computeLogRatio <- function(x,
 #'  - Correcting by reference variability
 #'
 #' @examples
+#' # Create muscomic objects
+#' atac <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_tumor,
+#'   allele_counts = allele_counts_atac_tumor,
+#'   features = peaks
+#' )
+#' rna <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_tumor,
+#'   allele_counts = allele_counts_rna_tumor,
+#'   features = genes
+#' )
+#' atac_ref <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_ref,
+#'   allele_counts = allele_counts_atac_ref,
+#'   features = peaks
+#' )
+#' rna_ref <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_ref,
+#'   allele_counts = allele_counts_rna_ref,
+#'   features = genes
+#' )
+#'
+#' # Create muscadet objects
+#' muscadet <- CreateMuscadetObject(
+#'   omics = list(atac, rna),
+#'   bulk.lrr = bulk_lrr,
+#'   bulk.label = "WGS",
+#'   genome = "hg38"
+#' )
+#' muscadet_ref <- CreateMuscadetObject(
+#'   omics = list(atac_ref, rna_ref),
+#'   genome = "hg38"
+#' )
+#'
+#' # Compute log R ratio for ATAC
 #' obj_atac <- computeLogRatioATAC(
 #'   matTumor = matCounts(muscadet)$ATAC,
 #'   matRef = matCounts(muscadet_ref)$ATAC,
 #'   peaksCoord = coordFeatures(muscadet)$ATAC,
 #'   genome = slot(muscadet, "genome"),
-#'   minReads = 1, # low value only for the example subsampled datasets
-#'   minPeaks = 10 # low value only for the example subsampled datasets
+#'   minReads = 1, # low value for example subsampled datasets
+#'   minPeaks = 1 # low value for example subsampled datasets
 #' )
 #' table(obj_atac$coord$keep)
 #'
@@ -291,8 +372,8 @@ computeLogRatio <- function(x,
 #'   matRef = matCounts(muscadet_ref)$ATAC,
 #'   peaksCoord = coordFeatures(muscadet)$ATAC,
 #'   genome = slot(muscadet, "genome"),
-#'   minReads = 1, # low value only for the example subsampled datasets
-#'   minPeaks = 10, # low value only for the example subsampled datasets
+#'   minReads = 1, # low value for example subsampled datasets
+#'   minPeaks = 1, # low value for example subsampled datasets
 #'   all_steps = TRUE
 #' )
 #' names(obj_atac_all)
@@ -335,13 +416,13 @@ computeLogRatioATAC <- function(matTumor,
 
   # Select genome
   if (genome == "hg38") {
-    genome_chrom <- muscadet:::hg38_chrom
+    genome_chrom <- hg38_chrom
   }
   if (genome == "hg19") {
-    genome_chrom <- muscadet:::hg19_chrom
+    genome_chrom <- hg19_chrom
   }
   if (genome == "mm10") {
-    genome_chrom <- muscadet:::mm10_chrom
+    genome_chrom <- mm10_chrom
   }
 
   # Create windows
@@ -350,8 +431,9 @@ computeLogRatioATAC <- function(matTumor,
     width = windowSize,
     step = slidingSize
   ) %>%
-    unlist() %>%
-    .[which(BiocGenerics::width(.) >= windowSize / 10), ] # keep windows at the end of chr that are at least 1/10 of window width
+    unlist()
+  # Keep windows at the end of chr that are at least 1/10 of window width
+  windowsGR <- windowsGR[which(BiocGenerics::width(windowsGR) >= windowSize / 10), ]
 
   # Match peaks and windows
   peaksCoord <- GenomicRanges::GRanges(peaksCoord)
@@ -418,7 +500,7 @@ computeLogRatioATAC <- function(matTumor,
   windowsDF$sdReads.ref[win] <- matrixStats::rowSds(matRef)
 
   # Add filtering information 'keep' in window coordinates data frame
-  windowsDF <- dplyr::mutate(windowsDF, keep = meanReads.ref >= minReads &
+  windowsDF <- dplyr::mutate(windowsDF, keep = windowsDF$meanReads.ref >= minReads &
     windowsDF$nPeaks >= minPeaks)
 
   stopifnot("No windows passing filters (`minReads` and `minPeaks` arguments)" = any(windowsDF$keep))
@@ -427,7 +509,7 @@ computeLogRatioATAC <- function(matTumor,
   matTumor <- matTumor[windowsDF$keep[window_index], ]
   matRef <- matRef[windowsDF$keep[window_index], ]
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step02 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -448,7 +530,7 @@ computeLogRatioATAC <- function(matTumor,
     (x / sum(x, na.rm = T)) * 1e6
   })
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step03 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -478,7 +560,7 @@ computeLogRatioATAC <- function(matTumor,
   matTumor <- apply(matTumor, 2, "-", Matrix::rowMeans(matRef))
   matRef <- apply(matRef, 2, "-", Matrix::rowMeans(matRef))
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step04 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -503,7 +585,7 @@ computeLogRatioATAC <- function(matTumor,
   matRef[matRef > thresh_capping] <- thresh_capping
   matRef[matRef < (-1 * thresh_capping)] <- -1 * thresh_capping
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step05 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -537,7 +619,7 @@ computeLogRatioATAC <- function(matTumor,
   })
   matRef <- t(apply(matRef, 1, "-", meansRef))
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step07 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -566,7 +648,7 @@ computeLogRatioATAC <- function(matTumor,
     (x - mean.ref) / sd.ref
   })
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step08 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -579,7 +661,7 @@ computeLogRatioATAC <- function(matTumor,
   windowsDF$meanLRR.corr.ref[windowsDF$keep] <- Matrix::rowMeans(matRef)
   windowsDF$sdLRR.corr.ref[windowsDF$keep] <- matrixStats::rowSds(matRef)
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$params <- params
     obj$coord <- windowsDF
     return(obj)
@@ -655,7 +737,7 @@ computeLogRatioATAC <- function(matTumor,
 #'
 #' @import Matrix
 #' @import dplyr
-#' @importFrom GenomicRanges GRanges
+#' @importFrom stats na.omit sd
 #' @importFrom sparseMatrixStats rowSds
 #' @importFrom caTools runmean
 #'
@@ -674,12 +756,51 @@ computeLogRatioATAC <- function(matTumor,
 #'  - Correcting by reference variability
 #'
 #' @examples
+#' # Create muscomic objects
+#' atac <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_tumor,
+#'   allele_counts = allele_counts_atac_tumor,
+#'   features = peaks
+#' )
+#' rna <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_tumor,
+#'   allele_counts = allele_counts_rna_tumor,
+#'   features = genes
+#' )
+#' atac_ref <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_ref,
+#'   allele_counts = allele_counts_atac_ref,
+#'   features = peaks
+#' )
+#' rna_ref <- CreateMuscomicObject(
+#'   type = "RNA",
+#'   mat_counts = mat_counts_rna_ref,
+#'   allele_counts = allele_counts_rna_ref,
+#'   features = genes
+#' )
+#'
+#' # Create muscadet objects
+#' muscadet <- CreateMuscadetObject(
+#'   omics = list(atac, rna),
+#'   bulk.lrr = bulk_lrr,
+#'   bulk.label = "WGS",
+#'   genome = "hg38"
+#' )
+#' muscadet_ref <- CreateMuscadetObject(
+#'   omics = list(atac_ref, rna_ref),
+#'   genome = "hg38"
+#' )
+#'
+#' # Compute log R ratio for RNA
 #' obj_rna <- computeLogRatioRNA(
 #'   matTumor = matCounts(muscadet)$RNA,
 #'   matRef = matCounts(muscadet_ref)$RNA,
 #'   genesCoord = coordFeatures(muscadet)$RNA,
 #'   genome = slot(muscadet, "genome"),
-#'   refReads = 20 # low value only for the example subsampled datasets
+#'   refReads = 2 # low value for example subsampled datasets
 #' )
 #' table(obj_rna$coord$keep)
 #'
@@ -689,7 +810,7 @@ computeLogRatioATAC <- function(matTumor,
 #'   matRef = matCounts(muscadet_ref)$RNA,
 #'   genesCoord = coordFeatures(muscadet)$RNA,
 #'   genome = slot(muscadet, "genome"),
-#'   refReads = 20, # low value only for the example subsampled datasets
+#'   refReads = 2, # low value for example subsampled datasets
 #'   all_steps = TRUE
 #' )
 #' names(obj_rna_all)
@@ -738,7 +859,7 @@ computeLogRatioRNA <- function(matTumor,
 
   obj <- list()
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step01 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -760,7 +881,7 @@ computeLogRatioRNA <- function(matTumor,
   genesDF$sdReads.ref <- sparseMatrixStats::rowSds(matRef)
 
   # Add filtering information 'keep' in gene coordinates data frame
-  genesDF <- mutate(genesDF, keep = meanReads.ref >= refMeanReads & sumReads.ref >= refReads)
+  genesDF <- mutate(genesDF, keep = genesDF$meanReads.ref >= refMeanReads & genesDF$sumReads.ref >= refReads)
 
   stopifnot("No genes passing filters (`refReads` and `refMeanReads` arguments)" = any(genesDF$keep))
 
@@ -768,7 +889,7 @@ computeLogRatioRNA <- function(matTumor,
   matTumor <- matTumor[genesDF$keep, ]
   matRef <- matRef[genesDF$keep, ]
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step02 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -789,7 +910,7 @@ computeLogRatioRNA <- function(matTumor,
     (x / sum(x, na.rm = T)) * 1e6
   }), sparse = TRUE)
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step03 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -820,7 +941,7 @@ computeLogRatioRNA <- function(matTumor,
   matTumor <- apply(matTumor, 2, "-", Matrix::rowMeans(matRef))
   matRef <- apply(matRef, 2, "-", Matrix::rowMeans(matRef))
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step04 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -845,7 +966,7 @@ computeLogRatioRNA <- function(matTumor,
   matRef[matRef > thresh_capping] <- thresh_capping
   matRef[matRef < (-1 * thresh_capping)] <- -1 * thresh_capping
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step05 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -900,7 +1021,7 @@ computeLogRatioRNA <- function(matTumor,
     }
   }))
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step06 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -930,7 +1051,7 @@ computeLogRatioRNA <- function(matTumor,
   })
   matRef <- t(apply(matRef, 1, "-", meansRef))
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step07 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -959,7 +1080,7 @@ computeLogRatioRNA <- function(matTumor,
     (x - mean.ref) / sd.ref
   })
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$step08 <- list(
       matTumor = matTumor,
       matRef = matRef,
@@ -972,7 +1093,7 @@ computeLogRatioRNA <- function(matTumor,
   genesDF$meanLRR.corr.ref[genesDF$keep] <- Matrix::rowMeans(matRef)
   genesDF$sdLRR.corr.ref[genesDF$keep] <- matrixStats::rowSds(matRef)
 
-  if (all_steps == T) {
+  if (all_steps == TRUE) {
     obj$params <- params
     obj$coord <- genesDF
     return(obj)
@@ -1006,7 +1127,9 @@ computeLogRatioRNA <- function(matTumor,
 #' retrieved from bulk data matching the feature coordinates.
 #'
 #' @importFrom GenomicRanges GRanges findOverlaps
-#' @importFrom GenomeInfoDb renameSeqlevels
+#' @importFrom GenomeInfoDb seqlevels seqlevels<- renameSeqlevels
+#'
+#' @export
 #'
 #' @examples
 #' # Create a muscomic object
@@ -1025,7 +1148,7 @@ computeLogRatioRNA <- function(matTumor,
 #' # or use the one inside a muscadet object
 #' head(slot(muscadet_obj, "bulk.data")[["log.ratio"]])
 #'
-#' features_bulk_lrr <- .getLogRatioBulk(
+#' features_bulk_lrr <- getLogRatioBulk(
 #'   x = atac,
 #'   bulk.lrr = bulk_lrr # or slot(muscadet_obj, "bulk.data")[["log.ratio"]]
 #' )
@@ -1035,9 +1158,7 @@ computeLogRatioRNA <- function(matTumor,
 #' example data: \code{\link{bulk_lrr}}
 #' functions: \code{\link{muscomic}}, \code{\link{muscadet}}
 #'
-#' @keywords internal
-#'
-.getLogRatioBulk <- function(x, bulk.lrr) {
+getLogRatioBulk <- function(x, bulk.lrr) {
 
     # Extract single-cell omic features coordinates
     features_coord <- x@coverage$coord.features
