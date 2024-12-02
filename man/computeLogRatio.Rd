@@ -81,23 +81,26 @@ Log R ratios computation steps are described in \code{\link[=computeLogRatioATAC
 and \code{\link[=computeLogRatioRNA]{computeLogRatioRNA()}} functions.
 }
 \examples{
+# Load example data
+data(muscadet_obj)
+
 # compute log R ratios for ATAC
-muscadet <- computeLogRatio(
-  x = muscadet,
+muscadet_obj <- computeLogRatio(
+  x = muscadet_obj,
   reference = muscadet_ref,
   omic = "ATAC",
   method = "ATAC",
-  minReads = 1, # low value only for the example subsampled datasets
-  minPeaks = 10 # low value only for the example subsampled datasets
+  minReads = 1, # low value for example subsampled datasets
+  minPeaks = 1 # low value for example subsampled datasets
 )
 
 # compute log R ratios for RNA
-muscadet <- computeLogRatio(
-  x = muscadet,
+muscadet_obj <- computeLogRatio(
+  x = muscadet_obj,
   reference = muscadet_ref,
   omic = "RNA",
   method = "RNA",
-  refReads = 20
+  refReads = 2 # low value for example subsampled datasets
 )
 
 }
