@@ -6,7 +6,7 @@
 \usage{
 CreateMuscadetObject(
   omics,
-  bulk_lrr = NULL,
+  bulk.lrr = NULL,
   bulk.label = NULL,
   genome = "hg38"
 )
@@ -16,8 +16,10 @@ CreateMuscadetObject(
 the list will set the names of omics in the final object, if the list is
 unamed, the type is taken instead.}
 
-\item{bulk_lrr}{A data frame containing log R ratio per genomic segments from
-bulk sequencing data (\code{data.frame}).}
+\item{bulk.lrr}{A data frame containing log R ratio per genomic segments from
+bulk sequencing data (\code{data.frame}). One row per segment and 4 columns
+ordered as followed: chromosome (\code{integer}), start position (\code{integer}),
+end position (\code{integer}), and Log R ratio value (\code{numeric}).}
 
 \item{bulk.label}{Label for bulk data (\code{character} string).}
 
@@ -38,7 +40,7 @@ A \code{\link{muscadet}} object can contain several
 \examples{
 muscadet <- CreateMuscadetObject(
   omics = list(atac, rna),
-  bulk_lrr = bulk_lrr,
+  bulk.lrr = bulk.lrr,
   bulk.label = "WGS",
   genome = "hg38"
 )

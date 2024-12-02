@@ -225,8 +225,10 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
 #' @param omics A list of \code{\link{muscomic}} objects (`list`). The names of
 #'   the list will set the names of omics in the final object, if the list is
 #'   unamed, the type is taken instead.
-#' @param bulk_lrr A data frame containing log R ratio per genomic segments from
-#'   bulk sequencing data (`data.frame`).
+#' @param bulk.lrr A data frame containing log R ratio per genomic segments from
+#'   bulk sequencing data (`data.frame`). One row per segment and 4 columns
+#'   ordered as followed: chromosome (`integer`), start position (`integer`),
+#'   end position (`integer`), and Log R ratio value (`numeric`).
 #' @param bulk.label Label for bulk data (`character` string).
 #' @param genome Reference genome name among: "hg38", "hg19" and "mm10"
 #'   (`character` string). "hg38" by default.
@@ -247,7 +249,7 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
 #' @examples
 #' muscadet <- CreateMuscadetObject(
 #'   omics = list(atac, rna),
-#'   bulk_lrr = bulk_lrr,
+#'   bulk.lrr = bulk.lrr,
 #'   bulk.label = "WGS",
 #'   genome = "hg38"
 #' )
@@ -257,7 +259,7 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
 #' )
 #'
 CreateMuscadetObject <- function(omics,
-                                 bulk_lrr = NULL,
+                                 bulk.lrr = NULL,
                                  bulk.label = NULL,
                                  genome = "hg38") {
   # check for omic objects
@@ -305,7 +307,7 @@ CreateMuscadetObject <- function(omics,
   )
 
   # add bulk log R ratio data
-  bulk.data <- list(log.ratio = bulk_lrr, label = bulk.label)
+  bulk.data <- list(log.ratio = bulk.lrr, label = bulk.label)
 
   # create object
   obj <- new(
@@ -397,7 +399,7 @@ setMethod(
 #'
 #' muscadet <- CreateMuscadetObject(
 #'   omics = list(atac, rna),
-#'   bulk_lrr = bulk_lrr,
+#'   bulk.lrr = bulk.lrr,
 #'   bulk.label = "WGS",
 #'   genome = "hg38"
 #' )

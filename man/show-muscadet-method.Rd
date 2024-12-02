@@ -32,7 +32,7 @@ rna <- CreateMuscomicObject(
 
 muscadet <- CreateMuscadetObject(
   omics = list(atac, rna),
-  bulk_lrr = bulk_lrr,
+  bulk.lrr = bulk.lrr,
   bulk.label = "WGS",
   genome = "hg38"
 )
