@@ -51,13 +51,13 @@ barcodes_atac_tumor <- barcodes_atac_tumor[which(barcodes_atac_tumor %in% colnam
 barcodes_rna_tumor <- barcodes_rna_tumor[which(barcodes_rna_tumor %in% colnames(mat_counts_rna_tumor))]
 
 common_barcodes_tumor <- intersect(barcodes_atac_tumor, barcodes_rna_tumor)
-common_barcodes_tumor_sub <- sort(sample(common_barcodes_tumor, 846))
+common_barcodes_tumor_sub <- sort(sample(common_barcodes_tumor, 84))
 
 barcodes_atac_tumor <- sort(c(common_barcodes_tumor_sub, sample(
-  setdiff(barcodes_atac_tumor, common_barcodes_tumor), 71
+  setdiff(barcodes_atac_tumor, common_barcodes_tumor), 28
 )))
 barcodes_rna_tumor <- sort(c(common_barcodes_tumor_sub, sample(
-  setdiff(barcodes_rna_tumor, common_barcodes_tumor), 87
+  setdiff(barcodes_rna_tumor, common_barcodes_tumor), 35
 )))
 
 
@@ -69,13 +69,13 @@ barcodes_atac_ref <- barcodes_atac_ref[which(barcodes_atac_ref %in% colnames(mat
 barcodes_rna_ref <- barcodes_rna_ref[which(barcodes_rna_ref %in% colnames(mat_counts_rna_ref))]
 
 common_barcodes_ref <- intersect(barcodes_atac_ref, barcodes_rna_ref)
-common_barcodes_ref_sub <- sort(sample(common_barcodes_ref, 624))
+common_barcodes_ref_sub <- sort(sample(common_barcodes_ref, 78))
 
 barcodes_atac_ref <- sort(c(common_barcodes_ref_sub, sample(
-  setdiff(barcodes_atac_ref, common_barcodes_ref), 54
+  setdiff(barcodes_atac_ref, common_barcodes_ref), 21
 )))
 barcodes_rna_ref <- sort(c(common_barcodes_ref_sub, sample(
-  setdiff(barcodes_rna_ref, common_barcodes_ref), 35
+  setdiff(barcodes_rna_ref, common_barcodes_ref), 19
 )))
 
 
@@ -89,7 +89,7 @@ peaks <- read.delim(
   header = F,
   col.names = c("CHROM", "start", "end", "id")
 )
-peaks <- peaks[sort(sample(as.integer(rownames(peaks)), 5000)), ]
+peaks <- peaks[sort(sample(as.integer(rownames(peaks)), 1000)), ]
 
 # from gtf file corresponding to genome
 genes <- read.delim(
@@ -102,7 +102,7 @@ genes <- genes[which(genes[, "id"] %in% intersect(
   rownames(mat_counts_rna_ref)
 )), ]
 rownames(genes) <- NULL
-genes <- genes[sort(sample(as.integer(rownames(genes)), 1000)), ]
+genes <- genes[sort(sample(as.integer(rownames(genes)), 500)), ]
 
 usethis::use_data(peaks, overwrite = TRUE)
 usethis::use_data(genes, overwrite = TRUE)
@@ -153,20 +153,20 @@ allele_counts_rna_ref <- allele_counts_rna_ref[which(allele_counts_rna_ref[, "ce
 # subsampling by SNP identifiers
 snp_atac_tumor <- sample(
   unique(allele_counts_atac_tumor[, "id"]),
-  round(length(unique(allele_counts_atac_tumor[, "id"])) / 20)
+  round(length(unique(allele_counts_atac_tumor[, "id"])) / 50)
 )
 snp_rna_tumor <- sample(
   unique(allele_counts_rna_tumor[, "id"]),
-  round(length(unique(allele_counts_rna_tumor[, "id"])) / 20)
+  round(length(unique(allele_counts_rna_tumor[, "id"])) / 50)
 )
 
 snp_atac_ref <- sample(
   unique(allele_counts_atac_ref[, "id"]),
-  round(length(unique(allele_counts_atac_ref[, "id"])) / 20)
+  round(length(unique(allele_counts_atac_ref[, "id"])) / 50)
 )
 snp_rna_ref <- sample(
   unique(allele_counts_rna_ref[, "id"]),
-  round(length(unique(allele_counts_rna_ref[, "id"])) / 20)
+  round(length(unique(allele_counts_rna_ref[, "id"])) / 50)
 )
 
 allele_counts_atac_tumor <- allele_counts_atac_tumor[which(allele_counts_atac_tumor[, "id"] %in% snp_atac_tumor), ]
@@ -252,7 +252,7 @@ rna_ref <- CreateMuscomicObject(
 # raw muscadet objects
 muscadet <- CreateMuscadetObject(
     omics = list(atac, rna),
-    bulk_lrr = bulk_lrr,
+    bulk.lrr = bulk_lrr,
     bulk.label = "WGS",
     genome = "hg38"
 )
@@ -268,7 +268,7 @@ muscadet <- computeLogRatio(
     omic = "ATAC",
     method = "ATAC",
     minReads = 1,
-    minPeaks = 10,
+    minPeaks = 1,
     remove.raw = F
 )
 # compute log R ratios for RNA
@@ -277,10 +277,17 @@ muscadet <- computeLogRatio(
     reference = muscadet_ref,
     omic = "RNA",
     method = "RNA",
-    refReads = 20,
+    refReads = 2,
     remove.raw = F
 )
 
+muscadet <- clusterMuscadet(
+    muscadet,
+    dist_method = "euclidean",
+    hclust_method = "ward.D",
+    k_range = 2:5
+)
+
 muscadet_obj <- muscadet
-usethis::use_data(muscadet_obj, overwrite = TRUE)
+usethis::use_data(muscadet_obj, compress = "xz", overwrite = TRUE)
 
