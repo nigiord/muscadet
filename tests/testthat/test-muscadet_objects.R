@@ -77,7 +77,7 @@ test_that("CreateMuscadetObject returns a correct muscadet object", {
     )
     muscadet <- CreateMuscadetObject(
         omics = list(atac, rna),
-        bulk_lrr = bulk_lrr,
+        bulk.lrr = bulk_lrr,
         bulk.label = "WGS",
         genome = "hg38"
     )
@@ -106,7 +106,7 @@ test_that("CreateMuscadetObject with identical muscomic : error of identical lab
     expect_error(
         muscadet <- CreateMuscadetObject(
             omics = list(atac, atac),
-            bulk_lrr = bulk_lrr,
+            bulk.lrr = bulk_lrr,
             bulk.label = "WGS",
             genome = "hg38"
         )
@@ -129,7 +129,7 @@ test_that("CreateMuscadetObject with incorrect genome : error of incorrect genom
     expect_error(
         muscadet <- CreateMuscadetObject(
             omics = list(atac, rna),
-            bulk_lrr = bulk_lrr,
+            bulk.lrr = bulk_lrr,
             bulk.label = "WGS",
             genome = "test"
         )
@@ -154,7 +154,7 @@ test_that("Check methods outputs", {
     )
     muscadet <- CreateMuscadetObject(
         omics = list(atac, rna),
-        bulk_lrr = bulk_lrr,
+        bulk.lrr = bulk_lrr,
         bulk.label = "WGS",
         genome = "hg38"
     )
