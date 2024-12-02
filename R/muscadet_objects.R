@@ -549,10 +549,10 @@ setMethod(
   f = "Features",
   signature = signature(x = "muscomic"),
   definition = function(x) {
-    if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
-      features <- rownames(slot(omic, "coverage")[["mat.counts"]])
-    } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
-      features <- rownames(slot(omic, "coverage")[["log.ratio"]])
+    if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
+      features <- rownames(slot(x, "coverage")[["mat.counts"]])
+    } else if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
+      features <- rownames(slot(x, "coverage")[["log.ratio"]])
     }
     return(features)
   }
