@@ -44,23 +44,26 @@
 #' @export
 #'
 #' @examples
+#' # Load example data
+#' data(muscadet_obj)
+#'
 #' # compute log R ratios for ATAC
-#' muscadet <- computeLogRatio(
-#'   x = muscadet,
+#' muscadet_obj <- computeLogRatio(
+#'   x = muscadet_obj,
 #'   reference = muscadet_ref,
 #'   omic = "ATAC",
 #'   method = "ATAC",
-#'   minReads = 1, # low value only for the example subsampled datasets
-#'   minPeaks = 10 # low value only for the example subsampled datasets
+#'   minReads = 1, # low value for example subsampled datasets
+#'   minPeaks = 1 # low value for example subsampled datasets
 #' )
 #'
 #' # compute log R ratios for RNA
-#' muscadet <- computeLogRatio(
-#'   x = muscadet,
+#' muscadet_obj <- computeLogRatio(
+#'   x = muscadet_obj,
 #'   reference = muscadet_ref,
 #'   omic = "RNA",
 #'   method = "RNA",
-#'   refReads = 20
+#'   refReads = 2 # low value for example subsampled datasets
 #' )
 #'
 computeLogRatio <- function(x,
@@ -165,6 +168,7 @@ computeLogRatio <- function(x,
   }
 
   x@omics[[omic]]@coverage[["log.ratio"]] <- obj$matTumor
+  x@omics[[omic]]@coverage[["ref.log.ratio.perc"]] <- setNames(quantile(obj$matRef, probs = seq(0, 1, 0.01)), seq(0, 1, 0.01))
   x@omics[[omic]]@coverage[["coord.features"]] <- obj$coord
   x@omics[[omic]]@coverage[["label.features"]] <- new.label.features[omic]
 
@@ -981,4 +985,82 @@ computeLogRatioRNA <- function(matTumor,
     )
     return(obj_min)
   }
+}
+
+
+#' @title Retrieve log R ratio from Bulk data on single-cell features (internal)
+#'
+#' @description
+#' This internal function assigns the log R ratio (LRR) values from bulk data
+#' segments to single-cell omic features. It matches the bulk data segments to
+#' corresponding genomic features from the single-cell omic data and returns a
+#' table of single-cell features with the corresponding bulk LRR values.
+#'
+#' @param x A `muscomic` object containing the single-cell omic data, which
+#'   includes the feature coordinates (`muscomic`).
+#' @inheritParams CreateMuscadetObject
+#'
+#' @return
+#' A data frame of single-cell omic features, with columns: `CHR`, `start`,
+#' `end`, and `bulk.lrr`, where `bulk.lrr` corresponds to the log R ratio values
+#' retrieved from bulk data matching the feature coordinates.
+#'
+#' @importFrom GenomicRanges GRanges findOverlaps
+#' @importFrom GenomeInfoDb renameSeqlevels
+#'
+#' @examples
+#' # Create a muscomic object
+#' atac <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_tumor,
+#'   allele_counts = allele_counts_atac_tumor,
+#'   features = peaks
+#' )
+#' # or use a muscomic object inside a muscadet object
+#' atac <- slot(muscadet_obj, "omics")[["ATAC"]]
+#'
+#' # Load bulk Log R ratio data frame
+#' data(bulk_lrr)
+#' head(bulk_lrr)
+#' # or use the one inside a muscadet object
+#' head(slot(muscadet_obj, "bulk.data")[["log.ratio"]])
+#'
+#' features_bulk_lrr <- .getLogRatioBulk(
+#'   x = atac,
+#'   bulk.lrr = bulk_lrr # or slot(muscadet_obj, "bulk.data")[["log.ratio"]]
+#' )
+#' head(features_bulk_lrr)
+#'
+#' @seealso
+#' example data: \code{\link{bulk_lrr}}
+#' functions: \code{\link{muscomic}}, \code{\link{muscadet}}
+#'
+#' @keywords internal
+#'
+.getLogRatioBulk <- function(x, bulk.lrr) {
+
+    # Extract single-cell omic features coordinates
+    features_coord <- x@coverage$coord.features
+    features_gr <- GenomicRanges::GRanges(features_coord[features_coord$keep, c("CHR", "start", "end")])
+
+    # GRanges object for bulk data segments
+    colnames(bulk.lrr) <- c("CHROM", "start", "end", "lrr")
+    bulk_gr <- GenomicRanges::GRanges(bulk.lrr)
+
+    # Correct sequence levels to match between the bulk and single-cell GRanges objects
+    bulk_gr <- GenomeInfoDb::renameSeqlevels(bulk_gr, seqlevels(features_gr)[1:length(seqlevels(bulk_gr))])
+    seqlevels(bulk_gr) <- seqlevels(features_gr)
+
+    # Find overlapping segments between bulk segments and single-cell features
+    df <- data.frame(bulk.seg = GenomicRanges::findOverlaps(features_gr, bulk_gr, select="first"))
+
+    # Extract and assign log R ratio (lrr) from bulk data to overlapping single-cell features
+    df[!is.na(df$bulk.seg), "lrr"] <- bulk.lrr[df$bulk.seg[!is.na(df$bulk.seg)], "lrr"]
+    features_gr$bulk.lrr <- df$lrr
+
+    # Convert the GRanges object back to a data frame for output with relevant columns
+    out <- as.data.frame(features_gr)[, c("seqnames", "start", "end", "bulk.lrr")]
+    colnames(out)[1] <- "CHR"
+
+    return(out) # Return the data frame with assigned bulk LRR values
 }
