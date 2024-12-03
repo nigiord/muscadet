@@ -28,8 +28,10 @@
 #'
 #' @param title Character string for the title of the heatmap (`character` string).
 #'
-#' @param add_bulk_lrr Logical value indicating whether to add bulk LRR
-#' data as annotations if present in the muscadet object (`logical`). Default is `TRUE`.
+#' @param add_bulk_lrr Logical value indicating whether to add bulk LRR data as
+#'   annotations if present in the muscadet object (`logical`). By default, it
+#'   is set to `NULL`, which will automatically include bulk LRR data if it is
+#'   available in the muscadet object.
 #'
 #' @param show_missing Logical value indicating whether to show missing cells
 #' (cells with missing data in at least one omic) in the heatmaps (`logical`). Default is `TRUE`.
@@ -77,20 +79,41 @@
 #' heatmapMuscadet(
 #'     muscadet_obj,
 #'     k = 3,
-#'     filename = file.path(getwd(), "heatmap_muscadet_k3.png"),
+#'     filename = file.path("heatmap_muscadet_k3.png"),
 #'     title = title
 #' )
 #'
 #' heatmapMuscadet(
 #'     muscadet_obj,
 #'     k = 3,
-#'     filename = file.path(getwd(), "heatmap_muscadet_k3_commoncells.png"),
+#'     filename = file.path("heatmap_muscadet_k3_commoncells.png"),
 #'     title = title,
 #'     show_missing = FALSE
 #' )
 #'
+#' # Loop over k
+#' for (k in names(slot(muscadet_obj, "clustering")$clusters)) {
+#'     filename <- paste0("heatmap_muscadet_k", k, ".png")
+#'     title <- paste(
+#'         "Example sample |",
+#'         slot(muscadet_obj, "clustering")[["params"]][["dist_method"]],
+#'         slot(muscadet_obj, "clustering")[["params"]][["hclust_method"]],
+#'         "|",
+#'         paste0("k=", k) ,
+#'         "|",
+#'         "Weights of omics:",
+#'         paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", ")
+#'     )
+#'     heatmapMuscadet(
+#'         muscadet_obj,
+#'         k = as.integer(k),
+#'         filename = filename,
+#'         title = title
+#'     )
+#' }
+#'
 heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
-                            add_bulk_lrr = TRUE, show_missing = TRUE, white_scale = c(0.3, 0.7),
+                            add_bulk_lrr = NULL, show_missing = TRUE, white_scale = c(0.3, 0.7),
                             colors = NULL, quiet = FALSE) {
 
     # Validate muscadet object
@@ -109,6 +132,11 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
         stopifnot(
             "The muscadet object must contain the clustering results for the k provided." = as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
         )
+    }
+
+    # Default addition of bulk data
+    if(is.null(add_bulk_lrr)) {
+        add_bulk_lrr <- !is.null(x@bulk.data$log.ratio)
     }
 
     # Validate white_scale
