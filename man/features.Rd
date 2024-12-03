@@ -9,10 +9,10 @@
 \format{
 A data frame with the following columns:
 \describe{
-\item{\code{CHROM}}{Chromosome in chracter format, e.g. "15", "X" (\code{character}).}
-\item{\code{start}}{Start position of the feature (\code{integer}).}
-\item{\code{end}}{End position of the feature (\code{character}).}
-\item{\code{id}}{Unique identifier, e.g. gene name "CDH1" or peak identifier
+\item{\code{CHROM}}{Chromosome names in character format, e.g. "15", "X" (\code{character}).}
+\item{\code{start}}{Start positions (\code{integer}).}
+\item{\code{end}}{End positions (\code{character}).}
+\item{\code{id}}{Unique identifiers, e.g. gene name "CDH1" or peak identifier
 CHROM_start_end "1_1600338_1600838" (\code{character}).}
 }
 }

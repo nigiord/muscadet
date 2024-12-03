@@ -114,6 +114,8 @@ usethis::use_data(genes, overwrite = TRUE)
 
 mat_counts_atac_tumor <- mat_counts_atac_tumor[rownames(peaks), barcodes_atac_tumor]
 mat_counts_atac_ref <- mat_counts_atac_ref[rownames(peaks), barcodes_atac_ref]
+rownames(mat_counts_atac_tumor) <- peaks[, "id"]
+rownames(mat_counts_atac_ref) <- peaks[, "id"]
 
 mat_counts_rna_tumor <- mat_counts_rna_tumor[genes[, "id"], barcodes_rna_tumor]
 mat_counts_rna_ref <- mat_counts_rna_ref[genes[, "id"], barcodes_rna_ref]

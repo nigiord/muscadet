@@ -5,7 +5,7 @@
 \title{Create a muscomic object}
 \usage{
 CreateMuscomicObject(
-  type.omic = c("ATAC", "RNA"),
+  type = c("ATAC", "RNA"),
   mat_counts,
   allele_counts = NULL,
   features,
@@ -14,17 +14,26 @@ CreateMuscomicObject(
 )
 }
 \arguments{
-\item{type.omic}{Type of single cell omic, either "ATAC" or "RNA"
+\item{type}{Type of single cell omic, either "ATAC" or "RNA"
 (\code{character} string).}
 
 \item{mat_counts}{Matrix of raw counts \emph{features x cells} (\code{matrix} or
-\code{dgCMatrix}). Rows are features, and columns are cells.}
+\code{dgCMatrix}). Rows are features (they must correspond to the id column of
+\code{features}), and columns are cells.}
 
 \item{allele_counts}{Data frame of allele counts at single nucleotide
 polymorphisms (SNPs) positions per cell (\code{data.frame}).}
 
 \item{features}{Data frame of features (peaks, genes...) coordinates on
-genome (\code{data.frame}).}
+genome (\code{data.frame}). It should contain 4 columns:
+\describe{
+\item{\code{CHROM}}{Chromosome names in character format, e.g. "15", "X" (\code{character}).}
+\item{\code{start}}{Start positions (\code{integer}).}
+\item{\code{end}}{End positions (\code{character}).}
+\item{\code{id}}{Unique identifiers, e.g. gene name "CDH1" or peak identifier
+CHROM_start_end "1_1600338_1600838" (\code{character}). It should match the
+feature identifiers as row names of \code{mat_counts}.}
+}}
 
 \item{label.omic}{Label for the single cell omic (\code{character} string). By
 default "scATAC-seq" is used for "ATAC" type and "scRNA-seq" for "RNA"
@@ -46,6 +55,7 @@ atac <- CreateMuscomicObject(
   allele_counts = allele_counts_atac_tumor,
   features = peaks
 )
+atac
 
 rna <- CreateMuscomicObject(
   type = "RNA",
@@ -53,6 +63,7 @@ rna <- CreateMuscomicObject(
   allele_counts = allele_counts_rna_tumor,
   features = genes
 )
+rna
 
 atac_ref <- CreateMuscomicObject(
   type = "ATAC",
@@ -67,6 +78,16 @@ rna_ref <- CreateMuscomicObject(
   allele_counts = allele_counts_rna_ref,
   features = genes
 )
+rna_ref
+
+# without allele counts data (not required for clustering step)
+atac2 <- CreateMuscomicObject(
+  type = "ATAC",
+  mat_counts = mat_counts_atac_tumor,
+  features = peaks
+)
+atac2
+
 }
 \seealso{
 \itemize{

@@ -69,14 +69,23 @@ methods::setClass(
 #'
 #' Create a \code{\link{muscomic}} object.
 #'
-#' @param type.omic Type of single cell omic, either "ATAC" or "RNA"
+#' @param type Type of single cell omic, either "ATAC" or "RNA"
 #'   (`character` string).
 #' @param mat_counts Matrix of raw counts *features x cells* (`matrix` or
-#'   `dgCMatrix`). Rows are features, and columns are cells.
+#'   `dgCMatrix`). Rows are features (they must correspond to the id column of
+#'   `features`), and columns are cells.
 #' @param allele_counts Data frame of allele counts at single nucleotide
 #'   polymorphisms (SNPs) positions per cell (`data.frame`).
 #' @param features Data frame of features (peaks, genes...) coordinates on
-#'   genome (`data.frame`).
+#'   genome (`data.frame`). It should contain 4 columns:
+#'   \describe{
+#'   \item{`CHROM`}{Chromosome names in character format, e.g. "15", "X" (`character`).}
+#'   \item{`start`}{Start positions (`integer`).}
+#'   \item{`end`}{End positions (`character`).}
+#'   \item{`id`}{Unique identifiers, e.g. gene name "CDH1" or peak identifier
+#'   CHROM_start_end "1_1600338_1600838" (`character`). It should match the
+#'   feature identifiers as row names of `mat_counts`.}
+#' }
 #' @param label.omic Label for the single cell omic (`character` string). By
 #'   default "scATAC-seq" is used for "ATAC" type and "scRNA-seq" for "RNA"
 #'   type.
@@ -106,6 +115,7 @@ methods::setClass(
 #'   allele_counts = allele_counts_atac_tumor,
 #'   features = peaks
 #' )
+#' atac
 #'
 #' rna <- CreateMuscomicObject(
 #'   type = "RNA",
@@ -113,6 +123,7 @@ methods::setClass(
 #'   allele_counts = allele_counts_rna_tumor,
 #'   features = genes
 #' )
+#' rna
 #'
 #' atac_ref <- CreateMuscomicObject(
 #'   type = "ATAC",
@@ -127,14 +138,24 @@ methods::setClass(
 #'   allele_counts = allele_counts_rna_ref,
 #'   features = genes
 #' )
-CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
+#' rna_ref
+#'
+#' # without allele counts data (not required for clustering step)
+#' atac2 <- CreateMuscomicObject(
+#'   type = "ATAC",
+#'   mat_counts = mat_counts_atac_tumor,
+#'   features = peaks
+#' )
+#' atac2
+#'
+CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
                                  mat_counts,
                                  allele_counts = NULL,
                                  features,
                                  label.omic = NULL,
                                  label.features = NULL) {
   # check for type of omic
-  type.omic <- match.arg(arg = type.omic)
+  type.omic <- match.arg(arg = type)
 
   # default labels
   if (type.omic == "ATAC") {
@@ -166,17 +187,15 @@ CreateMuscomicObject <- function(type.omic = c("ATAC", "RNA"),
 
   # check coordinates of features
   stopifnot("`features` must be a data frame." = class(features) == "data.frame")
+  colnames(features) <- c("CHROM", "start", "end", "id")
   features$CHROM <- stringr::str_remove(features$CHROM, "chr") # remove "chr" if necessary
   features$CHROM <- ordered(features$CHROM,
     levels = gtools::mixedsort(unique(features$CHROM))
   ) # ordered chromosomes
   features <- dplyr::arrange(features, "CHROM", "start") # sort by chromosome and position
 
-  # check number of features is identical in coordinates data frame and in number of rows of matrix
-  # stopifnot(
-  #   "Feature coordinates data frame and count matrix must have the same number of rows." =
-  #     nrow(features) == nrow(mat_counts)
-  # )
+  # Sort and filter matrix based on provided features
+  mat_counts <- mat_counts[features$id[features$id %in% rownames(mat_counts)], ]
 
   # check matching cells between coverage (count matrix) and allelic data (allele count df)
   # stopifnot(
@@ -478,7 +497,7 @@ setMethod(
 
         cat(
             "A muscadet object", "\n",
-            "omics:", paste(names(object@omics), collapse = ", "), "\n",
+            length(object@omics), "omics:", paste(names(object@omics), collapse = ", "), "\n",
             "types:", paste(omic_types, collapse = ", "), "\n",
             "labels:", paste(omic_labels, collapse = ", "), "\n",
             "coverage data matrix:", paste(omic_matrix_used, collapse = ", "), "\n",
@@ -598,8 +617,8 @@ setMethod(
   signature = signature(x = "muscadet"),
   definition = function(x) {
     lapply(slot(x, "omics"), function(omic) {
-      if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
-        cells <- colnames(slot(omic, "coverage")[["mat.counts"]])
+      if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+        cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
       } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
         cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
       }
@@ -630,10 +649,10 @@ setMethod(
   signature = signature(x = "muscadet"),
   definition = function(x) {
     lapply(slot(x, "omics"), function(omic) {
-      if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
-        features <- rownames(slot(omic, "coverage")[["mat.counts"]])
-      } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+      if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
         features <- rownames(slot(omic, "coverage")[["log.ratio"]])
+      } else if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+        features <- rownames(slot(omic, "coverage")[["mat.counts"]])
       }
       return(features)
     })
@@ -697,11 +716,11 @@ setMethod(
 #' @rdname muscadet-methods
 #'
 setMethod(
-    f = "matLogRatio",
-    signature = signature(x = "muscadet"),
-    definition = function(x) {
-        lapply(slot(x, "omics"), function(omic) {
-            return(slot(omic, "coverage")[["log.ratio"]])
-        })
-    }
+  f = "matLogRatio",
+  signature = signature(x = "muscadet"),
+  definition = function(x) {
+    lapply(slot(x, "omics"), function(omic) {
+      return(slot(omic, "coverage")[["log.ratio"]])
+    })
+  }
 )
