@@ -381,25 +381,38 @@ CreateMuscadetObject <- function(omics,
 #' )
 #' atac
 setMethod(
-  f = "show",
-  signature = signature(object = "muscomic"),
-  definition = function(object) {
-    cat(
-      "A muscomic object of type",
-      object@type,
-      "labelled", object@label.omic, "containing:",
-      "\n",
-      ncol(object@coverage$mat.counts),
-      "cells",
-      "\n",
-      nrow(object@coverage$mat.counts),
-      object@coverage$label.features,
-      "\n",
-      length(unique(object@allelic$table.counts$id)),
-      "SNPs",
-      "\n"
-    )
-  }
+    f = "show",
+    signature = signature(object = "muscomic"),
+    definition = function(object) {
+
+        get_muscomic_summary <- function(i) {
+            # Determine which matrix to use (mat.counts or log.ratio)
+            matrix_type <- if ("log.ratio" %in% names(i@coverage)) {
+                "log.ratio"
+            } else {
+                "mat.counts"
+            }
+            list(
+                type = i@type,
+                label = i@label.omic,
+                cells = ncol(i@coverage[[matrix_type]]),
+                features = nrow(i@coverage[[matrix_type]]),
+                snps = length(unique(i@allelic$table.counts$id)),
+                feature_labels = i@coverage$label.features,
+                matrix_used = matrix_type
+            )
+        }
+
+        summary <- get_muscomic_summary(object)
+        cat(
+            "A muscomic object of type", summary$type,
+            "labelled", summary$label, "containing:", "\n",
+            summary$matrix_used, "coverage data matrix", "\n",
+            summary$cells, "cells", "\n",
+            summary$features, "features:", summary$feature_labels, "\n",
+            summary$snps, "SNPs", "\n"
+        )
+    }
 )
 
 #' muscadet object overview
@@ -431,77 +444,60 @@ setMethod(
 #' show(slot(muscadet_obj, "omics")[[1]])
 #'
 setMethod(
-  f = "show",
-  signature = signature(object = "muscadet"),
-  definition = function(object) {
-    cat(
-      "A muscadet object",
-      "\n",
-      "omics:",
-      paste(names(object@omics), collapse = ", "),
-      "\n",
-      " ",
-      "types:",
-      paste(lapply(object@omics, function(i) {
-        i@type
-      }), collapse = ", "),
-      "\n",
-      " ",
-      "labels:",
-      paste(lapply(object@omics, function(i) {
-        i@label.omic
-      }), collapse = ", "),
-      "\n",
-      " ",
-      "cells:",
-      paste(lapply(object@omics, function(i) {
-        ncol(i@coverage$mat.counts)
-      }), collapse = ", "),
-      "\n",
-      " ",
-      "features:",
-      paste(lapply(object@omics, function(i) {
-        nrow(i@coverage$mat.counts)
-      }), collapse = ", "),
-      "\n",
-      " ",
-      "feature labels:",
-      paste(lapply(object@omics, function(i) {
-        i@coverage$label.features
-      }), collapse = ", "),
-      "\n",
-      " ",
-      "SNPs:",
-      paste(lapply(object@omics, function(i) {
-        length(unique(i@allelic$table.counts$id))
-      }), collapse = ", "),
-      "\n",
-      "data from paired bulk sequencing:",
-      ifelse(
-        is.null(object@bulk.data$label),
-        "None",
-        object@bulk.data$label
-      ),
-      "\n",
-      "clustering:",
-      ifelse(
-        length(object@clustering) == 0,
-        "None",
-        paste(
-          "k =",
-          paste(names(object@clustering$clusters), collapse = ", "),
-          "; optimal k =",
-          object@clustering$k.opt
+    f = "show",
+    signature = signature(object = "muscadet"),
+    definition = function(object) {
+
+        get_muscomic_summary <- function(i) {
+            # Determine which matrix to use (mat.counts or log.ratio)
+            matrix_type <- if ("log.ratio" %in% names(i@coverage)) {
+                "log.ratio"
+            } else {
+                "mat.counts"
+            }
+            list(
+                type = i@type,
+                label = i@label.omic,
+                cells = ncol(i@coverage[[matrix_type]]),
+                features = nrow(i@coverage[[matrix_type]]),
+                snps = length(unique(i@allelic$table.counts$id)),
+                feature_labels = i@coverage$label.features,
+                matrix_used = matrix_type
+            )
+        }
+
+        # Prepare summary data for each muscomic object inside muscadet
+        omic_summary <- lapply(object@omics, get_muscomic_summary)
+        omic_types <- sapply(omic_summary, function(x) x$type)
+        omic_labels <- sapply(omic_summary, function(x) x$label)
+        omic_cells <- sapply(omic_summary, function(x) x$cells)
+        omic_features <- sapply(omic_summary, function(x) x$features)
+        omic_snps <- sapply(omic_summary, function(x) x$snps)
+        omic_feature_labels <- sapply(omic_summary, function(x) x$feature_labels)
+        omic_matrix_used <- sapply(omic_summary, function(x) x$matrix_used)
+
+        cat(
+            "A muscadet object", "\n",
+            "omics:", paste(names(object@omics), collapse = ", "), "\n",
+            "types:", paste(omic_types, collapse = ", "), "\n",
+            "labels:", paste(omic_labels, collapse = ", "), "\n",
+            "coverage data matrix:", paste(omic_matrix_used, collapse = ", "), "\n",
+            "cells:", paste(omic_cells, collapse = ", "), "\n",
+            "features:", paste(omic_features, collapse = ", "), "\n",
+            "feature labels:", paste(omic_feature_labels, collapse = ", "), "\n",
+            "SNPs:", paste(omic_snps, collapse = ", "), "\n",
+            "data from paired bulk sequencing:", ifelse(
+                is.null(object@bulk.data$label),
+                "None", object@bulk.data$label), "\n",
+            "clustering:", ifelse(
+                length(object@clustering) == 0,
+                "None",
+                paste("k =", paste(names(object@clustering$clusters), collapse = ", "), "; optimal k =", object@clustering$k.opt)
+            ), "\n",
+            "CNA calling:", ifelse(length(object@cnacalling) == 0, "None", object@cnacalling), "\n",
+            "genome:", object@genome
         )
-      ),
-      "\n",
-      "CNA calling:",
-      ifelse(length(object@cnacalling) == 0, "None", object@cnacalling),
-      "\n",
-      "genome:",
-      object@genome
-    )
-  }
+    }
 )
 
 
