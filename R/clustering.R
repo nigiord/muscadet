@@ -615,7 +615,11 @@ imputeClusters <- function(mat_list,
 
     # Combine original clusters with imputed clusters
     clust_imp <- lapply(k_list, function(k) {
-        cl <- c(clusters[[as.character(k)]], full_clusters[[as.character(k)]])
+        if (length(full_clusters[[as.character(k)]]) > 0) {
+            cl <- c(clusters[[as.character(k)]], full_clusters[[as.character(k)]])
+        } else {
+            cl <- clusters[[as.character(k)]]
+        }
         cl <- cl[order(cl)]
         return(cl)
     })
