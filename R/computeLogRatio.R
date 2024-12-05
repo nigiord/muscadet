@@ -849,14 +849,21 @@ computeLogRatioRNA <- function(matTumor,
   colnames(genesDF)[1] <- "CHROM"
   genesDF$CHROM <- factor(genesDF$CHROM, levels = unique(genesDF$CHROM))
 
-  # Remove genes from matrix without coordinates in the input gene list
-  matTumor <- matTumor[!is.na(match(rownames(matTumor), genesDF[, 4])), ]
-  # Get same genes in reference data
-  matTumor <- matTumor[rownames(matTumor) %in% rownames(matRef), ] # remove gene without data in reference
+  # Remove gene without data in reference
+  matTumor <- matTumor[rownames(matTumor) %in% rownames(matRef), ]
+
+  # Remove genes without coordinates in the input genes data frame
+  matTumor <- matTumor[!is.na(match(rownames(matTumor), genesDF[, "id"])), ]
+
+  # Reorder genes data by positions and
+  genesDF <- genesDF[order(genesDF[, "start"]), ]
+  genesDF <- genesDF[order(genesDF[, "CHROM"]), ]
+  rownames(genesDF) <- NULL
+
+  # Apply coordinates order to rows of matrices
+  matTumor <- matTumor[match(genesDF[, "id"], rownames(matTumor)), ]
   matRef <- matRef[rownames(matTumor), ] # same genes in correct order in reference
 
-  # Match genes data with rows of matrix in correct order
-  genesDF <- genesDF[na.omit(match(rownames(matTumor), genesDF[, 4])), ]
 
   obj <- list()
 
