@@ -6,7 +6,7 @@
 \usage{
 heatmapMuscadet(
   x,
-  filename,
+  filename = NULL,
   k = NULL,
   clusters = NULL,
   title = "",
@@ -22,7 +22,7 @@ heatmapMuscadet(
 \code{\link[=computeLogRatio]{computeLogRatio()}}) and clustering data (with
 \code{\link[=clusterMuscadet]{clusterMuscadet()}}) (\code{muscadet}).}
 
-\item{filename}{Character string specifying the file path to save the heatmap
+\item{filename}{(Optional) Character string specifying the file path to save the heatmap
 image in the PNG format (\code{character} string).}
 
 \item{k}{(Optional) Integer specifying the cluster number to plot
@@ -58,7 +58,15 @@ are represented as white on the heatmap.}
 \item{quiet}{Logical value indicating whether to suppress messages. Default is \code{FALSE}.}
 }
 \value{
-A heatmap plot object saved as a png image using the provided file name.
+A list containing:
+\itemize{
+\item \code{plot}: A \code{\link{gTree}} object created with \code{\link[grid:grid.grab]{grid::grid.grab()}} (\code{\link{gTree}}).
+\item \code{width}: Width of the heatmap plot in mm (\code{\link{unit}}).
+\item \code{height}: Height of the heatmap plot in mm (\code{\link{unit}}).
+}
+
+If the \code{filename} argument is provided, the heatmap is directly saved as a
+PNG image at the provided path.
 }
 \description{
 This function generates a heatmap to visualize log R ratio (LRR) data
@@ -86,14 +94,14 @@ title <- paste("Example sample |",
      paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", "))
 
 # Generate heatmap
-heatmapMuscadet(
-    muscadet_obj,
-    k = 3,
-    filename = file.path("heatmap_muscadet_k3.png"),
-    title = title
+ht <- heatmapMuscadet(
+  muscadet_obj,
+  k = 3,
+  filename = file.path("heatmap_muscadet_k3.png"),
+  title = title
 )
 
-heatmapMuscadet(
+ht <- heatmapMuscadet(
     muscadet_obj,
     k = 3,
     filename = file.path("heatmap_muscadet_k3_commoncells.png"),
@@ -114,7 +122,7 @@ for (k in names(slot(muscadet_obj, "clustering")$clusters)) {
         "Weights of omics:",
         paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", ")
     )
-    heatmapMuscadet(
+    ht <- heatmapMuscadet(
         muscadet_obj,
         k = as.integer(k),
         filename = filename,

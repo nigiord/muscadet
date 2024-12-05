@@ -13,7 +13,7 @@
 #'   [muscadet::computeLogRatio()]) and clustering data (with
 #'   [muscadet::clusterMuscadet()]) (`muscadet`).
 #'
-#' @param filename Character string specifying the file path to save the heatmap
+#' @param filename (Optional) Character string specifying the file path to save the heatmap
 #'   image in the PNG format (`character` string).
 #'
 #' @param k (Optional) Integer specifying the cluster number to plot
@@ -49,7 +49,14 @@
 #'
 #' @param quiet Logical value indicating whether to suppress messages. Default is `FALSE`.
 #'
-#' @return A heatmap plot object saved as a png image using the provided file name.
+#' @return
+#' A list containing:
+#' - `plot`: A \code{\link{gTree}} object created with [grid::grid.grab()] (\code{\link{gTree}}).
+#' - `width`: Width of the heatmap plot in mm (\code{\link{unit}}).
+#' - `height`: Height of the heatmap plot in mm (\code{\link{unit}}).
+#'
+#' If the `filename` argument is provided, the heatmap is directly saved as a
+#' PNG image at the provided path.
 #'
 #' @import ComplexHeatmap
 #' @importFrom circlize colorRamp2
@@ -76,14 +83,14 @@
 #'      paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", "))
 #'
 #' # Generate heatmap
-#' heatmapMuscadet(
-#'     muscadet_obj,
-#'     k = 3,
-#'     filename = file.path("heatmap_muscadet_k3.png"),
-#'     title = title
+#' ht <- heatmapMuscadet(
+#'   muscadet_obj,
+#'   k = 3,
+#'   filename = file.path("heatmap_muscadet_k3.png"),
+#'   title = title
 #' )
 #'
-#' heatmapMuscadet(
+#' ht <- heatmapMuscadet(
 #'     muscadet_obj,
 #'     k = 3,
 #'     filename = file.path("heatmap_muscadet_k3_commoncells.png"),
@@ -104,7 +111,7 @@
 #'         "Weights of omics:",
 #'         paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", ")
 #'     )
-#'     heatmapMuscadet(
+#'     ht <- heatmapMuscadet(
 #'         muscadet_obj,
 #'         k = as.integer(k),
 #'         filename = filename,
@@ -112,7 +119,7 @@
 #'     )
 #' }
 #'
-heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
+heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title = "",
                             add_bulk_lrr = NULL, show_missing = TRUE, white_scale = c(0.3, 0.7),
                             colors = NULL, quiet = FALSE) {
 
@@ -165,7 +172,7 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
     palette(colors)
 
     # Check if output directory exists
-    stopifnot("The directory doesn't exist" = file.exists(dirname(filename)))
+    if(!is.null(filename)) stopifnot("The directory doesn't exist" = file.exists(dirname(filename)))
 
     # Get common and all cells
     common_cells <- sort(Reduce(intersect, lapply(muscadet::matLogRatio(x), colnames)))
@@ -189,7 +196,7 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
         message("Show missing cells: ", show_missing)
         message("Bulk LRR annotations: ", ifelse(add_bulk_lrr, slot(x, "bulk.data")[["label"]], add_bulk_lrr))
         message("White scale quantiles: ", paste(white_scale, collapse = " - "))
-        message("Output file: ", filename)
+        message("Output file: ", ifelse(is.null(filename), "None", filename))
     }
 
     # Create list of heatmap objects
@@ -320,10 +327,17 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
     dev.off()
 
     # Save complete plot of heatmaps as PNG
-    png(filename = filename,
-        width = ht_all@ht_list_param[["width"]],
-        height = ht_all@ht_list_param[["height"]],
-        units = "mm", res = 300)
+    if (!is.null(filename)) {
+        png(
+            filename = filename,
+            width = ht_all@ht_list_param[["width"]],
+            height = ht_all@ht_list_param[["height"]],
+            units = "mm",
+            res = 300
+        )
+    } else {
+        pdf(file = NULL)
+    }
 
     # Print plot
     print(ht_all)
@@ -346,7 +360,15 @@ heatmapMuscadet <- function(x, filename, k = NULL, clusters = NULL, title = "",
         }
     }
 
+    # store plot object
+    plot.obj <- list(plot = grid.grab(),
+                 width = ht_all@ht_list_param[["width"]],
+                 height = ht_all@ht_list_param[["height"]])
+
     dev.off()
+
+    # return the plot object
+    return(plot.obj)
 }
 
 

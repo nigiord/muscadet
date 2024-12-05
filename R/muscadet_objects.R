@@ -351,6 +351,15 @@ CreateMuscadetObject <- function(omics,
       )))
   )
 
+  # check bulk data
+  if (!is.null(bulk.lrr)) {
+      # default names for bulk df columns
+      colnames(bulk.lrr) <- c("CHROM", "start", "end", "lrr")
+      stopifnot(
+          "Label for bulk data (bulk.label) is required when bulk.lrr is provided." = !is.null(bulk.label)
+      )
+  }
+
   # check for genome
   stopifnot(
     "Genome must be either 'hg38', 'hg19' or 'mm10'." =

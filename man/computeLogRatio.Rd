@@ -130,8 +130,8 @@ muscadet <- computeLogRatio(
 )
 
 # compute log R ratios for RNA
-muscadet_obj <- computeLogRatio(
-  x = muscadet_obj,
+muscadet <- computeLogRatio(
+  x = muscadet,
   reference = muscadet_ref,
   omic = "RNA",
   method = "RNA",

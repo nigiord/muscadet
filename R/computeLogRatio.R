@@ -36,8 +36,9 @@
 #' matrix in the `coverage` slot of the selected `omic`.
 #'
 #' @details
-#' Log R ratios computation steps are described in [computeLogRatioATAC()]
-#' and [computeLogRatioRNA()] functions.
+#' Log R ratios computation steps are described in functions:
+#' - [computeLogRatioATAC()]
+#' - [computeLogRatioRNA()]
 #'
 #' @family computeLogRatio
 #'
@@ -96,8 +97,8 @@
 #' )
 #'
 #' # compute log R ratios for RNA
-#' muscadet_obj <- computeLogRatio(
-#'   x = muscadet_obj,
+#' muscadet <- computeLogRatio(
+#'   x = muscadet,
 #'   reference = muscadet_ref,
 #'   omic = "RNA",
 #'   method = "RNA",
@@ -268,7 +269,7 @@ computeLogRatio <- function(x,
 #'  \item{`coord`}{Data frame of coordinates for windows of peaks and associated
 #'  data along the different steps (`data.frame`).
 #'  Columns :
-#'  - `CHR`, `start`, `end`, `width`, `id`: coordinates and unique identifier of
+#'  - `CHROM`, `start`, `end`, `width`, `id`: coordinates and unique identifier of
 #'  windows (depends on `windowSize` and `slidingSize` arguments).
 #'  - `nPeaks`: number of peaks per window.
 #'  - `sumReads.tum/ref`: sum of read counts for all cells in tumor or reference
@@ -484,7 +485,7 @@ computeLogRatioATAC <- function(matTumor,
 
   # Initialize window coordinates data frame
   windowsDF <- as.data.frame(windowsGR)
-  colnames(windowsDF)[1] <- "CHR"
+  colnames(windowsDF)[1] <- "CHROM"
   windowsDF[, "strand"] <- NULL
 
   # Add data to window coordinates data frame
@@ -707,7 +708,7 @@ computeLogRatioATAC <- function(matTumor,
 #'  \item{`coord`}{Data frame of coordinates for windows of peaks and associated
 #'  data along the different steps (`data.frame`).
 #'  Columns :
-#'  - `CHR`, `start`, `end`, `id`: coordinates and name of genes.
+#'  - `CHROM`, `start`, `end`, `id`: coordinates and name of genes.
 #'  - `sumReads.tum/ref`: sum of read counts for all cells in tumor or reference
 #'  cells.
 #'  - `meanReads.tum/ref`: mean of read counts per cells for tumor or reference
@@ -845,8 +846,8 @@ computeLogRatioRNA <- function(matTumor,
 
   # Initialize gene coordinates data frame
   genesDF <- as.data.frame(genesCoord)
-  colnames(genesDF)[1] <- "CHR"
-  genesDF$CHR <- factor(genesDF$CHR, levels = unique(genesDF$CHR))
+  colnames(genesDF)[1] <- "CHROM"
+  genesDF$CHROM <- factor(genesDF$CHROM, levels = unique(genesDF$CHROM))
 
   # Remove genes from matrix without coordinates in the input gene list
   matTumor <- matTumor[!is.na(match(rownames(matTumor), genesDF[, 4])), ]
@@ -1122,7 +1123,7 @@ computeLogRatioRNA <- function(matTumor,
 #' @inheritParams CreateMuscadetObject
 #'
 #' @return
-#' A data frame of single-cell omic features, with columns: `CHR`, `start`,
+#' A data frame of single-cell omic features, with columns: `CHROM`, `start`,
 #' `end`, and `bulk.lrr`, where `bulk.lrr` corresponds to the log R ratio values
 #' retrieved from bulk data matching the feature coordinates.
 #'
@@ -1162,7 +1163,7 @@ getLogRatioBulk <- function(x, bulk.lrr) {
 
     # Extract single-cell omic features coordinates
     features_coord <- x@coverage$coord.features
-    features_gr <- GenomicRanges::GRanges(features_coord[features_coord$keep, c("CHR", "start", "end")])
+    features_gr <- GenomicRanges::GRanges(features_coord[features_coord$keep, c("CHROM", "start", "end")])
 
     # GRanges object for bulk data segments
     colnames(bulk.lrr) <- c("CHROM", "start", "end", "lrr")
@@ -1181,7 +1182,7 @@ getLogRatioBulk <- function(x, bulk.lrr) {
 
     # Convert the GRanges object back to a data frame for output with relevant columns
     out <- as.data.frame(features_gr)[, c("seqnames", "start", "end", "bulk.lrr")]
-    colnames(out)[1] <- "CHR"
+    colnames(out)[1] <- "CHROM"
 
     return(out) # Return the data frame with assigned bulk LRR values
 }

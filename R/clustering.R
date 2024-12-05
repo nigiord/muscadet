@@ -314,7 +314,7 @@ weightedSNF <- function(
         stop("Wall is empty")
     }
     if (n == 1) {
-        message("Only one matrix provided. Returning the input matrix.")
+        # message("Only one matrix provided. Returning the input matrix.")
         return(Wall[[1]])
     }
 
