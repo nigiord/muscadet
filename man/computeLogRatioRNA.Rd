@@ -61,7 +61,7 @@ reference cells (\code{matrix}).}
 data along the different steps (\code{data.frame}).
 Columns :
 \itemize{
-\item \code{CHR}, \code{start}, \code{end}, \code{id}: coordinates and name of genes.
+\item \code{CHROM}, \code{start}, \code{end}, \code{id}: coordinates and name of genes.
 \item \code{sumReads.tum/ref}: sum of read counts for all cells in tumor or reference
 cells.
 \item \code{meanReads.tum/ref}: mean of read counts per cells for tumor or reference

@@ -16,7 +16,7 @@ ordered as followed: chromosome (\code{integer}), start position (\code{integer}
 end position (\code{integer}), and Log R ratio value (\code{numeric}).}
 }
 \value{
-A data frame of single-cell omic features, with columns: \code{CHR}, \code{start},
+A data frame of single-cell omic features, with columns: \code{CHROM}, \code{start},
 \code{end}, and \code{bulk.lrr}, where \code{bulk.lrr} corresponds to the log R ratio values
 retrieved from bulk data matching the feature coordinates.
 }

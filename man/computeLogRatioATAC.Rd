@@ -66,7 +66,7 @@ reference cells (\code{matrix}).}
 data along the different steps (\code{data.frame}).
 Columns :
 \itemize{
-\item \code{CHR}, \code{start}, \code{end}, \code{width}, \code{id}: coordinates and unique identifier of
+\item \code{CHROM}, \code{start}, \code{end}, \code{width}, \code{id}: coordinates and unique identifier of
 windows (depends on \code{windowSize} and \code{slidingSize} arguments).
 \item \code{nPeaks}: number of peaks per window.
 \item \code{sumReads.tum/ref}: sum of read counts for all cells in tumor or reference

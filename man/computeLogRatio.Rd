@@ -77,8 +77,11 @@ object, the newly computed matrix of log R ratios is added for the
 selected \code{omic}.
 }
 \details{
-Log R ratios computation steps are described in \code{\link[=computeLogRatioATAC]{computeLogRatioATAC()}}
-and \code{\link[=computeLogRatioRNA]{computeLogRatioRNA()}} functions.
+Log R ratios computation steps are described in functions:
+\itemize{
+\item \code{\link[=computeLogRatioATAC]{computeLogRatioATAC()}}
+\item \code{\link[=computeLogRatioRNA]{computeLogRatioRNA()}}
+}
 }
 \examples{
 # Create muscomic objects
