@@ -13,8 +13,8 @@
 #'   [muscadet::computeLogRatio()]) and clustering data (with
 #'   [muscadet::clusterMuscadet()]) (`muscadet`).
 #'
-#' @param filename (Optional) Character string specifying the file path to save the heatmap
-#'   image in the PNG format (`character` string).
+#' @param filename (Optional) Character string specifying the file path to save
+#'   the heatmap image in the PNG format (`character` string).
 #'
 #' @param k (Optional) Integer specifying the cluster number to plot
 #'   (`integer`). It should be within the range of k used for clustering (with
@@ -26,7 +26,8 @@
 #'   only common cells (cells with data in all omics) if `show_missing = FALSE`.
 #'   Should be provided if `k` is `NULL`.
 #'
-#' @param title Character string for the title of the heatmap (`character` string).
+#' @param title Character string for the title of the heatmap (`character`
+#'   string). Default is an empty character string.
 #'
 #' @param add_bulk_lrr Logical value indicating whether to add bulk LRR data as
 #'   annotations if present in the muscadet object (`logical`). By default, it
@@ -34,7 +35,8 @@
 #'   available in the muscadet object.
 #'
 #' @param show_missing Logical value indicating whether to show missing cells
-#' (cells with missing data in at least one omic) in the heatmaps (`logical`). Default is `TRUE`.
+#'   (cells with missing data in at least one omic) in the heatmaps (`logical`).
+#'   Default is `TRUE`.
 #'
 #' @param white_scale Numeric vector of length 2 with values between 0 and 1,
 #'   defining the white color boundaries (`numeric` vector). This parameter
@@ -45,9 +47,11 @@
 #'   are represented as white on the heatmap.
 #'
 #'
-#' @param colors Vector of colors for the cluster annotation. Default is `NULL`, which uses predefined colors.
+#' @param colors Vector of colors for the cluster annotation. Default is `NULL`,
+#'   which uses predefined colors.
 #'
-#' @param quiet Logical value indicating whether to suppress messages. Default is `FALSE`.
+#' @param quiet Logical value indicating whether to suppress messages. Default
+#'   is `FALSE`.
 #'
 #' @return
 #' A list containing:
@@ -129,6 +133,9 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             !is.null(slot(x, "clustering"))
     )
 
+    # Set to no missing cells if only one omic
+    if(length(x@omics) == 1) show_missing <- FALSE
+
     # Validate k and clusters
     stopifnot(
         "Both k and clusters cannot be NULL." = !(is.null(k) && is.null(clusters))
@@ -207,7 +214,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 
         # Get chromosome info for features
         coord <- muscomic@coverage$coord.features
-        chrom <- factor(coord[coord$keep, "CHR"], levels = unique(coord[coord$keep, "CHR"]))
+        chrom <- factor(coord[coord$keep, "CHROM"], levels = unique(coord[coord$keep, "CHROM"]))
 
         # Define color breaks for heatmap using white_scale argument
         col_breaks <- c(-5, muscomic@coverage$ref.log.ratio.perc[as.character(white_scale)], 5)
@@ -267,7 +274,9 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             # Retrieve bulk lrr values on features
             bulk_df <- muscadet::getLogRatioBulk(muscomic, x@bulk.data$log.ratio)
             # Define color scale
-            bulk_col <- list(circlize::colorRamp2(c(min(bulk_df$bulk.lrr), median(bulk_df$bulk.lrr), max(bulk_df$bulk.lrr)),
+            bulk_col <- list(circlize::colorRamp2(c(min(bulk_df$bulk.lrr, na.rm = TRUE),
+                                                    median(bulk_df$bulk.lrr, na.rm = TRUE),
+                                                    max(bulk_df$bulk.lrr, na.rm = TRUE)),
                                                   c("#00008E", "white", "#630000")))
             names(bulk_col) = paste0("bulk_", muscomic@label.omic)
             # Create data frame for annotation
@@ -319,6 +328,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
                                  cluster_rows = hc, row_split = as.integer(k), merge_legend = TRUE)
         } else {
             # 3. Custom cluster assignments vector
+            n_cells <- table(clusters)
             ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
                                  row_split = as.factor(clusters), row_order = names(clusters),
                                  cluster_rows = F, merge_legend = TRUE)

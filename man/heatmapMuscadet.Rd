@@ -22,8 +22,8 @@ heatmapMuscadet(
 \code{\link[=computeLogRatio]{computeLogRatio()}}) and clustering data (with
 \code{\link[=clusterMuscadet]{clusterMuscadet()}}) (\code{muscadet}).}
 
-\item{filename}{(Optional) Character string specifying the file path to save the heatmap
-image in the PNG format (\code{character} string).}
+\item{filename}{(Optional) Character string specifying the file path to save
+the heatmap image in the PNG format (\code{character} string).}
 
 \item{k}{(Optional) Integer specifying the cluster number to plot
 (\code{integer}). It should be within the range of k used for clustering (with
@@ -35,7 +35,8 @@ image in the PNG format (\code{character} string).}
 only common cells (cells with data in all omics) if \code{show_missing = FALSE}.
 Should be provided if \code{k} is \code{NULL}.}
 
-\item{title}{Character string for the title of the heatmap (\code{character} string).}
+\item{title}{Character string for the title of the heatmap (\code{character}
+string). Default is an empty character string.}
 
 \item{add_bulk_lrr}{Logical value indicating whether to add bulk LRR data as
 annotations if present in the muscadet object (\code{logical}). By default, it
@@ -43,7 +44,8 @@ is set to \code{NULL}, which will automatically include bulk LRR data if it is
 available in the muscadet object.}
 
 \item{show_missing}{Logical value indicating whether to show missing cells
-(cells with missing data in at least one omic) in the heatmaps (\code{logical}). Default is \code{TRUE}.}
+(cells with missing data in at least one omic) in the heatmaps (\code{logical}).
+Default is \code{TRUE}.}
 
 \item{white_scale}{Numeric vector of length 2 with values between 0 and 1,
 defining the white color boundaries (\code{numeric} vector). This parameter
@@ -53,9 +55,11 @@ within this range are considered close enough to the majority of the LRR
 reference data, indicating no significant gain or loss of coverage, thereby
 are represented as white on the heatmap.}
 
-\item{colors}{Vector of colors for the cluster annotation. Default is \code{NULL}, which uses predefined colors.}
+\item{colors}{Vector of colors for the cluster annotation. Default is \code{NULL},
+which uses predefined colors.}
 
-\item{quiet}{Logical value indicating whether to suppress messages. Default is \code{FALSE}.}
+\item{quiet}{Logical value indicating whether to suppress messages. Default
+is \code{FALSE}.}
 }
 \value{
 A list containing:
