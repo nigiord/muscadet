@@ -27,3 +27,12 @@ of copy number alterations (CNAs) (\code{list}).}
 \item{\code{genome}}{Reference genome name among: "hg38", "hg19" and "mm10" (\code{character}).}
 }}
 
+\seealso{
+Functions related to \code{muscadet} objects:
+\itemize{
+\item \code{\link[=CreateMuscadetObject]{CreateMuscadetObject()}} (create \code{muscadet} objects)
+\item \link{muscadet-access} (simplified access and assignment methods)
+\item \link{.DollarNames.muscadet} (autocompletion for \code{$})
+\item \code{\link{show,muscadet-method}} (\code{show} method)
+}
+}

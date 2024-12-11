@@ -38,6 +38,7 @@ Imports:
     RANN,
     Rfast,
     rlang,
+    SeuratObject,
     SNFtool,
     sparseMatrixStats,
     stats,

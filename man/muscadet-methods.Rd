@@ -3,8 +3,6 @@
 \name{muscadet-methods}
 \alias{muscadet-methods}
 \alias{muscomic-methods}
-\alias{Cells}
-\alias{Features}
 \alias{coordFeatures}
 \alias{matCounts}
 \alias{matLogRatio}
@@ -18,12 +16,8 @@
 \alias{matCounts,muscadet-method}
 \alias{matLogRatio,muscomic-method}
 \alias{matLogRatio,muscadet-method}
-\title{\code{\link{muscomic}} and \code{\link{muscadet}} methods}
+\title{Methods for \code{\link{muscomic}} and \code{\link{muscadet}} objects}
 \usage{
-Cells(x)
-
-Features(x)
-
 coordFeatures(x)
 
 matCounts(x)
@@ -85,8 +79,15 @@ matLogRatio(x)
 }
 }
 \description{
-Methods for \code{\link{muscomic}} and \code{\link{muscadet}} objects, to
-facilitate access to slots within the objects.
+Methods to facilitate access to data within the \code{\link{muscomic}} and
+\code{\link{muscadet}} objects.
+\itemize{
+\item \code{\link[SeuratObject:Cells]{SeuratObject::Cells()}} - methods for \code{muscomic} and \code{muscadet}
+\item \code{\link[SeuratObject:Cells]{SeuratObject::Features()}} - methods for \code{muscomic} and \code{muscadet}
+\item \code{coordFeatures()}
+\item \code{matCounts()}
+\item \code{matLogRatio()}
+}
 }
 \seealso{
 \code{\link{muscomic-class}} \code{\link{muscadet-class}}

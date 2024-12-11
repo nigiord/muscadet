@@ -22,3 +22,12 @@ single-cell omic dataset used as primary input for muscadet analysis.
 \item{\code{allelic}}{Allelic data at single nucleotide polymorphisms (SNPs) positions (\code{list}).}
 }}
 
+\seealso{
+Functions related to \code{muscomic} objects:
+\itemize{
+\item \code{\link[=CreateMuscomicObject]{CreateMuscomicObject()}} (create \code{muscomic} objects)
+\item \link{muscadet-access} (simplified access and assignment methods)
+\item \link{.DollarNames.muscadet} (autocompletion for \code{$})
+\item \code{\link{show,muscomic-method}} (\code{show} method)
+}
+}

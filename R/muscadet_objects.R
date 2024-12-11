@@ -15,9 +15,16 @@
 #'
 #' @aliases muscomic
 #'
+#' @seealso
+#' Functions related to `muscomic` objects:
+#' * [CreateMuscomicObject()] (create `muscomic` objects)
+#' * [muscadet-access] (simplified access and assignment methods)
+#' * [.DollarNames.muscadet] (autocompletion for `$`)
+#' * [`show,muscomic-method`] (`show` method)
+#'
 #' @importFrom methods setClass
 #' @exportClass muscomic
-
+#'
 methods::setClass(
   "muscomic",
   slots = c(
@@ -46,9 +53,16 @@ methods::setClass(
 #'
 #' @aliases muscadet
 #'
+#' @seealso
+#' Functions related to `muscadet` objects:
+#' * [CreateMuscadetObject()] (create `muscadet` objects)
+#' * [muscadet-access] (simplified access and assignment methods)
+#' * [.DollarNames.muscadet] (autocompletion for `$`)
+#' * [`show,muscadet-method`] (`show` method)
+#'
 #' @importFrom methods setClass
 #' @exportClass muscadet
-
+#'
 methods::setClass(
   "muscadet",
   slots = c(
@@ -381,6 +395,266 @@ CreateMuscadetObject <- function(omics,
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Methods to access objects ----------------------------------------------------
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#' @title Autocompletion for `$` access on `muscadet` or `muscomic` objects
+#'
+#' @description Enable autocompletion for `$` access for \code{\link{muscadet}}
+#'   or \code{\link{muscomic}} objects. For `muscadet` objects, it also lists
+#'   omic datasets contained inside the `omics` slot.
+#'
+#' @rdname musc-auto
+#'
+#' @inheritParams utils::.DollarNames
+#' @param x A \code{\link{muscadet}} or \code{\link{muscomic}} object.
+#'
+#' @return Character vector of matching element names.
+#'
+#' @importFrom utils .DollarNames
+#' @importFrom methods slotNames
+#'
+#' @order 1
+#'
+#' @export
+#' @method .DollarNames muscadet
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#'
+".DollarNames.muscadet" <- function(x, pattern = "") {
+    # Combine available omics names and slot names
+    available <- c(names(x@omics), slotNames(x))
+    return(available[grep(pattern, available)])
+}
+
+#' @rdname musc-auto
+#'
+#' @importFrom utils .DollarNames
+#' @importFrom methods slotNames
+#'
+#' @order 2
+#'
+#' @export
+#' @method .DollarNames muscomic
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#'
+".DollarNames.muscomic" <- function(x, pattern = "") {
+    available <- c(slotNames(x))
+    return(available[grep(pattern, available)])
+}
+
+
+#' @title Access and assignment methods for `muscadet` objects
+#'
+#' @aliases muscadet-access
+#' @rdname musc-access
+#'
+#' @description Simplified access to omic datasets and slots inside
+#'   \code{\link{muscadet}} objects.
+#'
+#' @inheritParams .DollarNames.muscadet
+#' @param i The name of the slot (or omic).
+#' @param ... Other arguments (ignored).
+#'
+#' @return The selected slot or the omic dataset (\code{\link{muscomic}} object)
+#'   for `muscadet` objects. The selected slot for `muscomic` objects.
+#'
+#' @importFrom methods slot
+#' @importFrom methods slotNames
+#'
+#' @export
+#' @method [ muscadet
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Access to muscadet omics or slots
+#' muscadet_obj["ATAC"]
+#' muscadet_obj["genome"]
+#'
+"[.muscadet" <- function(x, i, ...) {
+    if (i %in% names(x@omics)) {
+        return(x@omics[[i]])
+    } else if (i %in% slotNames(x)) {
+        return(slot(x, i))
+    } else {
+        stop(paste("No element named", i, "in the muscadet object."))
+    }
+}
+
+#' @rdname musc-access
+#'
+#' @importFrom methods slot
+#' @importFrom methods slotNames
+#'
+#' @export
+#' @method [ muscomic
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Access to muscomic slots
+#' muscadet_obj["ATAC"]["label.omic"]
+#'
+"[.muscomic" <- function(x, i, ...) {
+    if (i %in% slotNames(x)) {
+        return(slot(x, i))
+    } else {
+        stop(paste("No element named", i, "in the muscomic object."))
+    }
+}
+
+#' @rdname musc-access
+#'
+#' @inheritParams .DollarNames.muscadet
+#' @param name The name of the slot (or omic).
+#'
+#' @importFrom methods slot
+#' @importFrom methods slotNames
+#'
+#' @export
+#' @method $ muscadet
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Access to muscadet omics or slots
+#' muscadet_obj$ATAC
+#' muscadet_obj$genome
+#'
+"$.muscadet" <- function(x, name) {
+    if (name %in% names(x@omics)) {
+        return(x@omics[[name]])
+    } else if (name %in% slotNames(x)) {
+        return(slot(x, name))
+    } else {
+        stop(paste("No element named", name, "in the muscadet object."))
+    }
+}
+
+#' @rdname musc-access
+#'
+#' @importFrom methods slot
+#' @importFrom methods slotNames
+#'
+#' @export
+#' @method $ muscomic
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Access to muscomic slots
+#' muscadet_obj$ATAC$label.type
+#'
+"$.muscomic" <- function(x, name) {
+    if (name %in% slotNames(x)) {
+        return(slot(x, name))
+    } else {
+        stop(paste("No element named", name, "in the muscomic object."))
+    }
+}
+
+#' @rdname musc-access
+#'
+#' @description Assign new data in a \code{\link{muscadet}} or
+#'   \code{\link{muscomic}} object. For `muscadet` objects, the omic datasets in
+#'   the `omics` slot can be directly reassigned.
+#'
+#' @param value The new value to assign.
+#'
+#' @return The updated \code{\link{muscadet}} or \code{\link{muscomic}} object.
+#'
+#' @importFrom methods slot
+#' @importFrom methods slotNames
+#'
+#' @export
+#' @method [<- muscadet
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Assign new data in muscadet object
+#' muscadet_obj["genome"] <- "hg38"
+#'
+"[<-.muscadet" <- function(x, i, value) {
+    if (i %in% names(x@omics)) {
+        x@omics[[i]] <- value
+    } else if (i %in% slotNames(x)) {
+        slot(x, i) <- value
+    } else {
+        stop(paste("Cannot assign to", i, "- it does not exist in the muscadet object."))
+    }
+    return(x)
+}
+
+
+#' @rdname musc-access
+#'
+#' @importFrom methods slot
+#' @importFrom methods slotNames
+#'
+#' @export
+#' @method [<- muscomic
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Assign new data in muscomic object
+#' muscadet_obj["ATAC"]["label.omic"] <- "scATAC-seq"
+#'
+"[<-.muscomic" <- function(x, i, value) {
+    if (i %in% slotNames(x)) {
+        slot(x, i) <- value
+    } else {
+        stop(paste("Cannot assign to", i, "- it does not exist in the muscomic object."))
+    }
+    return(x)
+}
+
+#' @rdname musc-access
+#'
+#' @export
+#' @method $<- muscadet
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Assign new data in muscadet object
+#' muscadet_obj$genome <- "hg38"
+#'
+"$<-.muscadet" <- function(x, i, value) {
+    # Use the [<- method for assignment
+    x <- `[<-.muscadet`(x, i, value)
+    return(x)
+}
+
+#' @rdname musc-access
+#'
+#' @export
+#' @method $<- muscomic
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#' # Assign new data in muscomic object
+#' muscadet_obj$ATAC$label.omic <- "scATAC-seq"
+#'
+"$<-.muscomic" <- function(x, i, value) {
+    # Use the [<- method for assignment
+    x <- `[<-.muscomic`(x, i, value)
+    return(x)
+}
+
+
+
+
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # S4 methods -------------------------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -530,18 +804,21 @@ setMethod(
 
 
 
-# New methods ------------------------------------------------------------------
+# Other methods ----------------------------------------------------------------
 
-#' \code{\link{muscomic}} and \code{\link{muscadet}} methods
+#' Methods for \code{\link{muscomic}} and \code{\link{muscadet}} objects
 #'
-#' Methods for \code{\link{muscomic}} and \code{\link{muscadet}} objects, to
-#' facilitate access to slots within the objects.
+#' Methods to facilitate access to data within the \code{\link{muscomic}} and
+#' \code{\link{muscadet}} objects.
+#' - [SeuratObject::Cells()] - methods for `muscomic` and `muscadet`
+#' - [SeuratObject::Features()] - methods for `muscomic` and `muscadet`
+#' - `coordFeatures()`
+#' - `matCounts()`
+#' - `matLogRatio()`
 #'
 #' @name muscadet-methods
 #' @rdname muscadet-methods
 #' @aliases muscomic-methods
-#'
-#' @importFrom methods slot
 #'
 #' @param x A \code{\link{muscomic}} or \code{\link{muscadet}} object.
 #'
@@ -549,71 +826,42 @@ setMethod(
 #'
 NULL
 
-#' @rdname muscadet-methods
-#' @export
-#' @return
-#' `Cells`:
-#' - `muscomic`: A vector of cell names.
-#' - `muscadet`: A list of vectors of cell names, one list element per omic.
-#'
-Cells <- function(x) {
-  UseMethod(generic = "Cells", object = x)
-}
 
 #' @rdname muscadet-methods
 #' @export
-#' @return
-#' `Features`:
-#' - `muscomic`: A vector of feature names.
-#' - `muscadet`: A list of vectors of feature names, one list element per omic.
-#'
-Features <- function(x) {
-  UseMethod(generic = "Features", object = x)
-}
-
-#' @rdname muscadet-methods
-#' @export
-#' @return
-#' `coordFeatures`:
-#' - `muscomic`: A data frame of feature coordinates.
-#' - `muscadet`: A list of data frames of feature coordinates, one list element per omic.
-#'
 coordFeatures <- function(x) {
   UseMethod(generic = "coordFeatures", object = x)
 }
 
 #' @rdname muscadet-methods
 #' @export
-#' @return
-#' `matCounts`:
-#' - `muscomic`: A \code{\link{dgCMatrix-class}} *features x cells*.
-#' - `muscadet`: A list of \code{\link{dgCMatrix-class}} *features x cells*, one list element per omic.
-#'
 matCounts <- function(x) {
   UseMethod(generic = "matCounts", object = x)
 }
 
 #' @rdname muscadet-methods
 #' @export
-#' @return
-#' `matLogRatio`:
-#' - `muscomic`: A \code{\link{matrix}} *features x cells*.
-#' - `muscadet`: A list of \code{\link{matrix}} *features x cells*, one list element per omic.
-#'
 matLogRatio <- function(x) {
     UseMethod(generic = "matLogRatio", object = x)
 }
 
 #' @rdname muscadet-methods
 #'
+#' @importFrom SeuratObject Cells
+#'
+#' @return
+#' `Cells`:
+#' - `muscomic`: A vector of cell names.
+#' - `muscadet`: A list of vectors of cell names, one list element per omic.
+#'
 setMethod(
   f = "Cells",
   signature = signature(x = "muscomic"),
   definition = function(x) {
-    if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
-      cells <- colnames(slot(x, "coverage")[["mat.counts"]])
-    } else if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
+    if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
       cells <- colnames(slot(x, "coverage")[["log.ratio"]])
+    } else if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
+      cells <- colnames(slot(x, "coverage")[["mat.counts"]])
     }
     return(cells)
   }
@@ -628,8 +876,8 @@ setMethod(
     lapply(slot(x, "omics"), function(omic) {
       if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
         cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
-      } else if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
-        cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
+      } else if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+        cells <- colnames(slot(omic, "coverage")[["mat.counts"]])
       }
       return(cells)
     })
@@ -638,14 +886,21 @@ setMethod(
 
 #' @rdname muscadet-methods
 #'
+#' @importFrom SeuratObject Features
+#'
+#' @return
+#' `Features`:
+#' - `muscomic`: A vector of feature names.
+#' - `muscadet`: A list of vectors of feature names, one list element per omic.
+#'
 setMethod(
   f = "Features",
   signature = signature(x = "muscomic"),
   definition = function(x) {
-    if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
-      features <- rownames(slot(x, "coverage")[["mat.counts"]])
-    } else if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
+    if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
       features <- rownames(slot(x, "coverage")[["log.ratio"]])
+    } else if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
+      features <- rownames(slot(x, "coverage")[["mat.counts"]])
     }
     return(features)
   }
@@ -670,6 +925,11 @@ setMethod(
 
 #' @rdname muscadet-methods
 #'
+#' @return
+#' `coordFeatures`:
+#' - `muscomic`: A data frame of feature coordinates.
+#' - `muscadet`: A list of data frames of feature coordinates, one list element per omic.
+#'
 setMethod(
   f = "coordFeatures",
   signature = signature(x = "muscomic"),
@@ -692,6 +952,11 @@ setMethod(
 
 #' @rdname muscadet-methods
 #'
+#' @return
+#' `matCounts`:
+#' - `muscomic`: A \code{\link{dgCMatrix-class}} *features x cells*.
+#' - `muscadet`: A list of \code{\link{dgCMatrix-class}} *features x cells*, one list element per omic.
+#'
 setMethod(
   f = "matCounts",
   signature = signature(x = "muscomic"),
@@ -713,6 +978,11 @@ setMethod(
 )
 
 #' @rdname muscadet-methods
+#'
+#' @return
+#' `matLogRatio`:
+#' - `muscomic`: A \code{\link{matrix}} *features x cells*.
+#' - `muscadet`: A list of \code{\link{matrix}} *features x cells*, one list element per omic.
 #'
 setMethod(
     f = "matLogRatio",
