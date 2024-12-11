@@ -1,6 +1,12 @@
 > [!NOTE]
 > This R package is currently in development and therefore is not functional yet
 
+To install the latest version directly from GitHub:
+```r
+library(devtools)
+install_github("ICAGEN/muscadet")
+```
+
 <br>
 
 # muscadet <img src="man/figures/logo.png" align="right" height="139" alt="" />
