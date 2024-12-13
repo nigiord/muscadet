@@ -21,20 +21,23 @@ set.seed(123)
 
 # Access dgCMatrix from RangedSummarizedExperiment object with SummarizedExperiment::assay(se)
 
-mat_counts_atac_tumor <- readRDS(file.path(dir, "MM-01-0287-T.atac.peak-matrix.Rds"))
+mat_counts_atac_tumor <- readRDS(file.path(dir, "sample.atac.peak-matrix.Rds"))
 rownames(mat_counts_atac_tumor) <- 1:nrow(mat_counts_atac_tumor)
 
 mat_counts_atac_ref <- readRDS(file.path(dir, "reference.atac.peak-matrix.Rds"))
 rownames(mat_counts_atac_ref) <- 1:nrow(mat_counts_atac_ref)
 
-seurat_tumor <- readRDS(file.path(dir, "MM-01-0287-T.rna.filtered.seurat-object.Rds"))
+seurat_tumor <- readRDS(file.path(dir, "sample.rna.filtered.seurat-object.Rds"))
 mat_counts_rna_tumor <- seurat_tumor[["RNA"]]$counts
 rownames(mat_counts_rna_tumor) <- Features(seurat_tumor)
-colnames(mat_counts_rna_tumor) <- paste("MM-01-0287-T", colnames(mat_counts_rna_tumor), sep = "_")
+colnames(mat_counts_rna_tumor) <- paste("samplename", colnames(mat_counts_rna_tumor), sep = "_")
 
 seurat_ref <- readRDS(file.path(dir, "reference.rna.filtered.seurat-object.Rds"))
 mat_counts_rna_ref <- seurat_ref[["RNA"]]$counts
 rownames(mat_counts_rna_ref) <- Features(seurat_ref)
+colnames(mat_counts_rna_ref) <- gsub("refname.", "refname", colnames(mat_counts_rna_ref))
+mat_counts_rna_ref <- mat_counts_rna_ref[, !duplicated(colnames(mat_counts_rna_ref))]
+
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -44,8 +47,8 @@ rownames(mat_counts_rna_ref) <- Features(seurat_ref)
 ## lists of barcodes -----------------------------------------------------------
 
 # tumor
-barcodes_atac_tumor <- scan(file.path(dir, "MM-01-0287-T.atac.barcodes.txt"), what = "character")
-barcodes_rna_tumor <- scan(file.path(dir, "MM-01-0287-T.rna.barcodes.txt"), what = "character")
+barcodes_atac_tumor <- scan(file.path(dir, "sample.atac.barcodes.txt"), what = "character")
+barcodes_rna_tumor <- scan(file.path(dir, "sample.rna.barcodes.txt"), what = "character")
 
 barcodes_atac_tumor <- barcodes_atac_tumor[which(barcodes_atac_tumor %in% colnames(mat_counts_atac_tumor))]
 barcodes_rna_tumor <- barcodes_rna_tumor[which(barcodes_rna_tumor %in% colnames(mat_counts_rna_tumor))]
@@ -120,9 +123,6 @@ rownames(mat_counts_atac_ref) <- peaks[, "id"]
 mat_counts_rna_tumor <- mat_counts_rna_tumor[genes[, "id"], barcodes_rna_tumor]
 mat_counts_rna_ref <- mat_counts_rna_ref[genes[, "id"], barcodes_rna_ref]
 
-rownames(mat_counts_atac_tumor) <- NULL
-rownames(mat_counts_atac_ref) <- NULL
-
 usethis::use_data(mat_counts_atac_tumor, overwrite = TRUE)
 usethis::use_data(mat_counts_atac_ref, overwrite = TRUE)
 
@@ -134,10 +134,11 @@ usethis::use_data(mat_counts_rna_ref, overwrite = TRUE)
 # Subsampling allele count tables ----------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-allele_counts_atac_tumor <- read.delim(file.path(dir, "MM-01-0287-T.atac.allele_counts.tsv.gz"))
-allele_counts_atac_ref <- read.delim(file.path(dir, "reference.atac.allele_counts.tsv.gz"))
-allele_counts_rna_tumor <- read.delim(file.path(dir, "MM-01-0287-T.rna.allele_counts.tsv.gz"))
-allele_counts_rna_ref <- read.delim(file.path(dir, "reference.rna.allele_counts.tsv.gz"))
+# The SNP REF and ALT alleles have been previously randomized for example data
+allele_counts_atac_tumor <- read.delim(file.path(dir, "sample.atac.allele_counts.tsv"))
+allele_counts_atac_ref <- read.delim(file.path(dir, "reference.atac.allele_counts.tsv"))
+allele_counts_rna_tumor <- read.delim(file.path(dir, "sample.rna.allele_counts.tsv"))
+allele_counts_rna_ref <- read.delim(file.path(dir, "reference.rna.allele_counts.tsv"))
 
 colnames(allele_counts_atac_tumor)[which(colnames(allele_counts_atac_tumor) == "snp_id")] <- "id"
 colnames(allele_counts_atac_ref)[which(colnames(allele_counts_atac_ref) == "snp_id")] <- "id"
@@ -189,7 +190,7 @@ usethis::use_data(allele_counts_rna_ref, overwrite = TRUE)
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 # result after fitcncf() from FACETS 0.6.2 "Cellular Fraction and Copy Numbers from Tumor Sequencing"
-wgs <- readRDS(file.path(dir, "MM-01-0287-T.wgs.facets_result.Rds"))
+wgs <- readRDS(file.path(dir, "sample.wgs.facets_result.Rds"))
 bulk_lrr <- wgs$cncf[, c("chrom", "start", "end", "cnlr.median")]
 colnames(bulk_lrr) <- c("CHROM", "start", "end", "lrr")
 
