@@ -30,6 +30,6 @@ muscadet object.
 \examples{
 # Load a muscadet object
 data(muscadet_obj)
-plotSil(muscadet_obj, k = 4)
+plotSil(muscadet_obj, k = 3)
 
 }

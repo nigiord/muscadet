@@ -333,10 +333,10 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
         if (is.null(clusters)) {
             # 2. Clustering hclust from the muscadet object clustering with commom cells
             hc <- x@clustering$hclust # hclust object to print the dendrogram on the heatmap
-            n_cells <- table(stats::cutree(hc, as.integer(k)))
+            n_cells <- table(dendextend::cutree(hc, k, order_clusters_as_data = FALSE))
 
             ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                                 cluster_rows = hc, row_split = as.integer(k), merge_legend = TRUE)
+                                 cluster_rows = hc, row_split = as.integer(k), row_dend_reorder = FALSE, merge_legend = TRUE)
         } else {
             # 3. Custom cluster assignments vector
             n_cells <- table(clusters)
@@ -423,7 +423,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #' @examples
 #' # Load a muscadet object
 #' data(muscadet_obj)
-#' plotSil(muscadet_obj, k = 4)
+#' plotSil(muscadet_obj, k = 3)
 #'
 plotSil <- function(x, k, colors = NULL, title = NULL) {
 

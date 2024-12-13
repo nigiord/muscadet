@@ -25,6 +25,7 @@ Imports:
     circlize,
     cluster,
     ComplexHeatmap,
+    dendextend,
     dplyr,
     facets,
     fastcluster,
