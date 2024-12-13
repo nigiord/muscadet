@@ -30,6 +30,7 @@ Imports:
     fastcluster,
     GenomeInfoDb,
     GenomicRanges,
+    ggplot2,
     grDevices,
     grid,
     gtools,

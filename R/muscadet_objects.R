@@ -549,7 +549,7 @@ CreateMuscadetObject <- function(omics,
 #' # Load muscadet object
 #' data(muscadet_obj)
 #' # Access to muscomic slots
-#' muscadet_obj$ATAC$label.type
+#' muscadet_obj$ATAC$label.omic
 #'
 "$.muscomic" <- function(x, name) {
     if (name %in% slotNames(x)) {

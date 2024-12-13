@@ -9,7 +9,7 @@
 #' values from bulk sequencing data can be plotted as an annotation under the
 #' heatmaps.
 #'
-#' @param x A muscadet object containing LRR data for all omics (with
+#' @param x A \code{\link{muscadet}} object containing LRR data for all omics (with
 #'   [muscadet::computeLogRatio()]) and clustering data (with
 #'   [muscadet::clusterMuscadet()]) (`muscadet`).
 #'
@@ -47,8 +47,8 @@
 #'   are represented as white on the heatmap.
 #'
 #'
-#' @param colors Vector of colors for the cluster annotation. Default is `NULL`,
-#'   which uses predefined colors.
+#' @param colors Vector of colors for the cluster annotation (`character`
+#'   vector). Default is `NULL`, which uses predefined colors.
 #'
 #' @param quiet Logical value indicating whether to suppress messages. Default
 #'   is `FALSE`.
@@ -67,7 +67,7 @@
 #' @importFrom methods slot
 #' @importFrom stats median
 #' @importFrom grDevices pdf png palette dev.off
-#' @importFrom grid gpar unit grid.rect grid.text
+#' @importFrom grid gpar unit grid.rect grid.text grid.grab
 #'
 #' @export
 #'
@@ -127,10 +127,21 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
                             add_bulk_lrr = NULL, show_missing = TRUE, white_scale = c(0.3, 0.7),
                             colors = NULL, quiet = FALSE) {
 
-    # Validate muscadet object
+    # Check that the input is a muscadet object
+    stopifnot(
+        "The input must be a muscadet object." = inherits(x, "muscadet")
+    )
+
+    # Validate the muscadet object contains clustering results
     stopifnot(
         "The muscadet object does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
+    )
+
+    # Validate the clustering result for the specified k
+    stopifnot(
+        "The muscadet object must contain clustering results for the specified k." =
+            as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
     )
 
     # Set to no missing cells if only one omic
@@ -384,3 +395,134 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 
 
 
+#' Silhouette plot for clustering validation
+#'
+#' Generate a silhouette plot for a specified clustering result within a
+#' muscadet object.
+#'
+#' @param x A \code{\link{muscadet}} object containing clustering data (using
+#'   [muscadet::clusterMuscadet()]).
+#'
+#' @param k Integer specifying the number of clusters to plot (`integer`).
+#'   It should be within the range of k used for clustering (with
+#'   [muscadet::clusterMuscadet()]).
+#'
+#' @param colors Vector of colors for the cluster annotation (`character`
+#'   vector). Default is `NULL`, which uses predefined colors.
+#'
+#' @param title Character string for the title of the plot (`character`
+#'   string). If `NULL`, a default title is generated.
+#'
+#' @return A ggplot object representing the silhouette plot.
+#'
+#' @import ggplot2
+#' @importFrom stats aggregate
+#' @importFrom rlang .data
+#' @export
+#'
+#' @examples
+#' # Load a muscadet object
+#' data(muscadet_obj)
+#' plotSil(muscadet_obj, k = 4)
+#'
+plotSil <- function(x, k, colors = NULL, title = NULL) {
+
+    # Check that the input is a muscadet object
+    stopifnot(
+        "The input must be a muscadet object." = inherits(x, "muscadet")
+    )
+
+    # Validate the muscadet object contains clustering results
+    stopifnot(
+        "The muscadet object does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+            !is.null(slot(x, "clustering"))
+    )
+
+    # Validate the clustering result for the specified k
+    stopifnot(
+        "The muscadet object must contain clustering results for the specified k." =
+            as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
+    )
+
+    # Set default color palette for clusters if not provided
+    if (is.null(colors)) {
+        colors <- c(
+            "#FABC2A", "#7FC97F", "#EE6C4D", "#39ADBD", "#BEAED4",
+            "#FEE672", "#F76F8E", "#487BEA", "#B67BE6", "#F38D68",
+            "#7FD8BE", "#F2AFC0"
+        )
+    }
+
+    # Generate a default title if none is provided
+    if (is.null(title)) {
+        title <- paste("Silhouette Plot (k =", as.character(k), ")")
+    }
+
+    # Extract silhouette data for the specified k
+    sil <- x@clustering[["silhouette"]][["sil.obj"]][[as.character(k)]]
+    df <- as.data.frame(sil[, 1:3], stringsAsFactors = TRUE)
+
+    # Order data for plotting
+    df <- df[order(df$cluster, -df$sil_width), ]
+    df$name <- factor(rownames(df), levels = rownames(df))
+    df$cluster <- as.factor(df$cluster)
+
+    # Calculate average silhouette width per cluster
+    avg_sil_width <- stats::aggregate(df$sil_width ~ df$cluster, data = df, mean)
+    colnames(avg_sil_width) <- c("cluster", "sil_width")
+
+    # Determine positions for cluster annotations
+    cluster_counts <- table(df$cluster)
+    cluster_positions <- sapply(unique(df$cluster), function(i) {
+        # Reverse y-axis positions since it is flipped
+        rev_y_position <- sum(cluster_counts) -
+            (sum(cluster_counts[as.numeric(levels(df$cluster)[1:i])]) - cluster_counts[i] / 2)
+        rev_y_position
+    })
+
+    # Create the ggplot object
+    p <- ggplot(df, aes(x = .data$sil_width, y = .data$name, fill = .data$cluster)) +
+        geom_bar(stat = "identity", width = 1) +
+        scale_y_discrete(limits = rev) +
+        theme_bw() +
+        theme(
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            panel.border = element_blank(),
+            panel.grid = element_blank(),
+            plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5),
+            plot.margin = unit(c(0.5, 1, 0.5, 0.5), "cm"),
+            legend.position = "none"
+        ) +
+        scale_fill_manual(values = colors) +
+        labs(
+            x = "Silhouette Width",
+            y = "",
+            title = title,
+            subtitle = paste0(
+                "Average Silhouette Width = ", round(mean(df$sil_width), 4), "\n",
+                "Annotation: cluster | number of cells | average silhouette width"
+            )
+        ) +
+        ggplot2::xlim(c(min(df$sil_width), max(df$sil_width) + 0.25)) +
+        geom_vline(xintercept = mean(df$sil_width), linetype = "dashed", color = "red")
+
+    # Add annotations for each cluster
+    for (i in seq_along(cluster_positions)) {
+        cluster <- unique(df$cluster)[i]
+        avg_width <- round(avg_sil_width$sil_width[avg_sil_width$cluster == cluster], 4)
+        count <- cluster_counts[i]
+        p <- p + geom_text(
+            label = paste(cluster, "|", count, "|", avg_width),
+            x = max(df$sil_width) + 0.05,
+            y = cluster_positions[i],
+            inherit.aes = FALSE,
+            hjust = 0,
+            vjust = -0.5,
+            check_overlap = TRUE
+        )
+    }
+
+    return(p)
+}

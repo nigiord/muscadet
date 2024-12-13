@@ -18,7 +18,7 @@ heatmapMuscadet(
 )
 }
 \arguments{
-\item{x}{A muscadet object containing LRR data for all omics (with
+\item{x}{A \code{\link{muscadet}} object containing LRR data for all omics (with
 \code{\link[=computeLogRatio]{computeLogRatio()}}) and clustering data (with
 \code{\link[=clusterMuscadet]{clusterMuscadet()}}) (\code{muscadet}).}
 
@@ -55,8 +55,8 @@ within this range are considered close enough to the majority of the LRR
 reference data, indicating no significant gain or loss of coverage, thereby
 are represented as white on the heatmap.}
 
-\item{colors}{Vector of colors for the cluster annotation. Default is \code{NULL},
-which uses predefined colors.}
+\item{colors}{Vector of colors for the cluster annotation (\code{character}
+vector). Default is \code{NULL}, which uses predefined colors.}
 
 \item{quiet}{Logical value indicating whether to suppress messages. Default
 is \code{FALSE}.}

@@ -74,7 +74,7 @@ muscadet_obj$genome
 # Load muscadet object
 data(muscadet_obj)
 # Access to muscomic slots
-muscadet_obj$ATAC$label.type
+muscadet_obj$ATAC$label.omic
 
 # Load muscadet object
 data(muscadet_obj)
