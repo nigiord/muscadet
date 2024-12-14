@@ -11,7 +11,8 @@
 #'   (`character`).
 #' @slot label.omic Label to display for the single-cell omic (`character`).
 #' @slot coverage Coverage data on features (`list`).
-#' @slot allelic Allelic data at single nucleotide polymorphisms (SNPs) positions (`list`).
+#' @slot allelic Allelic data at single nucleotide polymorphisms (SNPs)
+#'   positions (`list`).
 #'
 #' @aliases muscomic
 #'
@@ -42,7 +43,8 @@ methods::setClass(
 #' as \code{\link{muscomic}} objects as well as downstream analysis results after
 #' clustering and CNA calling.
 #'
-#' @slot omics List of \code{\link{muscomic}} objects, one per single-cell omic (`list`).
+#' @slot omics List of \code{\link{muscomic}} objects, one per single-cell omic
+#'   (`list`).
 #' @slot bulk.data List of objects containing data from paired bulk sequencing
 #'   (`list`).
 #' @slot clustering List of objects containing data associated with the
@@ -357,7 +359,8 @@ CreateMuscadetObject <- function(omics,
 
   # labels of omics can't be identical
   stopifnot(
-    "Identical omic labels found in the `omics` (muscomic object list) provided. You can check the labels with `slot(muscomic_oj, 'label.omic')`." =
+    "Identical omic labels found in the `omics` (muscomic object list) provided.
+    You can check the labels with `muscomic_obj$label.omic`." =
       !any(duplicated(unlist(
         lapply(omics, function(o) {
           o@label.omic
@@ -370,7 +373,7 @@ CreateMuscadetObject <- function(omics,
       # default names for bulk df columns
       colnames(bulk.lrr) <- c("CHROM", "start", "end", "lrr")
       stopifnot(
-          "Label for bulk data (bulk.label) is required when bulk.lrr is provided." = !is.null(bulk.label)
+          "Label for bulk data (`bulk.label`) is required when `bulk.lrr` is provided." = !is.null(bulk.label)
       )
   }
 
@@ -794,7 +797,8 @@ setMethod(
             "clustering:", ifelse(
                 length(object@clustering) == 0,
                 "None",
-                paste("k =", paste(names(object@clustering$clusters), collapse = ", "), "; optimal k =", object@clustering$k.opt)
+                paste("k =", paste(names(object@clustering$clusters), collapse = ", "),
+                      "; optimal k =", object@clustering$k.opt)
             ), "\n",
             "CNA calling:", ifelse(length(object@cnacalling) == 0, "None", object@cnacalling), "\n",
             "genome:", object@genome
@@ -810,11 +814,13 @@ setMethod(
 #'
 #' Methods to facilitate access to data within the \code{\link{muscomic}} and
 #' \code{\link{muscadet}} objects.
-#' - [SeuratObject::Cells()] - methods for `muscomic` and `muscadet`
-#' - [SeuratObject::Features()] - methods for `muscomic` and `muscadet`
-#' - `coordFeatures()`
-#' - `matCounts()`
-#' - `matLogRatio()`
+#' - `Cells()`: Get cell identifiers (addition of methods for `muscomic` and
+#'    `muscadet` to [SeuratObject::Cells()]).
+#' - `Features()`: Get feature identifiers (addition of methods for `muscomic`
+#'    and `muscadet` to [SeuratObject::Features()]).
+#' - `coordFeatures()`: Get coordinates of features data frames.
+#' - `matCounts()`: Get raw count matrices.
+#' - `matLogRatio()`: Get log R ratio matrices.
 #'
 #' @name muscadet-methods
 #' @rdname muscadet-methods
@@ -824,8 +830,15 @@ setMethod(
 #'
 #' @seealso \code{\link{muscomic-class}} \code{\link{muscadet-class}}
 #'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#'
+#' Cells(muscadet_obj) # list of 2 cell names vectors for the 2 omics
+#' Cells(muscadet_obj)$ATAC # cell names vector from the omic ATAC
+#' Cells(muscadet_obj$ATAC) # cell names vector from the ATAC muscomic object
+#'
 NULL
-
 
 #' @rdname muscadet-methods
 #' @export
@@ -845,44 +858,44 @@ matLogRatio <- function(x) {
     UseMethod(generic = "matLogRatio", object = x)
 }
 
+
 #' @rdname muscadet-methods
 #'
 #' @importFrom SeuratObject Cells
 #'
 #' @return
 #' `Cells`:
-#' - `muscomic`: A vector of cell names.
-#' - `muscadet`: A list of vectors of cell names, one list element per omic.
+#' - if `x` is a `muscomic` object: A vector of cell names.
+#' - if `x` is a `muscadet` object: A list of vectors of cell names, one list
+#' element per omic.
 #'
-setMethod(
-  f = "Cells",
-  signature = signature(x = "muscomic"),
-  definition = function(x) {
+#' @method Cells muscomic
+#' @export
+Cells.muscomic <- function(x, ...) {
     if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
-      cells <- colnames(slot(x, "coverage")[["log.ratio"]])
+        cells <- colnames(slot(x, "coverage")[["log.ratio"]])
     } else if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
-      cells <- colnames(slot(x, "coverage")[["mat.counts"]])
+        cells <- colnames(slot(x, "coverage")[["mat.counts"]])
     }
     return(cells)
-  }
-)
+}
 
 #' @rdname muscadet-methods
 #'
-setMethod(
-  f = "Cells",
-  signature = signature(x = "muscadet"),
-  definition = function(x) {
+#' @importFrom SeuratObject Cells
+#'
+#' @method Cells muscadet
+#' @export
+Cells.muscadet <- function(x, ...) {
     lapply(slot(x, "omics"), function(omic) {
-      if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
-        cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
-      } else if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
-        cells <- colnames(slot(omic, "coverage")[["mat.counts"]])
-      }
-      return(cells)
+        if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+            cells <- colnames(slot(omic, "coverage")[["log.ratio"]])
+        } else if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+            cells <- colnames(slot(omic, "coverage")[["mat.counts"]])
+        }
+        return(cells)
     })
-  }
-)
+}
 
 #' @rdname muscadet-methods
 #'
@@ -890,45 +903,46 @@ setMethod(
 #'
 #' @return
 #' `Features`:
-#' - `muscomic`: A vector of feature names.
-#' - `muscadet`: A list of vectors of feature names, one list element per omic.
+#' - if `x` is a `muscomic` object: A vector of feature names.
+#' - if `x` is a `muscadet` object: A list of vectors of feature names, one list
+#' element per omic.
 #'
-setMethod(
-  f = "Features",
-  signature = signature(x = "muscomic"),
-  definition = function(x) {
+#' @method Features muscomic
+#' @export
+Features.muscomic <- function(x, ...) {
     if (!is.null(slot(x, "coverage")[["log.ratio"]])) {
-      features <- rownames(slot(x, "coverage")[["log.ratio"]])
+        features <- rownames(slot(x, "coverage")[["log.ratio"]])
     } else if (!is.null(slot(x, "coverage")[["mat.counts"]])) {
-      features <- rownames(slot(x, "coverage")[["mat.counts"]])
+        features <- rownames(slot(x, "coverage")[["mat.counts"]])
     }
     return(features)
-  }
-)
+}
 
 #' @rdname muscadet-methods
 #'
-setMethod(
-  f = "Features",
-  signature = signature(x = "muscadet"),
-  definition = function(x) {
+#' @importFrom SeuratObject Features
+#'
+#' @method Features muscadet
+#' @export
+Features.muscadet <- function(x, ...) {
     lapply(slot(x, "omics"), function(omic) {
-      if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
-        features <- rownames(slot(omic, "coverage")[["log.ratio"]])
-      } else if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
-        features <- rownames(slot(omic, "coverage")[["mat.counts"]])
-      }
-      return(features)
+        if (!is.null(slot(omic, "coverage")[["log.ratio"]])) {
+            features <- rownames(slot(omic, "coverage")[["log.ratio"]])
+        } else if (!is.null(slot(omic, "coverage")[["mat.counts"]])) {
+            features <- rownames(slot(omic, "coverage")[["mat.counts"]])
+        }
+        return(features)
     })
-  }
-)
+}
+
 
 #' @rdname muscadet-methods
 #'
 #' @return
 #' `coordFeatures`:
-#' - `muscomic`: A data frame of feature coordinates.
-#' - `muscadet`: A list of data frames of feature coordinates, one list element per omic.
+#' - if `x` is a `muscomic` object: A data frame of feature coordinates.
+#' - if `x` is a `muscadet` object: A list of data frames of feature
+#' coordinates, one list element per omic.
 #'
 setMethod(
   f = "coordFeatures",
@@ -954,8 +968,9 @@ setMethod(
 #'
 #' @return
 #' `matCounts`:
-#' - `muscomic`: A \code{\link{dgCMatrix-class}} *features x cells*.
-#' - `muscadet`: A list of \code{\link{dgCMatrix-class}} *features x cells*, one list element per omic.
+#' - if `x` is a `muscomic` object: A \code{\link{dgCMatrix-class}} *features x cells*.
+#' - if `x` is a `muscadet` object: A list of \code{\link{dgCMatrix-class}} *features x cells*,
+#' one list element per omic.
 #'
 setMethod(
   f = "matCounts",
@@ -981,8 +996,9 @@ setMethod(
 #'
 #' @return
 #' `matLogRatio`:
-#' - `muscomic`: A \code{\link{matrix}} *features x cells*.
-#' - `muscadet`: A list of \code{\link{matrix}} *features x cells*, one list element per omic.
+#' - if `x` is a `muscomic` object: A \code{\link{matrix}} *features x cells*.
+#' - if `x` is a `muscadet` object: A list of \code{\link{matrix}} *features x cells*,
+#' one list element per omic.
 #'
 setMethod(
     f = "matLogRatio",
