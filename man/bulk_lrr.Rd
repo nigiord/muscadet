@@ -3,7 +3,7 @@
 \docType{data}
 \name{bulk_lrr}
 \alias{bulk_lrr}
-\title{Log R ratio from bulk sequencing data}
+\title{Example data: Log R ratio from bulk sequencing data}
 \format{
 A data frame with the following columns:
 \describe{

@@ -7,7 +7,7 @@
 \alias{mat_counts_atac_ref}
 \alias{mat_counts_rna_tumor}
 \alias{mat_counts_rna_ref}
-\title{Matrices of raw counts}
+\title{Example data: Matrices of raw counts}
 \format{
 A \code{dgCMatrix} (\code{\link{dgCMatrix-class}}) of numeric values with the following dimensions:
 \describe{

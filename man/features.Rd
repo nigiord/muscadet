@@ -5,7 +5,7 @@
 \alias{features}
 \alias{genes}
 \alias{peaks}
-\title{Feature coordinates}
+\title{Example data: Feature coordinates}
 \format{
 A data frame with the following columns:
 \describe{

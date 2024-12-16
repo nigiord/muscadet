@@ -7,7 +7,7 @@
 \alias{allele_counts_atac_ref}
 \alias{allele_counts_rna_tumor}
 \alias{allele_counts_rna_ref}
-\title{Allele counts at variation positions}
+\title{Example data: Allele counts at variation positions}
 \format{
 A data frame with columns based on the \href{https://en.wikipedia.org/wiki/Variant_Call_Format}{variant calling format (VCF) format} columns.
 It contains the following columns:

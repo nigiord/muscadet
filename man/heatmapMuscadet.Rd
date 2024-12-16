@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{heatmapMuscadet}
 \alias{heatmapMuscadet}
-\title{Heatmap Plot Function for muscadet Object}
+\title{Heatmap plot function for \code{muscadet} object}
 \usage{
 heatmapMuscadet(
   x,
@@ -74,13 +74,13 @@ PNG image at the provided path.
 }
 \description{
 This function generates a heatmap to visualize log R ratio (LRR) data
-contained in muscadet objects. One heatmap is generated per omic, rows are
-cells and columns are chromosomes, for muscadet object containing multiple
-omics, the heatmaps are plotted horizontally aligned. The cells can be
-clustered for a specific k number of cluster following the clustering step of
-muscadet object, or custom cluster assignments can be used. Additionally, LRR
-values from bulk sequencing data can be plotted as an annotation under the
-heatmaps.
+contained in \code{\link{muscadet}} objects. One heatmap is generated per
+omic, rows are cells and columns are chromosomes, for \code{muscadet} object
+containing multiple omics, the heatmaps are plotted horizontally aligned. The
+cells can be clustered for a specific k number of cluster following the
+clustering step of \code{muscadet} object, or custom cluster assignments can be
+used. Additionally, LRR values from bulk sequencing data can be plotted as an
+annotation under the heatmaps.
 }
 \examples{
 # Load example muscadet object

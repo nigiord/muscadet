@@ -2,7 +2,7 @@
 # Feature coordinates ----------------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' Feature coordinates
+#' Example data: Feature coordinates
 #'
 #' @description
 #' Data frames of features (peaks, genes...) coordinates on genome.
@@ -33,7 +33,7 @@
 # Matrices of counts -----------------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' Matrices of raw counts
+#' Example data: Matrices of raw counts
 #'
 #' @description
 #' Matrices of raw read counts *features x cells* in `dgCMatrix` format.
@@ -72,7 +72,7 @@
 # Allele counts ----------------------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' Allele counts at variation positions
+#' Example data: Allele counts at variation positions
 #'
 #' @description
 #' Data frames of allele counts at single nucleotide polymorphisms (SNPs)
@@ -125,7 +125,7 @@
 # Log ratio from bulk data -----------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' Log R ratio from bulk sequencing data
+#' Example data: Log R ratio from bulk sequencing data
 #'
 #' @description Data frame containing log R ratio values per genomic segments
 #' from bulk sequencing data.
@@ -196,24 +196,37 @@ NULL
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# muscadet object --------------------------------------------------------------
+# muscadet objects -------------------------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' muscadet object
+#' Example data: muscadet objects
 #'
-#' @description A \code{\link{muscadet}} object containing two omic datasets:
-#' scATAC-seq and scRNA-seq.
+#' @name muscadet_obj
+#' @rdname muscadet_obj
 #'
-#' @format A \code{\link{muscadet}} with the following slots:
+#' @description \code{\link{muscadet}} objects, containing two
+#'   single-cell omic datasets: scATAC-seq and scRNA-seq.
+#' - `muscadet_obj` with tumor cells data: sample cells
+#' - `muscadet_obj_ref` with normal cells data: reference cells
+#'
+#'
+#' @format \code{\link{muscadet}} objects with the following slots:
 #' \describe{
 #'   \item{`omics`}{List of \code{\link{muscomic}} objects, one per single-cell omic (`list`).}
-#'   \item{`bulk.data`}{List of objects containing data from paired bulk sequencing (`list`).}
-#'   \item{`clustering`}{ist of objects containing data associated with the
-#'   clustering of cells based on coverage log R ratio values (`list`).}
-#'   \item{`cnacalling`}{List of objects containing data associated with the calling
-#'   of copy number alterations (CNAs) (`list`).}
+#'   \item{`bulk.data`}{List of data from paired bulk sequencing (`list`).}
+#'   \item{`clustering`}{List of data associated with the clustering of cells
+#'   based on coverage log R ratio values (`list`).}
+#'   \item{`cnacalling`}{List of data associated with the calling of copy number
+#'   alterations (CNAs) (`list`).}
 #'   \item{`genome`}{Reference genome name among: "hg38", "hg19" and "mm10" (`character`).}
 #' }
 #'
 "muscadet_obj"
+
+#' @name muscadet_obj_ref
+#' @rdname muscadet_obj
+#' @format NULL
+#'
+"muscadet_obj_ref"
+
 

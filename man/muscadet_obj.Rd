@@ -3,24 +3,31 @@
 \docType{data}
 \name{muscadet_obj}
 \alias{muscadet_obj}
-\title{muscadet object}
+\alias{muscadet_obj_ref}
+\title{Example data: muscadet objects}
 \format{
-A \code{\link{muscadet}} with the following slots:
+\code{\link{muscadet}} objects with the following slots:
 \describe{
 \item{\code{omics}}{List of \code{\link{muscomic}} objects, one per single-cell omic (\code{list}).}
-\item{\code{bulk.data}}{List of objects containing data from paired bulk sequencing (\code{list}).}
-\item{\code{clustering}}{ist of objects containing data associated with the
-clustering of cells based on coverage log R ratio values (\code{list}).}
-\item{\code{cnacalling}}{List of objects containing data associated with the calling
-of copy number alterations (CNAs) (\code{list}).}
+\item{\code{bulk.data}}{List of data from paired bulk sequencing (\code{list}).}
+\item{\code{clustering}}{List of data associated with the clustering of cells
+based on coverage log R ratio values (\code{list}).}
+\item{\code{cnacalling}}{List of data associated with the calling of copy number
+alterations (CNAs) (\code{list}).}
 \item{\code{genome}}{Reference genome name among: "hg38", "hg19" and "mm10" (\code{character}).}
 }
 }
 \usage{
 muscadet_obj
+
+muscadet_obj_ref
 }
 \description{
-A \code{\link{muscadet}} object containing two omic datasets:
-scATAC-seq and scRNA-seq.
+\code{\link{muscadet}} objects, containing two
+single-cell omic datasets: scATAC-seq and scRNA-seq.
+\itemize{
+\item \code{muscadet_obj} with tumor cells data: sample cells
+\item \code{muscadet_obj_ref} with normal cells data: reference cells
+}
 }
 \keyword{datasets}

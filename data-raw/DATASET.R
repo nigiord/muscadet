@@ -153,30 +153,41 @@ allele_counts_rna_tumor <- allele_counts_rna_tumor[which(allele_counts_rna_tumor
 allele_counts_rna_ref <- allele_counts_rna_ref[which(allele_counts_rna_ref[, "cell"] %in% barcodes_rna_ref), ]
 
 
-# subsampling by SNP identifiers
-snp_atac_tumor <- sample(
-  unique(allele_counts_atac_tumor[, "id"]),
-  round(length(unique(allele_counts_atac_tumor[, "id"])) / 50)
-)
-snp_rna_tumor <- sample(
-  unique(allele_counts_rna_tumor[, "id"]),
-  round(length(unique(allele_counts_rna_tumor[, "id"])) / 50)
-)
+# subsampling by common SNP identifiers
 
-snp_atac_ref <- sample(
-  unique(allele_counts_atac_ref[, "id"]),
-  round(length(unique(allele_counts_atac_ref[, "id"])) / 50)
-)
-snp_rna_ref <- sample(
-  unique(allele_counts_rna_ref[, "id"]),
-  round(length(unique(allele_counts_rna_ref[, "id"])) / 50)
-)
+snp_atac <- intersect(unique(allele_counts_atac_tumor[, "id"]),
+                      unique(allele_counts_atac_ref[, "id"]))
+
+snp_atac_tumor <- c(snp_atac, sample(
+    setdiff(unique(allele_counts_atac_tumor[, "id"]), snp_atac), 100))
+
+snp_atac_ref <- c(snp_atac, sample(
+    setdiff(unique(allele_counts_atac_ref[, "id"]), snp_atac), 100))
+
+snp_rna <- intersect(unique(allele_counts_rna_tumor[, "id"]),
+                      unique(allele_counts_rna_ref[, "id"]))
+
+snp_rna_tumor <- c(snp_rna, sample(
+    setdiff(unique(allele_counts_rna_tumor[, "id"]), snp_rna), 100))
+
+snp_rna_ref <- c(snp_rna, sample(
+    setdiff(unique(allele_counts_rna_ref[, "id"]), snp_rna), 100))
 
 allele_counts_atac_tumor <- allele_counts_atac_tumor[which(allele_counts_atac_tumor[, "id"] %in% snp_atac_tumor), ]
+allele_counts_atac_tumor <- allele_counts_atac_tumor[order(allele_counts_atac_tumor[, "POS"]), ]
+allele_counts_atac_tumor <- allele_counts_atac_tumor[order(allele_counts_atac_tumor[, "CHROM"]), ]
+
 allele_counts_rna_tumor <- allele_counts_rna_tumor[which(allele_counts_rna_tumor[, "id"] %in% snp_rna_tumor), ]
+allele_counts_rna_tumor <- allele_counts_rna_tumor[order(allele_counts_rna_tumor[, "POS"]), ]
+allele_counts_rna_tumor <- allele_counts_rna_tumor[order(allele_counts_atac_tumor[, "CHROM"]), ]
 
 allele_counts_atac_ref <- allele_counts_atac_ref[which(allele_counts_atac_ref[, "id"] %in% snp_atac_ref), ]
+allele_counts_atac_ref <- allele_counts_atac_ref[order(allele_counts_atac_ref[, "POS"]), ]
+allele_counts_atac_ref <- allele_counts_atac_ref[order(allele_counts_atac_ref[, "CHROM"]), ]
+
 allele_counts_rna_ref <- allele_counts_rna_ref[which(allele_counts_rna_ref[, "id"] %in% snp_rna_ref), ]
+allele_counts_rna_ref <- allele_counts_rna_ref[order(allele_counts_rna_ref[, "POS"]), ]
+allele_counts_rna_ref <- allele_counts_rna_ref[order(allele_counts_atac_ref[, "CHROM"]), ]
 
 usethis::use_data(allele_counts_atac_tumor, overwrite = TRUE)
 usethis::use_data(allele_counts_atac_ref, overwrite = TRUE)
@@ -293,4 +304,5 @@ muscadet <- clusterMuscadet(
 
 muscadet_obj <- muscadet
 usethis::use_data(muscadet_obj, compress = "xz", overwrite = TRUE)
-
+muscadet_obj_ref <- muscadet_ref
+usethis::use_data(muscadet_obj_ref, compress = "xz", overwrite = TRUE)
