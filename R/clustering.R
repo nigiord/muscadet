@@ -141,6 +141,11 @@ clusterMuscadet <- function(x, # muscadet object
     dist_list <- lapply(mat_list, function(mat) {
         mat <- mat[common_cells, ]
         dist <- Rfast::Dist(mat, method = dist_method)
+        # Rfast::Dist returns a similarity matrix for cosine with 0 values in diagonal
+        if(dist_method == "cosine") {
+            diag(dist) <- 1
+            dist <- 1-dist
+        }
         dimnames(dist) <- list(rownames(mat), rownames(mat))
         return(dist)
     })
