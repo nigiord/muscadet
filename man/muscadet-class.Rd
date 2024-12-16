@@ -13,7 +13,8 @@ clustering and CNA calling.
 \section{Slots}{
 
 \describe{
-\item{\code{omics}}{List of \code{\link{muscomic}} objects, one per single-cell omic (\code{list}).}
+\item{\code{omics}}{List of \code{\link{muscomic}} objects, one per single-cell omic
+(\code{list}).}
 
 \item{\code{bulk.data}}{List of objects containing data from paired bulk sequencing
 (\code{list}).}

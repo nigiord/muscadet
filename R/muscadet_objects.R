@@ -111,6 +111,7 @@ methods::setClass(
 #' @return
 #' A \code{\link{muscomic}} object.
 #'
+#' @import dplyr
 #' @importClassesFrom Matrix dgCMatrix
 #' @importFrom Matrix Matrix
 #' @importFrom stringr str_remove
@@ -170,10 +171,10 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
                                  features,
                                  label.omic = NULL,
                                  label.features = NULL) {
-  # check for type of omic
+  # Check for type of omic
   type.omic <- match.arg(arg = type)
 
-  # default labels
+  # Default labels
   if (type.omic == "ATAC") {
     if (is.null(label.omic)) {
       label.omic <- "scATAC-seq"
@@ -191,17 +192,17 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
     }
   }
 
-  # check count matrix
+  # Check count matrix
   stopifnot(
     "`mat_counts` must be either a matrix or a dgCMatrix." =
       any(class(mat_counts) %in% c("matrix", "dgCMatrix"))
   )
-  # convert to dgCMatrix class objects if matrix
+  # Convert to dgCMatrix class objects if matrix
   if (any(class(mat_counts) == "matrix")) {
     mat_counts <- Matrix::Matrix(mat_counts)
   }
 
-  # check coordinates of features
+  # Check coordinates of features
   stopifnot("`features` must be a data frame." = class(features) == "data.frame")
   colnames(features) <- c("CHROM", "start", "end", "id")
   features$CHROM <- stringr::str_remove(features$CHROM, "chr") # remove "chr" if necessary
@@ -213,22 +214,23 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
   # Sort and filter matrix based on provided features
   mat_counts <- mat_counts[features$id[features$id %in% rownames(mat_counts)], ]
 
-  # check matching cells between coverage (count matrix) and allelic data (allele count df)
+  # Check matching cells between coverage (count matrix) and allelic data (allele count df)
   # stopifnot(
   #   "Cells in the allele counts data frame must be the same as the ones in matrix counts column names." =
   #     unique(allele_counts$cell) %in% colnames(mat_counts)
   # )
 
-  # generate table of raw counts by converting matrix to summary data frame
+  # Generate table of raw counts by converting matrix to summary data frame
   coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features))) # unique index value
 
   table_counts <- as.data.frame(Matrix::summary(mat_counts)) %>%
     dplyr::mutate(cell = colnames(mat_counts)[.data$j], omic = type.omic) %>%
     dplyr::rename(index = "i", DP = "x") %>%
     dplyr::left_join(coord.df, by = "index") %>%
-    dplyr::select(c("omic", "cell", "id", "CHROM", "start", "end", "DP"))
+    dplyr::select(c("omic", "cell", "id", "CHROM", "start", "DP"))
+  colnames(table_counts)[which(colnames(table_counts) == "start")] <- "POS"
 
-  # coverage data
+  # Coverage data
   coverage <- list(
     mat.counts = mat_counts,
     table.counts = table_counts,
@@ -236,14 +238,14 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
     label.features = label.features
   )
 
-  # allelic data
+  # Allelic data
   if (!is.null(allele_counts)) {
       allelic <- list(table.counts = data.frame(omic = type.omic, allele_counts))
   } else {
       allelic <- list(table.counts = NULL)
   }
 
-  # create object
+  # Create object
   obj <- new(
     Class = "muscomic",
     type = type.omic,
@@ -329,7 +331,7 @@ CreateMuscadetObject <- function(omics,
                                  bulk.lrr = NULL,
                                  bulk.label = NULL,
                                  genome = "hg38") {
-  # check for omic objects
+  # Check for omic objects
   for (i in seq_along(omics)) {
     stopifnot(
       "`omics` list elements must be of class `muscomic` (use CreateMuscomicObject())." =
@@ -338,7 +340,7 @@ CreateMuscadetObject <- function(omics,
   }
 
 
-  # set names of omics based on type if unamed
+  # Set names of omics based on type if unamed
   if (is.null(names(omics))) {
     omics <- setNames(omics, unlist(lapply(omics, function(o) {
       o@type
@@ -357,7 +359,7 @@ CreateMuscadetObject <- function(omics,
     ))
   }
 
-  # labels of omics can't be identical
+  # Labels of omics can't be identical
   stopifnot(
     "Identical omic labels found in the `omics` (muscomic object list) provided.
     You can check the labels with `muscomic_obj$label.omic`." =
@@ -368,7 +370,7 @@ CreateMuscadetObject <- function(omics,
       )))
   )
 
-  # check bulk data
+  # Check bulk data
   if (!is.null(bulk.lrr)) {
       # default names for bulk df columns
       colnames(bulk.lrr) <- c("CHROM", "start", "end", "lrr")
@@ -377,16 +379,16 @@ CreateMuscadetObject <- function(omics,
       )
   }
 
-  # check for genome
+  # Check for genome
   stopifnot(
     "Genome must be either 'hg38', 'hg19' or 'mm10'." =
       genome %in% c("hg38", "hg19", "mm10")
   )
 
-  # add bulk log R ratio data
+  # Add bulk log R ratio data
   bulk.data <- list(log.ratio = bulk.lrr, label = bulk.label)
 
-  # create object
+  # Create object
   obj <- new(
     Class = "muscadet",
     omics = omics,
@@ -787,8 +789,7 @@ setMethod(
             "types:", paste(omic_types, collapse = ", "), "\n",
             "labels:", paste(omic_labels, collapse = ", "), "\n",
             "coverage data matrix:", paste(omic_matrix_used, collapse = ", "), "\n",
-            "cells:", paste(omic_cells, collapse = ", "), "\n",
-            "features:", paste(omic_features, collapse = ", "), "\n",
+            "cells:", paste(omic_cells, collapse = ", "), paste0("(common: ", length(Reduce(intersect, Cells(object))), ", total: ", length(Reduce(union, Cells(object))), ")"), "\n", "features:", paste(omic_features, collapse = ", "), "\n",
             "feature labels:", paste(omic_feature_labels, collapse = ", "), "\n",
             "SNPs:", paste(omic_snps, collapse = ", "), "\n",
             "data from paired bulk sequencing:", ifelse(
@@ -800,7 +801,7 @@ setMethod(
                 paste("k =", paste(names(object@clustering$clusters), collapse = ", "),
                       "; optimal k =", object@clustering$k.opt)
             ), "\n",
-            "CNA calling:", ifelse(length(object@cnacalling) == 0, "None", object@cnacalling), "\n",
+            "CNA calling:", ifelse(length(object@cnacalling) == 0, "None", ""), "\n",
             "genome:", object@genome
         )
     }
