@@ -211,6 +211,12 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
   ) # ordered chromosomes
   features <- dplyr::arrange(features, "CHROM", "start") # sort by chromosome and position
 
+  # Check row names of matrix matching features id
+  stopifnot("Row names of count matrix `mat_counts` must not be NULL and must match `features` id column." =
+                !is.null(rownames(mat_counts)))
+  stopifnot("Row names of count matrix `mat_counts` must match `features` id column." =
+                any(features$id %in% rownames(mat_counts)))
+
   # Sort and filter matrix based on provided features
   mat_counts <- mat_counts[features$id[features$id %in% rownames(mat_counts)], ]
 
@@ -224,11 +230,11 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
   coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features))) # unique index value
 
   table_counts <- as.data.frame(Matrix::summary(mat_counts)) %>%
-    dplyr::mutate(cell = colnames(mat_counts)[.data$j], omic = type.omic) %>%
-    dplyr::rename(index = "i", DP = "x") %>%
-    dplyr::left_join(coord.df, by = "index") %>%
-    dplyr::select(c("omic", "cell", "id", "CHROM", "start", "DP"))
-  colnames(table_counts)[which(colnames(table_counts) == "start")] <- "POS"
+      dplyr::mutate(cell = colnames(mat_counts)[.data$j], omic = type.omic) %>%
+      dplyr::rename(index = "i", DP = "x") %>%
+      dplyr::left_join(coord.df, by = "index") %>%
+      dplyr::mutate(POS = round((.data$start + .data$end) / 2, 0)) %>% # POS as center of the feature
+      dplyr::select(c("omic", "cell", "id", "CHROM", "POS", "DP"))
 
   # Coverage data
   coverage <- list(
