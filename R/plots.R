@@ -192,9 +192,14 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     # Check if output directory exists
     if(!is.null(filename)) stopifnot("The directory doesn't exist" = file.exists(dirname(filename)))
 
-    # Get common and all cells
+    # Get common and all cells in clustering order
     common_cells <- sort(Reduce(intersect, lapply(muscadet::matLogRatio(x), colnames)))
-    all_cells <- sort(Reduce(union, lapply(muscadet::matLogRatio(x), colnames)))
+    if (is.null(clusters)) {
+        all_cells <- names(x@clustering$clusters[[as.character(k)]])
+    } else if (is.null(clusters)) {
+        all_cells <- names(clusters)
+    }
+    common_cells <- all_cells[which(all_cells %in% common_cells)]
 
     if (quiet == FALSE) {
         # Print information messages
@@ -331,7 +336,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 
     } else if (show_missing == FALSE) {
         if (is.null(clusters)) {
-            # 2. Clustering hclust from the muscadet object clustering with commom cells
+            # 2. Clustering hclust from the muscadet object clustering with common cells
             hc <- x@clustering$hclust # hclust object to print the dendrogram on the heatmap
             n_cells <- table(dendextend::cutree(hc, k, order_clusters_as_data = FALSE))
 

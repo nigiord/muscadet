@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{heatmapMuscadet}
 \alias{heatmapMuscadet}
-\title{Heatmap plot function for \code{muscadet} object}
+\title{Heatmap plot for \code{muscadet} object}
 \usage{
 heatmapMuscadet(
   x,
@@ -99,10 +99,10 @@ title <- paste("Example sample |",
 
 # Generate heatmap
 ht <- heatmapMuscadet(
-  muscadet_obj,
-  k = 3,
-  filename = file.path("heatmap_muscadet_k3.png"),
-  title = title
+    muscadet_obj,
+    k = 3,
+    filename = file.path("heatmap_muscadet_k3.png"),
+    title = title
 )
 
 ht <- heatmapMuscadet(
@@ -114,17 +114,17 @@ ht <- heatmapMuscadet(
 )
 
 # Loop over k
-for (k in names(slot(muscadet_obj, "clustering")$clusters)) {
+for (k in names(muscadet_obj$clustering$clusters)) {
     filename <- paste0("heatmap_muscadet_k", k, ".png")
     title <- paste(
         "Example sample |",
-        slot(muscadet_obj, "clustering")[["params"]][["dist_method"]],
-        slot(muscadet_obj, "clustering")[["params"]][["hclust_method"]],
+        muscadet_obj$clustering$params[["dist_method"]],
+        muscadet_obj$clustering$params[["hclust_method"]],
         "|",
         paste0("k=", k) ,
         "|",
         "Weights of omics:",
-        paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", ")
+        paste(muscadet_obj$clustering$params[["weights"]], collapse = ", ")
     )
     ht <- heatmapMuscadet(
         muscadet_obj,

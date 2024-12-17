@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plotSil}
 \alias{plotSil}
-\title{Silhouette plot for clustering validation}
+\title{Silhouette plot for \code{muscadet} object}
 \usage{
 plotSil(x, k, colors = NULL, title = NULL)
 }
@@ -25,11 +25,17 @@ A ggplot object representing the silhouette plot.
 }
 \description{
 Generate a silhouette plot for a specified clustering result within a
-muscadet object.
+\code{muscadet} object.
 }
 \examples{
 # Load a muscadet object
 data(muscadet_obj)
 plotSil(muscadet_obj, k = 3)
+
+# Loop over k
+for (k in names(muscadet_obj$clustering$clusters)) {
+    plot <- plotSil(muscadet_obj, k = as.integer(k))
+    ggsave(paste0("plot_silhouette_", k, ".png"), plot)
+}
 
 }
