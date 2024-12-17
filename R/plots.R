@@ -1,13 +1,13 @@
-#' Heatmap Plot Function for muscadet Object
+#' Heatmap plot for `muscadet` object
 #'
 #' This function generates a heatmap to visualize log R ratio (LRR) data
-#' contained in muscadet objects. One heatmap is generated per omic, rows are
-#' cells and columns are chromosomes, for muscadet object containing multiple
-#' omics, the heatmaps are plotted horizontally aligned. The cells can be
-#' clustered for a specific k number of cluster following the clustering step of
-#' muscadet object, or custom cluster assignments can be used. Additionally, LRR
-#' values from bulk sequencing data can be plotted as an annotation under the
-#' heatmaps.
+#' contained in \code{\link{muscadet}} objects. One heatmap is generated per
+#' omic, rows are cells and columns are chromosomes, for `muscadet` object
+#' containing multiple omics, the heatmaps are plotted horizontally aligned. The
+#' cells can be clustered for a specific k number of cluster following the
+#' clustering step of `muscadet` object, or custom cluster assignments can be
+#' used. Additionally, LRR values from bulk sequencing data can be plotted as an
+#' annotation under the heatmaps.
 #'
 #' @param x A \code{\link{muscadet}} object containing LRR data for all omics (with
 #'   [muscadet::computeLogRatio()]) and clustering data (with
@@ -88,10 +88,10 @@
 #'
 #' # Generate heatmap
 #' ht <- heatmapMuscadet(
-#'   muscadet_obj,
-#'   k = 3,
-#'   filename = file.path("heatmap_muscadet_k3.png"),
-#'   title = title
+#'     muscadet_obj,
+#'     k = 3,
+#'     filename = file.path("heatmap_muscadet_k3.png"),
+#'     title = title
 #' )
 #'
 #' ht <- heatmapMuscadet(
@@ -103,17 +103,17 @@
 #' )
 #'
 #' # Loop over k
-#' for (k in names(slot(muscadet_obj, "clustering")$clusters)) {
+#' for (k in names(muscadet_obj$clustering$clusters)) {
 #'     filename <- paste0("heatmap_muscadet_k", k, ".png")
 #'     title <- paste(
 #'         "Example sample |",
-#'         slot(muscadet_obj, "clustering")[["params"]][["dist_method"]],
-#'         slot(muscadet_obj, "clustering")[["params"]][["hclust_method"]],
+#'         muscadet_obj$clustering$params[["dist_method"]],
+#'         muscadet_obj$clustering$params[["hclust_method"]],
 #'         "|",
 #'         paste0("k=", k) ,
 #'         "|",
 #'         "Weights of omics:",
-#'         paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", ")
+#'         paste(muscadet_obj$clustering$params[["weights"]], collapse = ", ")
 #'     )
 #'     ht <- heatmapMuscadet(
 #'         muscadet_obj,
@@ -395,10 +395,10 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 
 
 
-#' Silhouette plot for clustering validation
+#' Silhouette plot for `muscadet` object
 #'
 #' Generate a silhouette plot for a specified clustering result within a
-#' muscadet object.
+#' `muscadet` object.
 #'
 #' @param x A \code{\link{muscadet}} object containing clustering data (using
 #'   [muscadet::clusterMuscadet()]).
@@ -424,6 +424,12 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #' # Load a muscadet object
 #' data(muscadet_obj)
 #' plotSil(muscadet_obj, k = 3)
+#'
+#' # Loop over k
+#' for (k in names(muscadet_obj$clustering$clusters)) {
+#'     plot <- plotSil(muscadet_obj, k = as.integer(k))
+#'     ggsave(paste0("plot_silhouette_", k, ".png"), plot)
+#' }
 #'
 plotSil <- function(x, k, colors = NULL, title = NULL) {
 
