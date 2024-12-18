@@ -178,8 +178,6 @@ clusterMuscadet <- function(x, # muscadet object
     # Cut the dendrogram to generate clusters for the specified k range
     clusters <- lapply(k_list, function(k) {
         cl <- dendextend::cutree(hc, k, order_clusters_as_data = FALSE)
-        cl <- cl[hc$order]
-        cl <- cl[order(cl)]
         return(cl)
     })
 
