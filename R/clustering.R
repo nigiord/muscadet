@@ -178,8 +178,6 @@ clusterMuscadet <- function(x, # muscadet object
     # Cut the dendrogram to generate clusters for the specified k range
     clusters <- lapply(k_list, function(k) {
         cl <- dendextend::cutree(hc, k, order_clusters_as_data = FALSE)
-        cl <- cl[hc$order]
-        cl <- cl[order(cl)]
         return(cl)
     })
 
@@ -537,14 +535,14 @@ imputeClusters <- function(mat_list,
         for (j in seq_along(other_mat)) {
 
             # Identify common cells between the current matrix and the other matrix
-            common_cells <- intersect(rownames(mat_list[[omic]]), rownames(other_mat[[j]]))
+            common_cells_mat <- intersect(rownames(mat_list[[omic]]), rownames(other_mat[[j]]))
 
             # Identify missing cells in the current matrix that are present in the other matrix
             cells_NA_other <- cells_NA[which(cells_NA %in% rownames(other_mat[[j]]))]
 
             # Find k-nearest neighbors using the other matrix
             nearest <- RANN::nn2(
-                data = other_mat[[j]][common_cells, ],
+                data = other_mat[[j]][common_cells_mat, ],
                 query = other_mat[[j]][cells_NA_other, , drop = FALSE],
                 k = knn_imp
             )
@@ -552,7 +550,7 @@ imputeClusters <- function(mat_list,
             # Extract neighbor indices and map them to cell barcodes
             knn <- nearest[["nn.idx"]]
             rownames(knn) <- cells_NA_other
-            knn <- apply(knn, c(1, 2), function(x) common_cells[x])
+            knn <- apply(knn, c(1, 2), function(x) common_cells_mat[x])
 
             # Add NA placeholders for cells not found in this matrix
             missing_knn <- matrix(
@@ -607,7 +605,7 @@ imputeClusters <- function(mat_list,
             # Handle ties: pick the cluster of the first matching nearest neighbor
             if (any(duplicated(clus_NA[which(clus_NA == max(clus_NA))]))) {
                 # if more than 1 major cluster exists (identical high number of knn cells assigned to two clusters)
-                final_cluster <- cl[p, cl[p, ] %in% names(which(clus_NA == max(clus_NA)))][1]
+                final_cluster <- as.character(cl[p, cl[p, ] %in% names(which(clus_NA == max(clus_NA)))][1])
             } else {
                 # else take the cluster corresponding to the highest number of knn cells
                 final_cluster <- names(clus_NA)[1]
@@ -626,11 +624,12 @@ imputeClusters <- function(mat_list,
         } else {
             cl <- clusters[[as.character(k)]]
         }
-        cl <- cl[order(cl)]
         return(cl)
     })
 
     return(clust_imp)
 }
+
+
 
 

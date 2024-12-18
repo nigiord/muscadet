@@ -194,12 +194,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 
     # Get common and all cells in clustering order
     common_cells <- sort(Reduce(intersect, lapply(muscadet::matLogRatio(x), colnames)))
-    if (is.null(clusters)) {
-        all_cells <- names(x@clustering$clusters[[as.character(k)]])
-    } else if (is.null(clusters)) {
-        all_cells <- names(clusters)
-    }
-    common_cells <- all_cells[which(all_cells %in% common_cells)]
+    all_cells <- sort(Reduce(union, lapply(muscadet::matLogRatio(x), colnames)))
 
     if (quiet == FALSE) {
         # Print information messages
@@ -330,7 +325,8 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
         n_cells <- table(clusters)
 
         ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                             row_split = as.factor(clusters), row_order = names(clusters),
+                             row_split = factor(clusters[all_cells], levels=sort(unique(clusters))),
+                             row_order = names(clusters),
                              cluster_rows = F, merge_legend = TRUE)
 
 
@@ -346,7 +342,8 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             # 3. Custom cluster assignments vector
             n_cells <- table(clusters)
             ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                                 row_split = as.factor(clusters), row_order = names(clusters),
+                                 row_split = factor(clusters[all_cells], levels=sort(unique(clusters))),
+                                 row_order = names(clusters), row_order = names(clusters),
                                  cluster_rows = F, merge_legend = TRUE)
         }
     }
