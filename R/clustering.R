@@ -518,6 +518,7 @@ imputeClusters <- function(mat_list,
 
     # Initialize the output list for imputed clusters
     out <- list()
+    cells_missing <- list()
 
     # Loop through each omic dataset in the list
     for (omic in names(mat_list)) {
@@ -590,11 +591,15 @@ imputeClusters <- function(mat_list,
         })
 
         out[[omic]] <- clusters_NA
+        cells_missing[[omic]] <- setdiff(cells_NA_all, cells_NA_other)
     }
+
+    cells_missing <- Reduce(c, cells_missing)
 
     # Combine imputed clusters across all omics datasets for each k value
     full_clusters <- lapply(k_list, function(k) {
         cl <- do.call(cbind, lapply(out, function(x) x[[as.character(k)]]))
+        cl <- cl[cells_missing, ] # order per omic instead of alphabetically
 
         # Assign final cluster to each cell based on the majority vote among neighbors
         cl2 <- sapply(rownames(cl), function(p) {
@@ -629,7 +634,5 @@ imputeClusters <- function(mat_list,
 
     return(clust_imp)
 }
-
-
 
 
