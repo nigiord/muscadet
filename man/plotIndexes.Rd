@@ -40,7 +40,7 @@ cluster compared to others.
 observations in different clusters
 to the largest within-cluster distance.
 \item \strong{Davis-Bouldin}: Measures cluster compactness and separation.
-\item \strong{Pearson’s Gamma}: Evaluates the goodness of clustering
+\item \strong{Pearson's Gamma}: Evaluates the goodness of clustering
 based on correlation.
 \item \strong{C Index}: Measures the clustering quality compared to
 random data.
@@ -49,6 +49,7 @@ random data.
 If multiple indexes are selected, the values are normalized to fall between
 0 and 1. For indexes that are better when minimized ("pearsongamma" and
 "c"), their values are reversed for easier comparison.
+The k for which the mean of indexes is maximal is highlighted with a dot.
 }
 \examples{
 # Load muscadet object

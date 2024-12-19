@@ -569,7 +569,7 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #'     observations in different clusters
 #'           to the largest within-cluster distance.
 #'     \item \strong{Davis-Bouldin}: Measures cluster compactness and separation.
-#'     \item \strong{Pearson’s Gamma}: Evaluates the goodness of clustering
+#'     \item \strong{Pearson's Gamma}: Evaluates the goodness of clustering
 #'     based on correlation.
 #'     \item \strong{C Index}: Measures the clustering quality compared to
 #'     random data.
@@ -578,6 +578,7 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #'   If multiple indexes are selected, the values are normalized to fall between
 #'   0 and 1. For indexes that are better when minimized ("pearsongamma" and
 #'   "c"), their values are reversed for easier comparison.
+#'   The k for which the mean of indexes is maximal is highlighted with a dot.
 #'
 #' @import ggplot2
 #' @importFrom cluster silhouette
@@ -682,7 +683,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
     }
 
     # Find the k with the maximum mean index value
-    max_k <- df_indexes[which(rowMeans(df_indexes) == max(rowMeans(df_indexes))), "k"]
+    max_k <- df_indexes[which(rowMeans(df_indexes[, 2:ncol(df_indexes)]) == max(rowMeans(df_indexes[, 2:ncol(df_indexes)]))), "k"]
 
     # Transform the data frame for plotting
     df_plot <- tidyr::pivot_longer(df_indexes, -k, names_to = "Index", values_to = "Value")
@@ -706,7 +707,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
             labels = c(
                 "silhouette" = "Silhouette",
                 "dunn2" = "Dunn2",
-                "pearsongamma" = "Pearson’s Gamma",
+                "pearsongamma" = "Pearson's Gamma",
                 "davisbouldin" = "Davis-Bouldin",
                 "c" = "C Index"
             )
