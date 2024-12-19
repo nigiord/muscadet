@@ -834,6 +834,7 @@ setMethod(
 #' @aliases muscomic-methods
 #'
 #' @param x A \code{\link{muscomic}} or \code{\link{muscadet}} object.
+#' @param ... Other arguments (ignored).
 #'
 #' @seealso \code{\link{muscomic-class}} \code{\link{muscadet-class}}
 #'

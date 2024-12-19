@@ -534,3 +534,185 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 
     return(p)
 }
+
+
+
+#' Plot clustering validation indexes for a `muscadet` object
+#'
+#' It generates a plot of clustering validation indexes for a clustering result
+#' within a `muscadet` object. The index values are computed only using
+#' distances between common cells across omics in the `muscadet` object.
+#'
+#' @param x A \code{\link{muscadet}} object containing clustering data
+#'   (generated using [muscadet::clusterMuscadet()]).
+#'
+#' @param index Character vector specifying one or more validation indexes to
+#'   plot among "silhouette", "dunn2", "davisbouldin", "pearsongamma", and "c".
+#'   If `NULL`, by default all available indexes are included. If multiple
+#'   indexes are selected, the values are normalized for comparability.
+#'
+#' @param colors Vector of colors for each index in the plot (`character`
+#'   vector). Default is `NULL`, which uses predefined colors for the indexes.
+#'
+#' @param title Character string for the title of the plot (`character`
+#'   string). If `NULL`, a default title is generated.
+#'
+#' @return A ggplot object visualizing the clustering validation indexes across
+#'   different numbers of clusters (`k`).
+#'
+#' @details The function computes several clustering validation indexes,
+#'   including:
+#'   \itemize{
+#'     \item \strong{Silhouette}: Measures how similar an object is to its own
+#'     cluster compared to others.
+#'     \item \strong{Dunn2}: The ratio of the smallest distance between
+#'     observations in different clusters
+#'           to the largest within-cluster distance.
+#'     \item \strong{Davis-Bouldin}: Measures cluster compactness and separation.
+#'     \item \strong{Pearson’s Gamma}: Evaluates the goodness of clustering
+#'     based on correlation.
+#'     \item \strong{C Index}: Measures the clustering quality compared to
+#'     random data.
+#'   }
+#'
+#'   If multiple indexes are selected, the values are normalized to fall between
+#'   0 and 1. For indexes that are better when minimized ("pearsongamma" and
+#'   "c"), their values are reversed for easier comparison.
+#'
+#' @import ggplot2
+#' @importFrom cluster silhouette
+#' @importFrom fpc cluster.stats
+#' @importFrom clusterSim index.DB index.C
+#' @importFrom tidyr pivot_longer
+#'
+#' @export
+#'
+#' @examples
+#' # Load muscadet object
+#' data(muscadet_obj)
+#'
+#' # Plot all indexes
+#' plotIndexes(muscadet_obj)
+#'
+#' # Plot specific indexes
+#' plotIndexes(muscadet_obj, index = "silhouette")
+#'
+plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
+
+    # Check that the input is a muscadet object
+    stopifnot(
+        "The input must be a muscadet object." = inherits(x, "muscadet")
+    )
+
+    # Validate the muscadet object contains clustering results
+    stopifnot(
+        "The muscadet object does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+            !is.null(slot(x, "clustering"))
+    )
+
+    # validate index
+    index = c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c")
+
+    # Set default colors if not provided
+    if (is.null(colors)) {
+        colors <- c(
+            "silhouette" = "brown",
+            "dunn2" = "coral2",
+            "davisbouldin" = "tan2",
+            "pearsongamma" = "turquoise4",
+            "c" = "skyblue4"
+        )
+    }
+
+    # Generate a default title if none is provided
+    if (is.null(title)) {
+        title <- "Clustering Validation Indexes Across k"
+    }
+
+    # Extract the clustering data
+    k_clusters <- as.integer(names(x@clustering$clusters))  # Number of clusters (k)
+    dist <- x@clustering$dist  # Distance matrix
+
+    # Initialize a data frame to store index values
+    df_indexes <- data.frame(k = k_clusters)
+
+    # Compute selected indexes for each k
+    for (k in k_clusters) {
+
+        # Extract cluster assignments for the current k
+        clusters <- x@clustering$clusters[[as.character(k)]]
+        clusters <- clusters[names(dist)] # Restrict to common cells in dist
+
+        # Compute each index if selected
+        if ("silhouette" %in% index) {
+            df_indexes[df_indexes$k == k, "silhouette"] <-
+                summary(cluster::silhouette(as.integer(clusters), dist))$avg.width
+        }
+        if ("dunn2" %in% index) {
+            df_indexes[df_indexes$k == k, "dunn2"] <-
+                fpc::cluster.stats(dist, as.integer(clusters))$dunn2
+        }
+        if ("davisbouldin" %in% index) {
+            df_indexes[df_indexes$k == k, "davisbouldin"] <-
+                clusterSim::index.DB(dist, as.integer(clusters))$DB
+        }
+        if ("pearsongamma" %in% index) {
+            df_indexes[df_indexes$k == k, "pearsongamma"] <-
+                fpc::cluster.stats(dist, as.integer(clusters))$pearsongamma
+        }
+        if ("c" %in% index) {
+            df_indexes[df_indexes$k == k, "c"] <-
+                clusterSim::index.C(dist, as.integer(clusters))
+        }
+    }
+
+    # If multiple indexes selected:
+    if( length(index) > 1) {
+        # Normalize indexes to values between 0 and 1
+        df_indexes[, 2:ncol(df_indexes)] <- apply(df_indexes[, 2:ncol(df_indexes)], 2, function(x) {
+            (x - min(x)) / diff(range(x))
+        })
+        # Reverse indexes that should be minimized, for comparability
+        if ("pearsongamma" %in% index) {
+            df_indexes <- mutate(df_indexes, pearsongamma = 1 - .data$pearsongamma)
+        }
+        if ("c" %in% index) {
+            df_indexes <- mutate(df_indexes, c = 1 - .data$c)
+        }
+    }
+
+    # Find the k with the maximum mean index value
+    max_k <- df_indexes[which(rowMeans(df_indexes) == max(rowMeans(df_indexes))), "k"]
+
+    # Transform the data frame for plotting
+    df_plot <- tidyr::pivot_longer(df_indexes, -k, names_to = "Index", values_to = "Value")
+    df_plot$Index <- factor(df_plot$Index, levels = index) # Maintain order of indexes
+
+    # Generate the plot
+    plot <- ggplot(df_plot, aes(
+        x = .data$k,
+        y = .data$Value,
+        color = .data$Index,
+        group = .data$Index
+    )) +
+        geom_line(linewidth = 1) +
+        geom_point(data = df_plot[which(df_plot$k == max_k),]) +
+        labs(x = "Number of Clusters (k)",
+             y = "Normalized Index Value",
+             title = title) +
+        scale_x_continuous(breaks = unique(df_plot$k)) +
+        scale_color_manual(
+            values = colors,
+            labels = c(
+                "silhouette" = "Silhouette",
+                "dunn2" = "Dunn2",
+                "pearsongamma" = "Pearson’s Gamma",
+                "davisbouldin" = "Davis-Bouldin",
+                "c" = "C Index"
+            )
+        ) +
+        theme_classic() +
+        theme(legend.position = "right")
+
+    return(plot)
+}

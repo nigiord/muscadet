@@ -46,6 +46,8 @@ matLogRatio(x)
 }
 \arguments{
 \item{x}{A \code{\link{muscomic}} or \code{\link{muscadet}} object.}
+
+\item{...}{Other arguments (ignored).}
 }
 \value{
 \code{Cells}:

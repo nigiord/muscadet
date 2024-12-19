@@ -24,11 +24,13 @@ Imports:
     caTools,
     circlize,
     cluster,
+    clusterSim,
     ComplexHeatmap,
     dendextend,
     dplyr,
     facets,
     fastcluster,
+    fpc,
     GenomeInfoDb,
     GenomicRanges,
     ggplot2,
@@ -45,9 +47,17 @@ Imports:
     SNFtool,
     sparseMatrixStats,
     stats,
-    stringr
+    stringr,
+    tidyr
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
+Collate: 
+    'muscadet_objects.R'
+    'clustering.R'
+    'computeLogRatio.R'
+    'data.R'
+    'muscadet-package.R'
+    'plots.R'
