@@ -55,9 +55,10 @@ Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
 Collate: 
-    'muscadet_objects.R'
     'clustering.R'
     'computeLogRatio.R'
     'data.R'
     'muscadet-package.R'
+    'muscadet_objects.R'
     'plots.R'
+    'utils.R'

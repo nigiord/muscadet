@@ -295,12 +295,20 @@ muscadet <- computeLogRatio(
     remove.raw = F
 )
 
+# clustering
 muscadet <- clusterMuscadet(
     muscadet,
     dist_method = "euclidean",
     hclust_method = "ward.D",
     k_range = 2:5
 )
+
+# assign clusters for k=3
+muscadet <- assignClusters(muscadet, k = 3)
+
+# merge counts
+muscadet <- mergeCounts(muscadet, muscadet_ref)
+
 
 muscadet_obj <- muscadet
 usethis::use_data(muscadet_obj, compress = "xz", overwrite = TRUE)
