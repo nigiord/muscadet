@@ -609,8 +609,12 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
             !is.null(slot(x, "clustering"))
     )
 
-    # validate index
-    index = c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c")
+    # Define default indexes if none are provided
+    if (is.null(index)) {
+        index <- c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c")
+    }
+    # Check for indexes correct names
+    index <- match.arg(index, c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c"), several.ok = TRUE)
 
     # Set default colors if not provided
     if (is.null(colors)) {
@@ -681,7 +685,11 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
     }
 
     # Find the k with the maximum mean index value
-    max_k <- df_indexes[which(rowMeans(df_indexes[, 2:ncol(df_indexes)]) == max(rowMeans(df_indexes[, 2:ncol(df_indexes)]))), "k"]
+    if (ncol(df_indexes) > 2) {
+        max_k <- df_indexes[which(rowMeans(df_indexes[, 2:ncol(df_indexes)]) == max(rowMeans(df_indexes[, 2:ncol(df_indexes)]))), "k"]
+    } else {
+        max_k <- df_indexes[which(df_indexes[, 2] == max(df_indexes[, 2])), "k"]
+    }
 
     # Transform the data frame for plotting
     df_plot <- tidyr::pivot_longer(df_indexes, -k, names_to = "Index", values_to = "Value")
