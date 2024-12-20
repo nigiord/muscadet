@@ -1,8 +1,6 @@
 > [!NOTE]
 > This R package is currently in development and therefore is not functional yet
 
-<br>
-
 # muscadet <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 ### *multiomics single-cell copy number alterations detection*
@@ -10,9 +8,9 @@
 **R package for the identification of copy number alterations (CNAs) in cancer cells from single-cell multiomics data.**
 
 
-Marie Denoulet<sup>1</sup>, Mia Cherkaoui<sup>1</sup>, Nils Giordano<sup>1</sup>, Robin Lanée<sup>1</sup>, Elise Douillard<sup>1,2</sup>, Magali Devic<sup>1,2</sup>, Florence Magrangeas<sup>1,2</sup>, Stéphane Minvielle<sup>1,2</sup>, Céline Vallot<sup>3,4</sup>, Eric Letouzé<sup>1,2</sup>
+> Marie Denoulet<sup>1</sup>, Mia Cherkaoui<sup>1</sup>, Nils Giordano<sup>1</sup>, Robin Lanée<sup>1</sup>, Elise Douillard<sup>1,2</sup>, Magali Devic<sup>1,2</sup>, Florence Magrangeas<sup>1,2</sup>, Stéphane Minvielle<sup>1,2</sup>, Céline Vallot<sup>3,4</sup>, Eric Letouzé<sup>1,2</sup>
 
-<sup>1</sup>Nantes Université, INSERM, CNRS, Université d'Angers, CRCI2NA, Nantes, France. <sup>2</sup>University Hospital Hôtel-Dieu, Nantes, France. <sup>3</sup>CNRS UMR3244, Institut Curie, PSL University, Paris, France. <sup>4</sup>Translational Research Department, Institut Curie, PSL University, Paris, France
+> <sup>1</sup>Nantes Université, INSERM, CNRS, Université d'Angers, CRCI2NA, Nantes, France. <sup>2</sup>University Hospital Hôtel-Dieu, Nantes, France. <sup>3</sup>CNRS UMR3244, Institut Curie, PSL University, Paris, France. <sup>4</sup>Translational Research Department, Institut Curie, PSL University, Paris, France
 
 ### Install the latest version directly from GitHub
 ```r

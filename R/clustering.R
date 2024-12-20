@@ -62,9 +62,12 @@
 #'
 #' @seealso
 #' * \code{\link{muscadet-class}}
-#' * [muscadet::weightedSNF()]
-#' * To plot cluster result as heatmap use [muscadet::heatmapMuscadet()].
-#' * To plot the silhouette widths use [muscadet::plotSil()].
+#' * Details on Similarity Network Fusion: [muscadet::weightedSNF()]
+#' * Plot cluster result as heatmap with [muscadet::heatmapMuscadet()].
+#' * Plot silhouette widths with [muscadet::plotSil()].
+#' * Plot several cluster validation indexes with [muscadet::plotIndexes()].
+#' * After cluster partition validation, assign final cluster assignments with
+#' [muscadet::assignClusters()].
 #'
 #' @importFrom Rfast Dist
 #' @importFrom SNFtool affinityMatrix
@@ -635,140 +638,5 @@ imputeClusters <- function(mat_list,
     return(clust_imp)
 }
 
-
-#' Assign a cluster assignment to a `muscadet` object
-#'
-#' Add the user selected cluster assignments to cells in a
-#' \code{\link{muscadet}} object. This function allows the user to choose the
-#' cluster assignments they consider to fit the data and their requirements, or
-#' cluster assignments based on other data and methods.
-#'
-#' @param x A \code{\link{muscadet}} object (`muscadet`).
-#' @param k Integer specifying the number of clusters to choose from the
-#'   muscadet object (`integer`). If `k` is provided, the clustering result
-#'   stored in the object for that specific `k` is used
-#'   (`muscadet_obj$clustering$clusters[[as.character(k)]]`).
-#' @param clusters A custom named vector of cluster assignments (e.g., to
-#'   regroup some clusters) (`vector`). The vector must have the same length as
-#'   the number of cells in the muscadet object and names matching the cell
-#'   names.
-#' @param mapping Optional named vector specifying how to remap cluster values
-#'   (`vector`). The names of the vector correspond to the original cluster
-#'   values, and the values are the remapped cluster values. For example, `c("1"
-#'   = 1, "2" = 1, "3" = 2, "4" = 3)` would merge clusters 1 and 2 into 1,
-#'   cluster 3 into 2, and cluster 4 into 3.
-#'
-#' @details
-#' - The clusters can be taken directly from the `muscadet` object clustering
-#' results with setting the `k` argument to the chosen partition (e.g.
-#' `muscadet_obj$clustering$clusters[["2"]]` for k=`2`).
-#' - A custom vector of cluster assignments
-#' can be attributed using the `clusters` argument.
-#' - Either way, the clusters assignments can be rearranged using the `mapping`
-#' argument.
-#'
-#' @return A \code{\link{muscadet}} object updated with the user chosen cluster
-#' assignments in `muscadet_obj$cnacalling$clusters`.
-#'
-#' @include muscadet_objects.R
-#' @importFrom SeuratObject Cells
-#' @export
-#'
-#' @examples
-#' # Load muscadet object
-#' data(muscadet_obj)
-#'
-#' # Select clustering result for k = 4
-#' muscadet_obj <- assignClusters(muscadet_obj, k = 4)
-#' table(muscadet_obj$cnacalling$clusters)
-#'
-#' # Assign custom clusters
-#' cell_names <- Reduce(union, Cells(muscadet_obj))
-#' n1 <- sample(1:length(cell_names), 1)
-#' n2 <- length(cell_names) - n1
-#' custom_clusters <- c(rep.int(1, n1), rep.int(2, n2))
-#' names(custom_clusters) <- cell_names
-#' muscadet_obj <- assignClusters(muscadet_obj, clusters = custom_clusters)
-#' table(muscadet_obj$cnacalling$clusters)
-#'
-#' # Assign clusters with remapping
-#' # example to remap from k=4 to k=3 by merging clusters 1 and 2
-#' clusters <- muscadet_obj$clustering$clusters[["4"]]
-#' mapping <- c("1" = 1, "2" = 1, "3" = 2, "4" = 3)
-#'
-#' muscadet_obj <- assignClusters(muscadet_obj, clusters = clusters, mapping = mapping)
-#' table(muscadet_obj$cnacalling$clusters)
-#' # check original and remapped clusters
-#' table(clusters, muscadet_obj$cnacalling$clusters)
-#'
-#' muscadet_obj <- assignClusters(muscadet_obj, k=4, mapping = mapping)
-#' table(muscadet_obj$cnacalling$clusters)
-#' # check original and remapped clusters
-#' table(clusters, muscadet_obj$cnacalling$clusters)
-#'
-#' # Visualize clusters on heatmap
-#' ht <- heatmapMuscadet(
-#'   muscadet_obj,
-#'   k = 4,
-#'   filename = file.path("heatmap_muscadet_k4.png"),
-#'   title = "Example sample | k=4"
-#' )
-#' ht <- heatmapMuscadet(
-#'   muscadet_obj,
-#'   clusters = muscadet_obj$cnacalling$clusters,
-#'   filename = file.path("heatmap_muscadet_customk3.png"),
-#'   title = "Example sample | rearranged clusters k=3"
-#' )
-#'
-assignClusters <- function(x, k = NULL, clusters = NULL, mapping = NULL) {
-
-    # Validate input: x must be a muscadet object
-    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
-
-    # Validate that either k or clusters is provided, but not both
-    stopifnot(
-        "Either 'k' or 'clusters' must be provided, but not both." = xor(!is.null(k), !is.null(clusters))
-    )
-
-    # If k is provided, validate that clustering has been performed
-    if (!is.null(k)) {
-        stopifnot(
-            "Clustering results are not available in the muscadet object. Perform clustering first using 'clusterMuscadet()'." = !is.null(x@clustering),
-            "Clustering results for the chosen k are not available. Use 'clusterMuscadet()' with the 'k_range' argument containing k" = as.character(k) %in% names(x@clustering$clusters)
-        )
-    }
-
-    # If clusters is provided, validate its format
-    if (!is.null(clusters)) {
-        stopifnot(
-            "'clusters' must be a named vector." = is.vector(clusters) && !is.null(names(clusters)),
-            "Length of 'clusters' must match the total number of cells in the muscadet object." = length(clusters) == length(Reduce(union, Cells(x))),
-            "Names of 'clusters' must match the cell names in the muscadet object." = all(names(clusters) %in% Reduce(union, Cells(x)))
-        )
-    }
-
-    # Apply mapping if provided
-    if (!is.null(mapping)) {
-        stopifnot(
-            "Mapping must be a named vector." = is.vector(mapping) && !is.null(names(mapping)),
-            "All cluster values must have corresponding mappings." = all(as.character(unique(clusters)) %in% names(mapping))
-        )
-        if (!is.null(k)) {
-            clusters <- x@clustering$clusters[[as.character(k)]]
-        }
-        remapped_clusters <- mapping[as.character(clusters)]
-        names(remapped_clusters) <- names(clusters)
-        x@cnacalling[["clusters"]] <- remapped_clusters
-    } else {
-        # Assign clusters without remapping
-        if (!is.null(clusters)) {
-            x@cnacalling[["clusters"]] <- clusters
-        } else if (!is.null(k)) {
-            x@cnacalling[["clusters"]] <- x@clustering$clusters[[as.character(k)]]
-        }
-    }
-
-    return(x)
-}
 
 

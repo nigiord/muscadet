@@ -127,9 +127,9 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
                             add_bulk_lrr = NULL, show_missing = TRUE, white_scale = c(0.3, 0.7),
                             colors = NULL, quiet = FALSE) {
 
-    # Check that the input is a muscadet object
+    # Check that x is a muscadet object
     stopifnot(
-        "The input must be a muscadet object." = inherits(x, "muscadet")
+        "The argument 'x' must be a muscadet object." = inherits(x, "muscadet")
     )
 
     # Validate the muscadet object contains clustering results
@@ -435,9 +435,9 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #'
 plotSil <- function(x, k, colors = NULL, title = NULL) {
 
-    # Check that the input is a muscadet object
+    # Check that x is a muscadet object
     stopifnot(
-        "The input must be a muscadet object." = inherits(x, "muscadet")
+        "The argument 'x' must be a muscadet object." = inherits(x, "muscadet")
     )
 
     # Validate the muscadet object contains clustering results
@@ -600,10 +600,8 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #'
 plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 
-    # Check that the input is a muscadet object
-    stopifnot(
-        "The input must be a muscadet object." = inherits(x, "muscadet")
-    )
+    # Check that x is a muscadet object
+    stopifnot("The argument 'x' must be a muscadet object." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(

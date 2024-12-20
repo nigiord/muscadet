@@ -112,117 +112,115 @@ computeLogRatio <- function(x,
                             reference,
                             omic,
                             method = NULL,
-                            new.label.features = c(
-                              ATAC = "windows of peaks",
-                              RNA = "genes"
-                            ),
+                            new.label.features = c(ATAC = "windows of peaks", RNA = "genes"),
                             remove.raw = TRUE,
                             quiet = FALSE,
                             ...) {
+    # Validate input: x and reference must be muscadet objects
+    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+    stopifnot("Input object 'reference' must be of class 'muscadet'." = inherits(reference, "muscadet"))
 
     # Check omic is in the omics of 'x' and 'reference'
     stopifnot(
         "'omic' argument must corresponds to an omic name in both muscadet objects 'x' and 'reference'." =
-            omic %in% names(x@omics) & omic %in% names(reference@omics)
+            omic %in% names(x@omics) &
+            omic %in% names(reference@omics)
     )
 
-  # Check method
-  if (is.null(method)) method <- x@omics[[omic]]@type
-  stopifnot(
-    "'method' must be either 'ATAC' or 'RNA'." =
-      method %in% c("ATAC", "RNA")
-  )
+    # Check method
+    if (is.null(method))
+        method <- x@omics[[omic]]@type
+    stopifnot("'method' must be either 'ATAC' or 'RNA'." =
+                  method %in% c("ATAC", "RNA"))
 
-  # Check raw count matrix in muscadet object
-  stopifnot(
-      "Raw count matrix not found in the muscadet 'x' object." =
-          !is.null(x@omics[[omic]]@coverage[["mat.counts"]])
-  )
-
-
-  # ATAC method ----------------------------------------------------------------
-
-  if (method == "ATAC") {
-
-      # Check dot arguments
-      dots <- list(...)
-      stopifnot("Unknown arguments used." =
-                    all(names(dots) %in% c(formalArgs(computeLogRatioATAC))))
-
-      # Check label features
-      if (is.null(new.label.features)) {
-          new.label.features <- c(ATAC = "windows of peaks")
-      }
-
-      if (quiet == FALSE) {
-          message("-- computeLogRatio: Method 'ATAC' using computeLogRatioATAC().")
-      }
-
-      obj <- computeLogRatioATAC(
-          matTumor = x@omics[[omic]]@coverage[["mat.counts"]],
-          matRef = reference@omics[[omic]]@coverage[["mat.counts"]],
-          peaksCoord = x@omics[[omic]]@coverage[["coord.features"]],
-          quiet = quiet,
-          ...
-      )
-  }
-
-  # RNA method ---------------------------------------------------------------
-
-  if (method == "RNA") {
-
-    # Check dot arguments
-    dots <- list(...)
+    # Check raw count matrix in muscadet object
     stopifnot(
-      "Unknown arguments used." =
-        all(names(dots) %in% c(formalArgs(
-          computeLogRatioRNA
-        )))
+        "Raw count matrix not found in the muscadet 'x' object." =
+            !is.null(x@omics[[omic]]@coverage[["mat.counts"]])
     )
 
-    # Check label features
-    if (is.null(new.label.features)) {
-      new.label.features <- c(RNA = x@omics[[omic]]@coverage[["label.features"]])
+
+    # ATAC method ----------------------------------------------------------------
+
+    if (method == "ATAC") {
+        # Check dot arguments
+        dots <- list(...)
+        stopifnot("Unknown arguments used." =
+                      all(names(dots) %in% c(
+                          formalArgs(computeLogRatioATAC)
+                      )))
+
+        # Check label features
+        if (is.null(new.label.features)) {
+            new.label.features <- c(ATAC = "windows of peaks")
+        }
+
+        if (quiet == FALSE) {
+            message("-- computeLogRatio: Method 'ATAC' using computeLogRatioATAC().")
+        }
+
+        obj <- computeLogRatioATAC(
+            matTumor = x@omics[[omic]]@coverage[["mat.counts"]],
+            matRef = reference@omics[[omic]]@coverage[["mat.counts"]],
+            peaksCoord = x@omics[[omic]]@coverage[["coord.features"]],
+            quiet = quiet,
+            ...
+        )
+    }
+
+    # RNA method ---------------------------------------------------------------
+
+    if (method == "RNA") {
+        # Check dot arguments
+        dots <- list(...)
+        stopifnot("Unknown arguments used." =
+                      all(names(dots) %in% c(formalArgs(
+                          computeLogRatioRNA
+                      ))))
+
+        # Check label features
+        if (is.null(new.label.features)) {
+            new.label.features <- c(RNA = x@omics[[omic]]@coverage[["label.features"]])
+        }
+
+        if (quiet == FALSE) {
+            message("-- computeLogRatio: Method 'RNA' using computeLogRatioRNA().")
+        }
+
+        obj <- computeLogRatioRNA(
+            matTumor = x@omics[[omic]]@coverage[["mat.counts"]],
+            matRef = reference@omics[[omic]]@coverage[["mat.counts"]],
+            genesCoord = x@omics[[omic]]@coverage[["coord.features"]],
+            quiet = quiet,
+            ...
+        )
+    }
+
+    if ("all_steps" %in% names(dots)) {
+        if (dots$all_steps == TRUE) {
+            obj <- list(
+                matTumor = obj$step08$matTumor,
+                matRef = obj$step08$matRef,
+                params = obj$params,
+                coord = obj$coord
+            )
+        }
+    }
+
+    x@omics[[omic]]@coverage[["log.ratio"]] <- obj$matTumor
+    x@omics[[omic]]@coverage[["ref.log.ratio.perc"]] <- setNames(quantile(obj$matRef, probs = seq(0, 1, 0.01)), seq(0, 1, 0.01))
+    x@omics[[omic]]@coverage[["coord.features"]] <- obj$coord
+    x@omics[[omic]]@coverage[["label.features"]] <- new.label.features[omic]
+
+    if (remove.raw == TRUE) {
+        x@omics[[omic]]@coverage[["mat.counts"]] <- NULL
     }
 
     if (quiet == FALSE) {
-        message("-- computeLogRatio: Method 'RNA' using computeLogRatioRNA().")
+        message("Done.")
     }
 
-    obj <- computeLogRatioRNA(
-      matTumor = x@omics[[omic]]@coverage[["mat.counts"]],
-      matRef = reference@omics[[omic]]@coverage[["mat.counts"]],
-      genesCoord = x@omics[[omic]]@coverage[["coord.features"]],
-      quiet = quiet,
-      ...
-    )
-  }
-
-  if ("all_steps" %in% names(dots)) {
-      if (dots$all_steps == TRUE) {
-          obj <- list(
-              matTumor = obj$step08$matTumor,
-              matRef = obj$step08$matRef,
-              params = obj$params,
-              coord = obj$coord
-          )
-      }
-  }
-
-  x@omics[[omic]]@coverage[["log.ratio"]] <- obj$matTumor
-  x@omics[[omic]]@coverage[["ref.log.ratio.perc"]] <- setNames(quantile(obj$matRef, probs = seq(0, 1, 0.01)), seq(0, 1, 0.01))
-  x@omics[[omic]]@coverage[["coord.features"]] <- obj$coord
-  x@omics[[omic]]@coverage[["label.features"]] <- new.label.features[omic]
-
-  if (remove.raw == TRUE) {
-    x@omics[[omic]]@coverage[["mat.counts"]] <- NULL
-  }
-
-  if (quiet == FALSE) {
-      message("Done.")
-  }
-
-  return(x)
+    return(x)
 }
 
 

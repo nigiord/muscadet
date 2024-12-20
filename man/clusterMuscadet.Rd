@@ -113,8 +113,11 @@ slot(muscadet_obj, "clustering")[["k.opt"]]
 \seealso{
 \itemize{
 \item \code{\link{muscadet-class}}
-\item \code{\link[=weightedSNF]{weightedSNF()}}
-\item To plot cluster result as heatmap use \code{\link[=heatmapMuscadet]{heatmapMuscadet()}}.
-\item To plot the silhouette widths use \code{\link[=plotSil]{plotSil()}}.
+\item Details on Similarity Network Fusion: \code{\link[=weightedSNF]{weightedSNF()}}
+\item Plot cluster result as heatmap with \code{\link[=heatmapMuscadet]{heatmapMuscadet()}}.
+\item Plot silhouette widths with \code{\link[=plotSil]{plotSil()}}.
+\item Plot several cluster validation indexes with \code{\link[=plotIndexes]{plotIndexes()}}.
+\item After cluster partition validation, assign final cluster assignments with
+\code{\link[=assignClusters]{assignClusters()}}.
 }
 }
