@@ -87,14 +87,14 @@
 #'      paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", "))
 #'
 #' # Generate heatmap
-#' ht <- heatmapMuscadet(
+#' heatmapMuscadet(
 #'     muscadet_obj,
 #'     k = 3,
 #'     filename = file.path("heatmap_muscadet_k3.png"),
 #'     title = title
 #' )
 #'
-#' ht <- heatmapMuscadet(
+#' heatmapMuscadet(
 #'     muscadet_obj,
 #'     k = 3,
 #'     filename = file.path("heatmap_muscadet_k3_commoncells.png"),
@@ -115,7 +115,7 @@
 #'         "Weights of omics:",
 #'         paste(muscadet_obj$clustering$params[["weights"]], collapse = ", ")
 #'     )
-#'     ht <- heatmapMuscadet(
+#'     heatmapMuscadet(
 #'         muscadet_obj,
 #'         k = as.integer(k),
 #'         filename = filename,
@@ -384,15 +384,22 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     }
 
     # store plot object
-    plot.obj <- list(plot = grid.grab(),
-                 width = ht_all@ht_list_param[["width"]],
-                 height = ht_all@ht_list_param[["height"]])
+    if (is.null(filename)) {
+        plot.obj <- list(
+            plot = grid.grab(),
+            width = ht_all@ht_list_param[["width"]],
+            height = ht_all@ht_list_param[["height"]]
+        )
+    }
 
     dev.off()
 
     # return the plot object
-    return(plot.obj)
+    if (is.null(filename)) {
+        return(plot.obj)
+    }
 }
+
 
 
 
@@ -684,11 +691,18 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
         }
     }
 
-    # Find the k with the maximum mean index value
+    # Find optimal k based on selected indexes
     if (ncol(df_indexes) > 2) {
-        max_k <- df_indexes[which(rowMeans(df_indexes[, 2:ncol(df_indexes)]) == max(rowMeans(df_indexes[, 2:ncol(df_indexes)]))), "k"]
+        # Find the k with the maximum mean index value
+        opt_k <- df_indexes[which(rowMeans(df_indexes[, 2:ncol(df_indexes)]) == max(rowMeans(df_indexes[, 2:ncol(df_indexes)]))), "k"]
     } else {
-        max_k <- df_indexes[which(df_indexes[, 2] == max(df_indexes[, 2])), "k"]
+        if (colnames(df_indexes)[2] %in% c("pearsongamma", "c")) {
+            # Find k with the minimal value for indexes to minimize
+            opt_k <- df_indexes[which(df_indexes[, 2] == min(df_indexes[, 2])), "k"]
+        } else {
+            # Find k with the maximal value for indexes to maximize
+            opt_k <- df_indexes[which(df_indexes[, 2] == max(df_indexes[, 2])), "k"]
+        }
     }
 
     # Transform the data frame for plotting
@@ -703,7 +717,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
         group = .data$Index
     )) +
         geom_line(linewidth = 1) +
-        geom_point(data = df_plot[which(df_plot$k == max_k),]) +
+        geom_point(data = df_plot[which(df_plot$k == opt_k),]) +
         labs(x = "Number of Clusters (k)",
              y = "Normalized Index Value",
              title = title) +

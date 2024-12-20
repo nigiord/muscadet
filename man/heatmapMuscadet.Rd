@@ -98,14 +98,14 @@ title <- paste("Example sample |",
      paste(slot(muscadet_obj, "clustering")[["params"]][["weights"]], collapse = ", "))
 
 # Generate heatmap
-ht <- heatmapMuscadet(
+heatmapMuscadet(
     muscadet_obj,
     k = 3,
     filename = file.path("heatmap_muscadet_k3.png"),
     title = title
 )
 
-ht <- heatmapMuscadet(
+heatmapMuscadet(
     muscadet_obj,
     k = 3,
     filename = file.path("heatmap_muscadet_k3_commoncells.png"),
@@ -126,7 +126,7 @@ for (k in names(muscadet_obj$clustering$clusters)) {
         "Weights of omics:",
         paste(muscadet_obj$clustering$params[["weights"]], collapse = ", ")
     )
-    ht <- heatmapMuscadet(
+    heatmapMuscadet(
         muscadet_obj,
         k = as.integer(k),
         filename = filename,
