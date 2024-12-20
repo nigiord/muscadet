@@ -24,25 +24,25 @@ library(muscadet)
 
 # Create muscomic objects
 atac <- CreateMuscomicObject(
-  type = "ATAC",
-  mat_counts = mat_counts_atac_tumor,
-  allele_counts = allele_counts_atac_tumor,
-  features = peaks)
+    type = "ATAC",
+    mat_counts = mat_counts_atac_tumor,
+    allele_counts = allele_counts_atac_tumor,
+    features = peaks)
 rna <- CreateMuscomicObject(
-  type = "RNA",
-  mat_counts = mat_counts_rna_tumor,
-  allele_counts = allele_counts_rna_tumor,
-  features = genes)
+    type = "RNA",
+    mat_counts = mat_counts_rna_tumor,
+    allele_counts = allele_counts_rna_tumor,
+    features = genes)
 atac_ref <- CreateMuscomicObject(
-  type = "ATAC",
-  mat_counts = mat_counts_atac_ref,
-  allele_counts = allele_counts_atac_ref,
-  features = peaks)
+    type = "ATAC",
+    mat_counts = mat_counts_atac_ref,
+    allele_counts = allele_counts_atac_ref,
+    features = peaks)
 rna_ref <- CreateMuscomicObject(
-  type = "RNA",
-  mat_counts = mat_counts_rna_ref,
-  allele_counts = allele_counts_rna_ref,
-  features = genes)
+    type = "RNA",
+    mat_counts = mat_counts_rna_ref,
+    allele_counts = allele_counts_rna_ref,
+    features = genes)
 
 # Create raw muscadet objects
 muscadet <- CreateMuscadetObject(
@@ -90,6 +90,16 @@ ht <- heatmapMuscadet(
 
 # Plot Silhouette widths for cluster validation
 plotSil(muscadet, k = 3)
+
+# Plot cluster validation indexes
+plotIndexes(muscadet)
+plotIndexes(muscadet, index = "silhouette")
+
+# Assign the chose cluster assignment
+muscadet <- assignClusters(muscadet, k = 3)
+
+# Merge all counts from all omics from both sample and reference
+muscadet <- mergeCounts(muscadet, muscadet_ref)
 ```
 
 
