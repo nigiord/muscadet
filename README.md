@@ -82,10 +82,16 @@ muscadet <- clusterMuscadet(
 load(muscadet_obj)
 
 # Plot heatmap of clustering
-ht <- heatmapMuscadet(
+heatmapMuscadet(
     muscadet,
     k = 3,
-    filename = "heatmap_muscadet_k3.png",
+    show_missing = FALSE,
+    filename = "heatmap_muscadet_k3_commoncells.png",
+    title = "Example sample (k=3)")
+heatmapMuscadet(
+    muscadet,
+    k = 3,
+    filename = "heatmap_muscadet_k3_allcells.png",
     title = "Example sample (k=3)")
 
 # Plot Silhouette widths for cluster validation
@@ -95,7 +101,7 @@ plotSil(muscadet, k = 3)
 plotIndexes(muscadet)
 plotIndexes(muscadet, index = "silhouette")
 
-# Assign the chose cluster assignment
+# Assign the chosen cluster assignment
 muscadet <- assignClusters(muscadet, k = 3)
 
 # Merge all counts from all omics from both sample and reference
