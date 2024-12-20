@@ -91,13 +91,15 @@ methods::setClass(
 #'   `dgCMatrix`). Rows are features (they must correspond to the id column of
 #'   `features`), and columns are cells.
 #' @param allele_counts Data frame of allele counts at single nucleotide
-#'   polymorphisms (SNPs) positions per cell (`data.frame`).
+#'   polymorphisms (SNPs) positions per cell (`data.frame`). It must contain the
+#'   following columns : `cell`, `id`, `CHROM`, `POS`, `REF`, `ALT`, `RD`, `AD`,
+#'   `DP`, `GT`. See [allele_counts] for details.
 #' @param features Data frame of features (peaks, genes...) coordinates on
 #'   genome (`data.frame`). It should contain 4 columns:
 #'   \describe{
 #'   \item{`CHROM`}{Chromosome names in character format, e.g. "15", "X" (`character`).}
 #'   \item{`start`}{Start positions (`integer`).}
-#'   \item{`end`}{End positions (`character`).}
+#'   \item{`end`}{End positions (`integer`).}
 #'   \item{`id`}{Unique identifiers, e.g. gene name "CDH1" or peak identifier
 #'   CHROM_start_end "1_1600338_1600838" (`character`). It should match the
 #'   feature identifiers as row names of `mat_counts`.}
@@ -205,11 +207,18 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
   # Check coordinates of features
   stopifnot("`features` must be a data frame." = class(features) == "data.frame")
   colnames(features) <- c("CHROM", "start", "end", "id")
-  features$CHROM <- stringr::str_remove(features$CHROM, "chr") # remove "chr" if necessary
-  features$CHROM <- ordered(features$CHROM,
-    levels = gtools::mixedsort(unique(features$CHROM))
-  ) # ordered chromosomes
-  features <- dplyr::arrange(features, "CHROM", "start") # sort by chromosome and position
+  # Modify class if needed
+  features$CHROM <- as.character(features$CHROM)
+  features$start <- as.integer(features$start)
+  features$end <- as.integer(features$end)
+  features$id <- as.character(features$id)
+  # Remove "chr" if necessary
+  features$CHROM <- stringr::str_remove(features$CHROM, "chr")
+  # Ordered chromosomes
+  features$CHROM <- ordered(features$CHROM, levels = gtools::mixedsort(unique(features$CHROM)))
+  # Reorder data
+  features <- features[order(features[, "start"]), ]
+  features <- features[order(features[, "CHROM"]), ]
 
   # Check row names of matrix matching features id
   stopifnot("Row names of count matrix `mat_counts` must not be NULL and must match `features` id column." =
@@ -220,21 +229,20 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
   # Sort and filter matrix based on provided features
   mat_counts <- mat_counts[features$id[features$id %in% rownames(mat_counts)], ]
 
-  # Check matching cells between coverage (count matrix) and allelic data (allele count df)
-  # stopifnot(
-  #   "Cells in the allele counts data frame must be the same as the ones in matrix counts column names." =
-  #     unique(allele_counts$cell) %in% colnames(mat_counts)
-  # )
-
+  # Get unique index value for features
+  coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features)))
   # Generate table of raw counts by converting matrix to summary data frame
-  coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features))) # unique index value
-
   table_counts <- as.data.frame(Matrix::summary(mat_counts)) %>%
       dplyr::mutate(cell = colnames(mat_counts)[.data$j], omic = type.omic) %>%
       dplyr::rename(index = "i", DP = "x") %>%
       dplyr::left_join(coord.df, by = "index") %>%
       dplyr::mutate(POS = round((.data$start + .data$end) / 2, 0)) %>% # POS as center of the feature
       dplyr::select(c("omic", "cell", "id", "CHROM", "POS", "DP"))
+  # Ordered chromosomes
+  table_counts$CHROM <- ordered(table_counts$CHROM, levels = gtools::mixedsort(unique(table_counts$CHROM)))
+  # Reorder data
+  table_counts <- table_counts[order(table_counts[, "POS"]), ]
+  table_counts <- table_counts[order(table_counts[, "CHROM"]), ]
 
   # Coverage data
   coverage <- list(
@@ -246,8 +254,19 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
 
   # Allelic data
   if (!is.null(allele_counts)) {
+
+      # Remove "chr" if necessary
+      allele_counts$CHROM <- stringr::str_remove(allele_counts$CHROM, "chr")
+      # Ordered chromosomes
+      allele_counts$CHROM <- ordered(allele_counts$CHROM, levels = gtools::mixedsort(unique(allele_counts$CHROM)))
+      # Reorder data
+      allele_counts <- allele_counts[order(allele_counts[, "POS"]), ]
+      allele_counts <- allele_counts[order(allele_counts[, "CHROM"]), ]
+
       allelic <- list(table.counts = data.frame(omic = type.omic, allele_counts))
+
   } else {
+
       allelic <- list(table.counts = NULL)
   }
 

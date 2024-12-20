@@ -22,14 +22,16 @@ CreateMuscomicObject(
 \code{features}), and columns are cells.}
 
 \item{allele_counts}{Data frame of allele counts at single nucleotide
-polymorphisms (SNPs) positions per cell (\code{data.frame}).}
+polymorphisms (SNPs) positions per cell (\code{data.frame}). It must contain the
+following columns : \code{cell}, \code{id}, \code{CHROM}, \code{POS}, \code{REF}, \code{ALT}, \code{RD}, \code{AD},
+\code{DP}, \code{GT}. See \link{allele_counts} for details.}
 
 \item{features}{Data frame of features (peaks, genes...) coordinates on
 genome (\code{data.frame}). It should contain 4 columns:
 \describe{
 \item{\code{CHROM}}{Chromosome names in character format, e.g. "15", "X" (\code{character}).}
 \item{\code{start}}{Start positions (\code{integer}).}
-\item{\code{end}}{End positions (\code{character}).}
+\item{\code{end}}{End positions (\code{integer}).}
 \item{\code{id}}{Unique identifiers, e.g. gene name "CDH1" or peak identifier
 CHROM_start_end "1_1600338_1600838" (\code{character}). It should match the
 feature identifiers as row names of \code{mat_counts}.}
