@@ -127,14 +127,12 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
                             add_bulk_lrr = NULL, show_missing = TRUE, white_scale = c(0.3, 0.7),
                             colors = NULL, quiet = FALSE) {
 
-    # Check that x is a muscadet object
-    stopifnot(
-        "The argument 'x' must be a muscadet object." = inherits(x, "muscadet")
-    )
+    # Validate input: x must be a muscadet object
+    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(
-        "The muscadet object does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+        "The muscadet object 'x' does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
     )
 
@@ -343,8 +341,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             n_cells <- table(clusters)
             ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
                                  row_split = factor(clusters[all_cells], levels=sort(unique(clusters))),
-                                 row_order = names(clusters), row_order = names(clusters),
-                                 cluster_rows = F, merge_legend = TRUE)
+                                 row_order = names(clusters), cluster_rows = F, merge_legend = TRUE)
         }
     }
     dev.off()
@@ -442,14 +439,12 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #'
 plotSil <- function(x, k, colors = NULL, title = NULL) {
 
-    # Check that x is a muscadet object
-    stopifnot(
-        "The argument 'x' must be a muscadet object." = inherits(x, "muscadet")
-    )
+    # Validate input: x must be a muscadet object
+    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(
-        "The muscadet object does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+        "The muscadet object 'x' does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
     )
 
@@ -571,15 +566,16 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #'   including:
 #'   \itemize{
 #'     \item \strong{Silhouette}: Measures how similar an object is to its own
-#'     cluster compared to others.
+#'     cluster compared to others (see [cluster::silhouette]).
 #'     \item \strong{Dunn2}: The ratio of the smallest distance between
-#'     observations in different clusters
-#'           to the largest within-cluster distance.
-#'     \item \strong{Davis-Bouldin}: Measures cluster compactness and separation.
+#'     observations in different clusters to the largest within-cluster distance
+#'     (see [fpc::cluster.stats] `$dunn2`).
+#'     \item \strong{Davis-Bouldin}: Measures cluster compactness and separation
+#'     (see [clusterSim::index.DB]).
 #'     \item \strong{Pearson's Gamma}: Evaluates the goodness of clustering
-#'     based on correlation.
+#'     based on correlation (see [fpc::cluster.stats] `$pearsongamma`).
 #'     \item \strong{C Index}: Measures the clustering quality compared to
-#'     random data.
+#'     random data (see [clusterSim::index.C]).
 #'   }
 #'
 #'   If multiple indexes are selected, the values are normalized to fall between
@@ -588,6 +584,7 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #'   The k for which the mean of indexes is maximal is highlighted with a dot.
 #'
 #' @import ggplot2
+#' @importFrom stats as.dist
 #' @importFrom cluster silhouette
 #' @importFrom fpc cluster.stats
 #' @importFrom clusterSim index.DB index.C
@@ -607,12 +604,12 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #'
 plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 
-    # Check that x is a muscadet object
-    stopifnot("The argument 'x' must be a muscadet object." = inherits(x, "muscadet"))
+    # Validate input: x must be a muscadet object
+    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(
-        "The muscadet object does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+        "The muscadet object 'x' does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
     )
 
@@ -641,7 +638,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 
     # Extract the clustering data
     k_clusters <- as.integer(names(x@clustering$clusters))  # Number of clusters (k)
-    dist <- x@clustering$dist  # Distance matrix
+    dist <- stats::as.dist(x@clustering$dist)  # Distance matrix to dist object
 
     # Initialize a data frame to store index values
     df_indexes <- data.frame(k = k_clusters)
@@ -656,7 +653,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
         # Compute each index if selected
         if ("silhouette" %in% index) {
             df_indexes[df_indexes$k == k, "silhouette"] <-
-                summary(cluster::silhouette(as.integer(clusters), dist))$avg.width
+                summary(cluster::silhouette(as.integer(clusters), dist))[["avg.width"]]
         }
         if ("dunn2" %in% index) {
             df_indexes[df_indexes$k == k, "dunn2"] <-

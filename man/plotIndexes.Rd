@@ -35,15 +35,16 @@ The function computes several clustering validation indexes,
 including:
 \itemize{
 \item \strong{Silhouette}: Measures how similar an object is to its own
-cluster compared to others.
+cluster compared to others (see \link[cluster:silhouette]{cluster::silhouette}).
 \item \strong{Dunn2}: The ratio of the smallest distance between
-observations in different clusters
-to the largest within-cluster distance.
-\item \strong{Davis-Bouldin}: Measures cluster compactness and separation.
+observations in different clusters to the largest within-cluster distance
+(see \link[fpc:cluster.stats]{fpc::cluster.stats} \verb{$dunn2}).
+\item \strong{Davis-Bouldin}: Measures cluster compactness and separation
+(see \link[clusterSim:index.DB]{clusterSim::index.DB}).
 \item \strong{Pearson's Gamma}: Evaluates the goodness of clustering
-based on correlation.
+based on correlation (see \link[fpc:cluster.stats]{fpc::cluster.stats} \verb{$pearsongamma}).
 \item \strong{C Index}: Measures the clustering quality compared to
-random data.
+random data (see \link[clusterSim:index.C]{clusterSim::index.C}).
 }
 
 If multiple indexes are selected, the values are normalized to fall between
