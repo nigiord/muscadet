@@ -32,7 +32,7 @@
 #' @return A \code{\link{muscadet}} object updated with the user chosen cluster
 #' assignments in `muscadet_obj$cnacalling$clusters`.
 #'
-#' @include muscadet_objects.R
+#' @include objects.R
 #' @importFrom SeuratObject Cells
 #' @export
 #'
@@ -328,6 +328,7 @@ mergeCounts <- function(x, reference) {
             DP.all = sum(.data$DP, na.rm = T),
             AF.all = round(.data$AD.all / .data$DP.all, 2)
         ) %>%
+        dplyr::ungroup() %>%
         dplyr::select(!c("cell", "RD", "AD", "DP"))
     allele_sample <- subset(allele_sample, !duplicated(allele_sample))
 
@@ -348,6 +349,7 @@ mergeCounts <- function(x, reference) {
             DP.all = sum(.data$DP, na.rm = T),
             AF.all = round(.data$AD.all / .data$DP.all, 2)
         ) %>%
+        dplyr::ungroup() %>%
         dplyr::select(!c("cell", "RD", "AD", "DP"))
     allele_ref <- subset(allele_ref, !duplicated(allele_ref))
 
@@ -361,7 +363,7 @@ mergeCounts <- function(x, reference) {
         dplyr::arrange(.data$CHROM, .data$POS, .data$cluster) %>%
         dplyr::mutate(signal = "allelic")
 
-    x@cnacalling[["allelic.counts"]] <- snp
+    x@cnacalling[["allelic.counts"]] <- as.data.frame(snp)
 
     # Coverage Data Processing -------------------------------------------------
     # Extract coverage counts for all omics in both sample and reference
@@ -404,7 +406,7 @@ mergeCounts <- function(x, reference) {
         dplyr::select("omic", "id", "CHROM", "POS", "DP.NOR", "DP.TUM", "cluster") %>%
         dplyr::mutate(signal = "coverage")
 
-    x@cnacalling[["coverage.counts"]] <- cov
+    x@cnacalling[["coverage.counts"]] <- as.data.frame(cov)
 
 
     # Combine Allelic and Coverage Data ----------------------------------------
@@ -428,7 +430,7 @@ mergeCounts <- function(x, reference) {
     combined <- rbind(snp, cov) %>%
         arrange(.data$Chromosome, .data$Position)
 
-    x@cnacalling[["combined.counts"]] <- combined
+    x@cnacalling[["combined.counts"]] <- as.data.frame(combined)
 
     return(x)
 }
