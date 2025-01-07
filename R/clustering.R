@@ -1,4 +1,4 @@
-#' Perform Clustering on a muscadet Object
+#' Perform clustering on a muscadet object
 #'
 #' This function performs clustering on the cells within a
 #' \code{\link{muscadet}} object using the log R ratio matrices. It calculates
@@ -34,11 +34,33 @@
 #' @param k_range Numeric vector specifying the range of clusters (k) to
 #'   evaluate (`numeric` vector). Default is from 2 to 10.
 #'
-#' @return A \code{\link{muscadet}} object with updated clustering results
-#'   stored in the `"clustering"` slot, including clustering parameters,
-#'   distance and affinity matrices, the fused similarity matrix, cluster
-#'   assignments, silhouette objects and widths and a default optimal k number
-#'   of clusters.
+#'
+#' @return
+#' A \code{\link{muscadet}} object with updated clustering results
+#' stored in the `clustering` slot, including:
+#' \describe{
+#'   \item{`params`}{Clustering parameters used (`list`).}
+#'   \item{`SNF`}{Fused similarity matrix, result of Similarity Network Fusion
+#'   (SNF) (`matrix`). If the muscadet object contains only one omic, it
+#'   corresponds to the affinity matrix from this unique omic.}
+#'   \item{`dist`}{Distance matrix, derived from the `SNF` matrix:
+#'   `max(SNF) - SNF` (excluding the diagonal values) (`matrix`).}
+#'   \item{`hclust`}{Hierarchical clustering object of class \code{\link{hclust}}, result of
+#'   the clustering function [fastcluster::hclust()] with the chosen hclust
+#'   method used (`hclust`).}
+#'   \item{`clusters`}{Cluster assignments as a list for each given `k` from the
+#'   `k_range` argument (`list`). Each element of the list is a named vector of
+#'   clusters per cell.
+#'   Note: element names being integers (`k`) in the character format it should
+#'   be called as followed: `muscadet_obj$clustering$clusters[["3"]]` or
+#'   `muscadet_obj$clustering$clusters[[as.character(k)]]`}
+#'   \item{`silhouette`}{List of silhouette objects (`sil.obj`), average
+#'   silhouette widths (`sil.w.avg`), and clusters average silhouette widths
+#'   (`sil.w.avg.clusters`), per each `k` partition (`list`).}
+#'   \item{`k.opt`}{Optimal `k` number of clusters based on silhouette average
+#'   widths (`integer`).}
+#' }
+#'
 #'
 #' @details
 #' The function calculates pairwise distances for cells within each omic dataset
@@ -57,7 +79,7 @@
 #' Then, it imputes cluster assignments for missing cells based on their
 #' nearest neighbors.
 #'
-#' Finally, a default optimal number of cluster (k) is found based on average
+#' Finally, a default optimal number of cluster (`k`) is found based on average
 #' silhouette widths.
 #'
 #' @seealso
@@ -90,14 +112,14 @@
 #' )
 #'
 #' # Cluster assignments (for k = 3)
-#' slot(muscadet_obj, "clustering")[["clusters"]][["3"]]
-#' table(slot(muscadet_obj, "clustering")[["clusters"]][["3"]])
+#' muscadet_obj$clustering$clusters[["3"]]
+#' table(muscadet_obj$clustering$clusters[["3"]])
 #'
 #' # Silhouette width per k
-#' unlist(slot(muscadet_obj, "clustering")[["silhouette"]][["sil.w.avg"]])
+#' unlist(muscadet_obj$clustering$silhouette[["sil.w.avg"]])
 #'
 #' # Optimal k according to silhouette width index
-#' slot(muscadet_obj, "clustering")[["k.opt"]]
+#' muscadet_obj$clustering$k.opt
 #'
 clusterMuscadet <- function(x, # muscadet object
                             dist_method = "euclidean",
@@ -109,6 +131,10 @@ clusterMuscadet <- function(x, # muscadet object
                             weights = rep(1, length(slot(x, "omics"))),
                             knn_imp = 10,
                             k_range = seq(2, 10, 1)) {
+
+    # Validate input: x must be a muscadet object
+    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+
     # Add clustering parameters to the muscadet object
     slot(x, "clustering")[["params"]] <- list(
         dist_method = dist_method,
@@ -170,7 +196,7 @@ clusterMuscadet <- function(x, # muscadet object
     tmp <- matSNF
     diag(tmp) <- 0
     dist <- stats::as.dist(max(tmp) - matSNF)
-    slot(x, "clustering")[["dist"]] <- dist
+    slot(x, "clustering")[["dist"]] <- as.matrix(dist)
 
     # Clustering ----------------------------------------------------------------
 
@@ -186,10 +212,13 @@ clusterMuscadet <- function(x, # muscadet object
 
     # Clusters imputation ------------------------------------------------------
 
-    # Impute clusters assignments to missing cells based on nearest neighbors
-    clusters_imp <- imputeClusters(mat_list, clusters, knn_imp = knn_imp)
-    slot(x, "clustering")[["clusters"]] <- clusters_imp
-
+    # Impute clusters assignments to missing cells based on nearest neighbors (if several omics)
+    if (length(mat_list) > 1) {
+        clusters_imp <- imputeClusters(mat_list, clusters, knn_imp = knn_imp)
+        slot(x, "clustering")[["clusters"]] <- clusters_imp
+    } else {
+        slot(x, "clustering")[["clusters"]] <- clusters
+    }
 
     # Find optimal k number of clusters  ---------------------------------------
     sil <- lapply(k_list, function(k) {
@@ -226,7 +255,8 @@ clusterMuscadet <- function(x, # muscadet object
 #'
 #' @param Wall List of affinity matrices (`list`). Each element of the list is a
 #'   square, symmetric matrix that shows affinities of the data points from a
-#'   certain view.
+#'   certain view. If only one matrix is provided, the function returns the
+#'   unique input matrix.
 #' @param K Number of neighbors in K-nearest neighbors (`integer`). Default is
 #'   `20`.
 #' @param t Number of iterations for the diffusion process (`integer`). Default
@@ -244,17 +274,23 @@ clusterMuscadet <- function(x, # muscadet object
 #' types. It contains both complementary information and common
 #' structures from all individual network.
 #'
+#' If only one matrix is provided (`Wall`), the function returns the unique input matrix.
+#'
 #' @export
 #'
 #' @source This function is derived from the [SNFtool::SNF()] function, with the
 #' addition of the `weights` argument.
 #'
-#' **Authors:** Dr. Anna Goldenberg, Bo Wang, Aziz Mezlini, Feyyaz Demir
+#' Wang B, Mezlini A, Demir F, Fiume M, Tu Z, Brudno M, Haibe-Kains B,
+#' Goldenberg A (2021). _SNFtool: Similarity Network Fusion_. R package version
+#' 2.3.1, [https://CRAN.R-project.org/package=SNFtool](https://CRAN.R-project.org/package=SNFtool).
 #'
-#' @references B Wang, A Mezlini, F Demir, M Fiume, T Zu, M Brudno, B
-#' Haibe-Kains, A Goldenberg (2014) Similarity Network Fusion: a fast and
-#' effective method to aggregate multiple data types on a genome wide scale.
-#' Nature Methods. Online. Jan 26, 2014 Concise description can be found here:
+#' @references
+#' Wang B, Mezlini AM, Demir F, Fiume M, Tu Z, Brudno M, Haibe-Kains B,
+#' Goldenberg A. Similarity network fusion for aggregating data types on a
+#' genomic scale. Nat Methods. 2014 Mar;11(3):333-7. doi: [10.1038/nmeth.2810](http://doi.org/10.1038/nmeth.2810).
+#'
+#' Concise description of SNF can be found here:
 #' [http://compbio.cs.toronto.edu/SNF/SNF/Software.html](http://compbio.cs.toronto.edu/SNF/SNF/Software.html)
 #'
 #' @examples

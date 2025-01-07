@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustering.R
 \name{clusterMuscadet}
 \alias{clusterMuscadet}
-\title{Perform Clustering on a muscadet Object}
+\title{Perform clustering on a muscadet object}
 \usage{
 clusterMuscadet(
   x,
@@ -57,10 +57,29 @@ evaluate (\code{numeric} vector). Default is from 2 to 10.}
 }
 \value{
 A \code{\link{muscadet}} object with updated clustering results
-stored in the \code{"clustering"} slot, including clustering parameters,
-distance and affinity matrices, the fused similarity matrix, cluster
-assignments, silhouette objects and widths and a default optimal k number
-of clusters.
+stored in the \code{clustering} slot, including:
+\describe{
+\item{\code{params}}{Clustering parameters used (\code{list}).}
+\item{\code{SNF}}{Fused similarity matrix, result of Similarity Network Fusion
+(SNF) (\code{matrix}). If the muscadet object contains only one omic, it
+corresponds to the affinity matrix from this unique omic.}
+\item{\code{dist}}{Distance matrix, derived from the \code{SNF} matrix:
+\code{max(SNF) - SNF} (excluding the diagonal values) (\code{matrix}).}
+\item{\code{hclust}}{Hierarchical clustering object of class \code{\link{hclust}}, result of
+the clustering function \code{\link[fastcluster:hclust]{fastcluster::hclust()}} with the chosen hclust
+method used (\code{hclust}).}
+\item{\code{clusters}}{Cluster assignments as a list for each given \code{k} from the
+\code{k_range} argument (\code{list}). Each element of the list is a named vector of
+clusters per cell.
+Note: element names being integers (\code{k}) in the character format it should
+be called as followed: \code{muscadet_obj$clustering$clusters[["3"]]} or
+\code{muscadet_obj$clustering$clusters[[as.character(k)]]}}
+\item{\code{silhouette}}{List of silhouette objects (\code{sil.obj}), average
+silhouette widths (\code{sil.w.avg}), and clusters average silhouette widths
+(\code{sil.w.avg.clusters}), per each \code{k} partition (\code{list}).}
+\item{\code{k.opt}}{Optimal \code{k} number of clusters based on silhouette average
+widths (\code{integer}).}
+}
 }
 \description{
 This function performs clustering on the cells within a
@@ -86,7 +105,7 @@ It then performs a hierarchical clustering using the specified
 Then, it imputes cluster assignments for missing cells based on their
 nearest neighbors.
 
-Finally, a default optimal number of cluster (k) is found based on average
+Finally, a default optimal number of cluster (\code{k}) is found based on average
 silhouette widths.
 }
 \examples{
@@ -100,14 +119,14 @@ muscadet_obj <- clusterMuscadet(
 )
 
 # Cluster assignments (for k = 3)
-slot(muscadet_obj, "clustering")[["clusters"]][["3"]]
-table(slot(muscadet_obj, "clustering")[["clusters"]][["3"]])
+muscadet_obj$clustering$clusters[["3"]]
+table(muscadet_obj$clustering$clusters[["3"]])
 
 # Silhouette width per k
-unlist(slot(muscadet_obj, "clustering")[["silhouette"]][["sil.w.avg"]])
+unlist(muscadet_obj$clustering$silhouette[["sil.w.avg"]])
 
 # Optimal k according to silhouette width index
-slot(muscadet_obj, "clustering")[["k.opt"]]
+muscadet_obj$clustering$k.opt
 
 }
 \seealso{

@@ -7,7 +7,9 @@
 This function is derived from the \code{\link[SNFtool:SNF]{SNFtool::SNF()}} function, with the
 addition of the \code{weights} argument.
 
-\strong{Authors:} Dr. Anna Goldenberg, Bo Wang, Aziz Mezlini, Feyyaz Demir
+Wang B, Mezlini A, Demir F, Fiume M, Tu Z, Brudno M, Haibe-Kains B,
+Goldenberg A (2021). \emph{SNFtool: Similarity Network Fusion}. R package version
+2.3.1, \url{https://CRAN.R-project.org/package=SNFtool}.
 }
 \usage{
 weightedSNF(Wall, K = 20, t = 20, weights = rep.int(1, length(Wall)))
@@ -15,7 +17,8 @@ weightedSNF(Wall, K = 20, t = 20, weights = rep.int(1, length(Wall)))
 \arguments{
 \item{Wall}{List of affinity matrices (\code{list}). Each element of the list is a
 square, symmetric matrix that shows affinities of the data points from a
-certain view.}
+certain view. If only one matrix is provided, the function returns the
+unique input matrix.}
 
 \item{K}{Number of neighbors in K-nearest neighbors (\code{integer}). Default is
 \code{20}.}
@@ -34,6 +37,8 @@ Defaults to equal weights for all matrices.}
 An overall status matrix derived, unified similarity graph of all data
 types. It contains both complementary information and common
 structures from all individual network.
+
+If only one matrix is provided (\code{Wall}), the function returns the unique input matrix.
 }
 \description{
 Similarity Network Fusion (SNF) takes multiple views of a network and fuses
@@ -88,9 +93,10 @@ image(matSNF4, main = "Respectively 0.8 and 0.2 weights", col = heat.colors(10),
 
 }
 \references{
-B Wang, A Mezlini, F Demir, M Fiume, T Zu, M Brudno, B
-Haibe-Kains, A Goldenberg (2014) Similarity Network Fusion: a fast and
-effective method to aggregate multiple data types on a genome wide scale.
-Nature Methods. Online. Jan 26, 2014 Concise description can be found here:
+Wang B, Mezlini AM, Demir F, Fiume M, Tu Z, Brudno M, Haibe-Kains B,
+Goldenberg A. Similarity network fusion for aggregating data types on a
+genomic scale. Nat Methods. 2014 Mar;11(3):333-7. doi: \href{http://doi.org/10.1038/nmeth.2810}{10.1038/nmeth.2810}.
+
+Concise description of SNF can be found here:
 \url{http://compbio.cs.toronto.edu/SNF/SNF/Software.html}
 }
