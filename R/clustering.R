@@ -649,10 +649,10 @@ imputeClusters <- function(mat_list,
             # Handle ties: pick the cluster of the first matching nearest neighbor
             if (any(duplicated(clus_NA[which(clus_NA == max(clus_NA))]))) {
                 # if more than 1 major cluster exists (identical high number of knn cells assigned to two clusters)
-                final_cluster <- as.character(cl[p, cl[p, ] %in% names(which(clus_NA == max(clus_NA)))][1])
+                final_cluster <- as.integer(cl[p, cl[p, ] %in% names(which(clus_NA == max(clus_NA)))][1])
             } else {
                 # else take the cluster corresponding to the highest number of knn cells
-                final_cluster <- names(clus_NA)[1]
+                final_cluster <- as.integer(names(clus_NA)[1])
             }
 
             return(final_cluster)
