@@ -13,23 +13,18 @@ R package version 0.6.2, \url{https://github.com/mskcc/facets}.
 \usage{
 preProcSample2(
   rcmat,
-  ndepth = 5,
   het.thresh = 0.25,
   snp.nbhd = 250,
   cval = 25,
-  deltaCN = 0,
   gbuild = "hg38",
   hetscale = TRUE,
-  unmatched = FALSE,
+  ndepth = 5,
   ndepthmax = 1000
 )
 }
 \arguments{
 \item{rcmat}{A data frame with 8 required columns: \code{Chrom}, \code{Pos}, \code{NOR.DP},
 \code{NOR.RD}, \code{TUM.DP}, \code{TUM.RD}, \code{cluster}, and \code{signal} (\code{data.frame}).}
-
-\item{ndepth}{Minimum depth in normal reference to keep (\code{numeric}). Default:
-5.}
 
 \item{het.thresh}{VAF (Variant Allele Frequency) threshold to call SNP
 heterozygous (\code{numeric}). Default: 0.25.}
@@ -39,9 +34,6 @@ heterozygous (\code{numeric}). Default: 0.25.}
 
 \item{cval}{Critical value for segmentation (\code{numeric}). Default: 25.}
 
-\item{deltaCN}{Minimum detectable copy number difference from diploid state
-(\code{numeric}). Default: 0.}
-
 \item{gbuild}{Genome build used for alignment. One of \code{"hg19"},
 \code{"hg38"}, or \code{"mm10"} (\code{character}). Default: \code{"hg19"}.}
 
@@ -50,6 +42,9 @@ should be scaled to give more weight in the test statistics for
 segmentation and clustering (\code{logical}). Usually only 10\% of snps are hets
 and hetscale gives the logOR contribution to T-square as 0.25/proportion of
 hets. Default: \code{TRUE}.}
+
+\item{ndepth}{Minimum depth in normal reference to keep (\code{numeric}). Default:
+5.}
 
 \item{ndepthmax}{Maximum normal coverage threshold for filtering loci
 (\code{numeric}). Default: 1000.}

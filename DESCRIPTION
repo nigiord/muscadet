@@ -43,6 +43,7 @@ Imports:
     RANN,
     Rfast,
     rlang,
+    S4Vectors,
     SeuratObject,
     SNFtool,
     sparseMatrixStats,
