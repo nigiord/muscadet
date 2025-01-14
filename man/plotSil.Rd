@@ -28,6 +28,8 @@ Generate a silhouette plot for a specified clustering result within a
 \code{muscadet} object.
 }
 \examples{
+library("ggplot2")
+
 # Load a muscadet object
 data(muscadet_obj)
 plotSil(muscadet_obj, k = 3)

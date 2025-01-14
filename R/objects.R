@@ -858,6 +858,7 @@ setMethod(
 #' @seealso \code{\link{muscomic-class}} \code{\link{muscadet-class}}
 #'
 #' @examples
+#' library("SeuratObject")
 #' # Load muscadet object
 #' data(muscadet_obj)
 #'

@@ -99,6 +99,7 @@ and \code{muscadet} to \code{\link[SeuratObject:Cells]{SeuratObject::Features()}
 }
 }
 \examples{
+library("SeuratObject")
 # Load muscadet object
 data(muscadet_obj)
 

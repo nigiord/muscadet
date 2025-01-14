@@ -427,6 +427,8 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #' @export
 #'
 #' @examples
+#' library("ggplot2")
+#'
 #' # Load a muscadet object
 #' data(muscadet_obj)
 #' plotSil(muscadet_obj, k = 3)
