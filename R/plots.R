@@ -429,7 +429,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #' @examples
 #' library("ggplot2")
 #'
-#' # Load a muscadet object
+#' # Load example muscadet object
 #' data(muscadet_obj)
 #' plotSil(muscadet_obj, k = 3)
 #'
@@ -595,7 +595,7 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #' @export
 #'
 #' @examples
-#' # Load muscadet object
+#' # Load example muscadet object
 #' data(muscadet_obj)
 #'
 #' # Plot all indexes
@@ -736,3 +736,462 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 
     return(plot)
 }
+
+
+
+#' Plot CNA profiles from muscadet object
+#'
+#' This function generates a multi-panel plot of copy number alteration (CNA)
+#' profiles from a \code{\link{muscadet}} object, including: log R ratios values, log odds
+#' ratio (or variant allele frequency), copy numbers and cell fractions.
+#'
+#' @param x A \code{\link{muscadet}} object containing CNA calling data to be
+#'   visualized (generated using [muscadet::cnaCalling()]).
+#' @param on.data Either a cluster identifier to plot data of a cluster or
+#' "allcells" to plot data on all cells.
+#' @param title An optional title for the plot. Default is `NULL`.
+#' @param allelic.type A character string indicating the allelic metric to plot:
+#'   "lor" for log odds ratio or "vaf" for variant allele frequency. Default is
+#'   "lor".
+#' @param point.size Numeric value specifying the size of points in the plot in
+#'   pixel (with pch = "."). Default is `2`.
+#' @param chrom.colors A character vector of length 2 defining alternating
+#'   chromosome colors. Default is `c("slategrey", "skyblue")`.
+#' @param lor.colors A character vector of length 2 for log odds ratio point
+#'   colors depending of variant allele frequency in all cells. Use "none" to
+#'   use the alternating chromosome colors (defined by `chrom.colors`). Default is
+#'   `c("peachpuff2", "paleturquoise3")`.
+#' @param cn.colors A character vector of length 2 for total copy number and
+#'   minor allele copy number segment colors. Default is `c("black", "brown2")`.
+#' @param cf.colors A character vector of length 3 for cellular fraction
+#'   gradient (of 10 values): start color of the gradient, end color of the
+#'   gradient, and color for normal diploid (depending on the ploidy). Default
+#'   is `c("white", "steelblue", "bisque2")`.
+#' @param dipLogR.color A character string for the diploid log R ratio line
+#'   color. Default is "magenta4".
+#' @param seg.color A character string for the color of segment medians. Default
+#'   is "brown2".
+#'
+#' @return A multi-panel plot of CNA profiles is produced.
+#' @export
+#'
+#' @examples
+#' # Load example muscadet object
+#' data(muscadet_obj)
+#'
+#' # Plot profile for all cells
+#' pdf("CNAprofile_allcells.pdf", width = 15, height = 7.5) # Save as PDF
+#' plotProfile(muscadet_obj, on.data = "allcells", title = "Example data - all cells")
+#' dev.off()
+#'
+plotProfile <- function(x,
+                        on.data,
+                        title = NULL,
+                        allelic.type = "lor",
+                        point.size = 2,
+                        chrom.colors = c("slategrey", "skyblue"),
+                        lor.colors = c("peachpuff2", "paleturquoise3"),
+                        cn.colors = c("black", "brown2"),
+                        cf.colors = c("white", "steelblue", "bisque2"),
+                        dipLogR.color = c("magenta4"),
+                        seg.color = c("brown2")) {
+
+
+    # Argument checks
+    stopifnot(
+        "Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"),
+        "Invalid 'allelic.type'. Use 'lor' or 'vaf'." = allelic.type %in% c("lor", "vaf"),
+        "'point.size' must be a numeric value." = is.numeric(point.size) &&
+            length(point.size) == 1,
+        "'chrom.colors' must be a character vector of length 2." = is.character(chrom.colors) &&
+            length(chrom.colors) == 2,
+        "'lor.colors' must be a character vector of length 2 or 'none'." = (is.character(lor.colors) &&
+                                                                                length(lor.colors) == 2) ||
+            all(lor.colors == "none"),
+        "'cn.colors' must be a character vector of length 2." = is.character(cn.colors) &&
+            length(cn.colors) == 2,
+        "'cf.colors' must be a character vector of length 3." = is.character(cf.colors) &&
+            length(cf.colors) == 3,
+        "'dipLogR.color' must be a single character value." = is.character(dipLogR.color) &&
+            length(dipLogR.color) == 1,
+        "'seg.color' must be a single character value." = is.character(seg.color) &&
+            length(seg.color) == 1
+    )
+
+    # Extract data -------------------------------------------------------------
+    if(on.data == "allcells") {
+        pos <- x@cnacalling$positions.allcells
+        segs <- x@cnacalling$segments.allcells
+        ploidy <- x@cnacalling$ploidy.allcells
+    } else {
+        pos <- x@cnacalling$positions
+        segs <- x@cnacalling$segments
+        ploidy <- x@cnacalling$ploidy.clusters
+    }
+    stopifnot(
+        "'on.data' must be 'allcells' or a valid cluster identifier." =
+            (on.data == "allcells" || on.data %in% unique(pos$cluster))
+    )
+    if (on.data != "allcells") {
+        pos <- pos[which(pos$cluster == on.data), ]
+        segs <- segs[which(segs$cluster == on.data), ]
+    }
+
+    # Adjust chromosomes levels to get only numeric chromosomes
+    pos$chrom <- factor(pos$chrom, levels = unique(pos$chrom))
+    segs$chrom <- factor(segs$chrom, levels = unique(segs$chrom))
+    levels(pos$chrom) <- 1:length(levels(pos$chrom))
+    levels(segs$chrom) <- 1:length(levels(segs$chrom))
+    pos$chrom <- as.numeric(pos$chrom)
+    segs$chrom <- as.numeric(segs$chrom)
+    chomlevels <- unique(pos$chrom)
+
+    # Chromosome alternating dual colors
+    chrcol <- 1 + rep(segs$chrom - 2 * floor(segs$chrom / 2), segs$num.mark)
+
+    # Chromosomes position boundaries
+    chrbdry <- which(diff(pos$chrom) != 0)
+
+    # Segment position boundaries
+    segbdry <- cumsum(c(0, segs$num.mark))
+    segstart <- segbdry[-length(segbdry)]
+    segend <- segbdry[-1]
+
+
+    # Layout params ------------------------------------------------------------
+    def.par <- par(no.readonly = TRUE)
+    layout(matrix(rep(1:4, c(9, 9, 6, 1)), ncol = 1))
+    par(mar = c(0.25, 3, 0.25, 1),
+        mgp = c(1.75, 0.6, 0),
+        oma = c(3, 1, 1.5, 0))
+
+
+    # 1- Plot the LRR data -----------------------------------------------------
+    plot(
+        pos$cnlr,
+        pch = ".",
+        cex = point.size,
+        col = chrom.colors[chrcol],
+        ylab = "Log R ratio",
+        cex.lab = 1.5,
+        xaxt = "n"
+    )
+    # Add chromosomes boundaries
+    abline(v = chrbdry, lwd = 0.25)
+    # # Add LRR median
+    # abline(h=median(pos$cnlr, na.rm=TRUE), col="green3")
+    # Add diploid LRR
+    abline(h = dipLogR, col = dipLogR.color)
+    # Add LRR segment medians
+    segments(
+        segstart,
+        segs$cnlr.median,
+        segend,
+        segs$cnlr.median,
+        lwd = 1.75,
+        col = seg.color
+    )
+
+    # 2- Plot the LOR data -----------------------------------------------------
+    if (any(lor.colors == "none")) {
+        cols <- chrom.colors[chrcol]
+    } else {
+        cols <- lor.colors[pos$colSNP]
+    }
+    if (allelic.type == "lor") {
+        plot(
+            pos$valor,
+            pch = ".",
+            cex = point.size,
+            col = cols,
+            ylab = "Log odds ratio",
+            cex.lab = 1.5,
+            ylim = c(-4, 4),
+            xaxt = "n"
+        )
+        abline(v = chrbdry, lwd = 0.25)
+        segments(segstart,
+                 sqrt(abs(segs$mafR)),
+                 segend,
+                 sqrt(abs(segs$mafR)),
+                 lwd = 1.75,
+                 col = seg.color)
+        segments(segstart,
+                 -sqrt(abs(segs$mafR)),
+                 segend,
+                 -sqrt(abs(segs$mafR)),
+                 lwd = 1.75,
+                 col = seg.color)
+    }
+    if (allelic.type == "vaf") {
+        pos[which(pos$signal == "coverage"), "vafT"] <- NA
+        plot(
+            pos$vafT,
+            pch = ".",
+            cex = point.size,
+            col = cols,
+            ylab = "Variant allele frequency",
+            cex.lab = 1.5,
+            ylim = c(0, 1),
+            xaxt = "n"
+        )
+        abline(v = chrbdry, lwd = 0.25)
+        segments(segstart,
+                 segs$vafT.median,
+                 segend,
+                 segs$vafT.median,
+                 lwd = 1.75,
+                 col = seg.color)
+    }
+
+    # 3- Plot the estimated copy numbers and cf --------------------------------
+
+    # Transform to tcn to log scale over 10
+    tcn.i <- which(segs$tcn.em > 10 & !is.na(segs$tcn.em))
+    if (length(tcn.i) > 0) {
+        segs$tcn.em[tcn.i] <- 9 + log10(segs$tcn.em[tcn.i])
+    }
+
+    # Transform to lcn to log scale over 5
+    lcn.i <- which(segs$lcn.em > 5)
+    if (length(lcn.i) > 0) {
+        segs$lcn.em[lcn.i] <- 5 + log10(segs$lcn.em[lcn.i])
+    }
+
+    plot(
+        c(0, nrow(pos)),
+        c(0, max(segs$tcn.em, na.rm = T)),
+        type = "n",
+        ylab = "Copy number",
+        cex.lab = 1.5,
+        xaxt = "n"
+    )
+    abline(v=chrbdry, lwd=0.25)
+    # Add lcn
+    segments(segstart,
+             segs$lcn.em,
+             segend,
+             segs$lcn.em,
+             lwd = 1.75,
+             col = cn.colors[2])
+    # Add tcn
+    segments(segstart,
+             segs$tcn.em,
+             segend,
+             segs$tcn.em,
+             lwd = 1.75,
+             col = cn.colors[1])
+    # Add cf
+    plot(
+        c(0, nrow(pos)),
+        0:1,
+        type = "n",
+        ylab = "",
+        xaxt = "n",
+        yaxt = "n"
+    )
+    mtext(
+        "cf",
+        side = 2,
+        at = 0.5,
+        line = 1,
+        las = 2,
+        cex = 1
+    )
+
+    cfpalette <- colorRampPalette(c(cf.colors[1], cf.colors[2]))(10)
+    cfcol <- cfpalette[round(10 * segs$cf.em)]
+    cfcol[segs$tcn.em == ploidy & segs$lcn.em == ploidy/2] <- cf.colors[3]
+    rect(segstart, 0, segend, 1, col = cfcol, border = NA)
+
+    # Add chromosome ticks on x-axis -------------------------------------------
+
+    # Number positions per chromosomes
+    nn <- cumsum(table(pos$chrom))
+    # Ticks
+    axis(
+        labels = chromlevels,
+        side = 1,
+        at = (nn + c(0, nn[-length(nn)])) / 2,
+        cex = 1.5
+    )
+    # Labels
+    mtext(side = 1,
+          line = 1.75,
+          "Chromosomes",
+          cex = 1)
+
+    # Add title ----------------------------------------------------------------
+    mtext(title, side = 3, line = 0, outer = TRUE, cex = 1.1)
+
+    # Reset layout
+    par(def.par)
+}
+
+
+
+
+#' Plot CNA segments across clusters from a muscadet object
+#'
+#' This function visualizes copy number alteration (CNA) segments across
+#' clusters based on data stored in a \code{\link{muscadet}} object. It displays
+#' CNAs for each clusters and scales the y-axis based on the proportion of cells
+#' in each cluster.
+#'
+#' @param x A \code{\link{muscadet}} object containing CNA calling data to be
+#'   visualized (generated using [muscadet::cnaCalling()]).
+#' @param title An optional title for the plot. Default is `NULL`.
+#' @param cna.colors A vector of 3 colors for CNA states: gain, loss, and cnloh
+#'   (or named vector where names are "gain", "loss", and "cnloh" and the values
+#'   are their respective colors). Default is `c("gain" = "#EF6F6AFF", "loss" =
+#'   "#6699CCFF", "cnloh" = "#44AA99FF")`.
+#'
+#' @return A ggplot object representing the CNA segments plot.
+#'
+#' @import ggplot2
+#' @importFrom dplyr mutate
+#' @importFrom dplyr left_join
+#'
+#' @export
+#'
+#' @examples
+#' library("ggplot2")
+#'
+#' # Load example muscadet object
+#' data(muscadet_obj)
+#'
+#' # plot CNA segments
+#' plot <- plotCNA(muscadet_obj, title = "Copy Number Alterations in Example Data")
+#' print(plot)
+plotCNA <- function(
+        x,
+        title = NULL,
+        cna.colors = c("gain" = "#EF6F6AFF", "loss" = "#6699CCFF", "cnloh" = "#44AA99FF")
+) {
+
+    # Argument checks
+    stopifnot(
+        "Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+
+    # Extract genome
+    if (x@genome == "hg38") {
+        genome_chrom <- muscadet:::hg38_chrom
+    }
+    if (x@genome == "hg19") {
+        genome_chrom <- muscadet:::hg19_chrom
+    }
+    if (x@genome == "mm10") {
+        genome_chrom <- muscadet:::mm10_chrom
+    }
+    chromSizes <- as.data.frame(genome_chrom)
+
+    # Keep only autosomes to display
+    chromSizes$seqnames <- as.character(chromSizes$seqnames)
+    chromSizes <- chromSizes[!chromSizes$seqnames %in% c("X", "Y", "M"), ]
+
+    # Chromosomes start coordinates
+    chromStarts <- data.frame(
+        chrom = factor(chromSizes$seqnames, levels = unique(chromSizes$seqnames)),
+        chrom.start = c(0, cumsum(as.numeric(chromSizes$width)))[-(nrow(chromSizes) + 1)]
+    )
+
+    # Ordered chromosomes names
+    chromNames <- factor(unique(chromSizes$seqnames), levels = unique(chromSizes$seqnames))
+
+    # Extract data table
+    data <- x@cnacalling$table
+
+    # Extract number of cells per cluster
+    ncells <- x@cnacalling$ncells
+
+    # Keep only autosomes to display
+    data <- data[!data$chrom %in% c("X", "Y", "M"),]
+
+    # Add chromosomes start and end coordinates on x axis
+    df <- dplyr::left_join(data, chromStarts, by = "chrom") %>%
+        dplyr::mutate(start.x = start + chrom.start,
+                      end.x = end + chrom.start)
+
+    # Remove consensus segs that have no data in a cluster
+    df <- df[complete.cases(df$cluster),]
+
+    # Compute proportions of cells per cluster for y axis
+    prop_clus <- unique(df$prop.cluster[!is.na(df$prop.cluster)])
+    prop_starts <- c(0, cumsum(prop_clus[-length(prop_clus)]))
+    prop_ends <- cumsum(prop_clus)
+    names(prop_starts) <- unique(df$cluster[!is.na(df$cluster)])
+    names(prop_ends) <- unique(df$cluster[!is.na(df$cluster)])
+    props <- unique(c(prop_starts, prop_ends))
+    props_breaks <- props[-length(props)] + (diff(props) / 2)
+
+    # Add clusters coordinates on y axis
+    df <- df %>%
+        dplyr::mutate(start.y = prop_starts[as.character(cluster)],
+                      end.y = prop_ends[as.character(cluster)])
+
+    # Ordered levels for CNA states
+    df$cna_state <- factor(df$cna_state, levels = c("gain", "loss", "cnloh"))
+
+    # Construct plot
+    cna_plot <- ggplot2::ggplot(
+        df,
+        aes(
+            xmin = start.x,
+            xmax = end.x,
+            ymin = start.y,
+            ymax = end.y,
+            fill = cna_state,
+            alpha = cf.em)) +
+        geom_rect() +
+        # lines between chromosomes
+        geom_vline(
+            xintercept = chromStarts$chrom.start,
+            colour = "grey",
+            linewidth = 0.2) +
+        # lines between clusters
+        geom_hline(yintercept = props,
+                   colour = "black",
+                   linewidth = 0.2) +
+        # chromosomes labels placement in the center of each chromosome
+        scale_x_continuous(
+            expand = c(0, 0),
+            breaks = chromStarts$chrom.start + (chromSizes$width /2),
+            labels = as.character(chromNames)) +
+        # method labels in the center
+        scale_y_continuous(
+            expand = c(0, 0),
+            trans = "reverse",
+            limits = c(1, 0),
+            breaks = props_breaks,
+            labels = paste0("cluster ", unique(df$cluster), "\n", ncells, " cells")) +
+        # set colors for the calls and remove the name
+        {if (length(cna.colors) > 0)
+            scale_fill_manual(
+                name = "",
+                values = cna.colors,
+                na.value = "white",
+                na.translate = FALSE,
+                drop = FALSE
+            )} +
+        scale_alpha_continuous(
+            name = "cell fraction",
+            range = c(0, 1),
+            limits = c(0, 1),
+            breaks = c(0.2, 0.4, 0.6, 0.8, 1)) +
+        guides(fill = guide_legend(order = 1), alpha = guide_legend(order = 2)) +
+        ## Set axis labels
+        labs(title = title) +
+        theme_bw() +
+        theme(
+            panel.grid = element_blank(),
+            plot.title = element_text(hjust = 0.5),
+            axis.title.y = element_text(size = 10, face = "bold"),
+            axis.text.x = element_text(size = 6, face = "bold"),
+            axis.text.y = element_text(size = 8, face = "bold"),
+            axis.ticks = element_blank(),
+            legend.position = "top"
+        )
+
+    return(cna_plot)
+}
+
