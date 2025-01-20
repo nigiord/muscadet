@@ -309,6 +309,17 @@ muscadet <- assignClusters(muscadet, k = 3)
 # merge counts
 muscadet <- mergeCounts(muscadet, muscadet_ref)
 
+# CNA calling
+muscadet <- cnaCalling(
+    muscadet,
+    omics.coverage = "ATAC",
+    depthmin.a.clusters = 3,
+    depthmin.c.clusters = 5,
+    depthmin.a.allcells = 3,
+    depthmin.c.allcells = 5,
+    depthmin.nor = 0
+)
+
 
 muscadet_obj <- muscadet
 usethis::use_data(muscadet_obj, compress = "xz", overwrite = TRUE)
