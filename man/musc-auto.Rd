@@ -25,10 +25,10 @@ or \code{\link{muscomic}} objects. For \code{muscadet} objects, it also lists
 omic datasets contained inside the \code{omics} slot.
 }
 \examples{
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 
 }

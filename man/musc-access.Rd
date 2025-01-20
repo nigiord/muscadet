@@ -54,44 +54,44 @@ Assign new data in a \code{\link{muscadet}} or
 the \code{omics} slot can be directly reassigned.
 }
 \examples{
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Access to muscadet omics or slots
 muscadet_obj["ATAC"]
 muscadet_obj["genome"]
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Access to muscomic slots
 muscadet_obj["ATAC"]["label.omic"]
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Access to muscadet omics or slots
 muscadet_obj$ATAC
 muscadet_obj$genome
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Access to muscomic slots
 muscadet_obj$ATAC$label.omic
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Assign new data in muscadet object
 muscadet_obj["genome"] <- "hg38"
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Assign new data in muscomic object
 muscadet_obj["ATAC"]["label.omic"] <- "scATAC-seq"
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Assign new data in muscadet object
 muscadet_obj$genome <- "hg38"
 
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 # Assign new data in muscomic object
 muscadet_obj$ATAC$label.omic <- "scATAC-seq"

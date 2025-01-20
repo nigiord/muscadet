@@ -17,7 +17,7 @@ Prints summary to \code{\link[base]{stdout}} and invisibly returns
 Overview of a \code{\link{muscadet}} object.
 }
 \examples{
-# Load muscadej object
+# Load example muscadet object
 data(muscadet_obj)
 
 # Overview of the muscadet object

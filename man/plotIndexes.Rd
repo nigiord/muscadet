@@ -53,7 +53,7 @@ If multiple indexes are selected, the values are normalized to fall between
 The k for which the mean of indexes is maximal is highlighted with a dot.
 }
 \examples{
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 
 # Plot all indexes

@@ -4,7 +4,7 @@
 \alias{getSegConsensus}
 \title{Get consensus segments across clusters}
 \usage{
-getSegConsensus(x, ncells, dist.breakpoints = 1e+07)
+getSegConsensus(x, ncells, dist.breakpoints = 1e+06)
 }
 \arguments{
 \item{x}{A data frame containing cluster segments information with the
@@ -22,7 +22,7 @@ in the \code{cluster} column of \code{x}.}
 
 \item{dist.breakpoints}{A numeric value specifying the minimum genomic
 distance between adjacent breakpoints to be grouped into the same consensus
-segment (\code{numeric} value). Default: \code{10e6}.}
+segment (\code{numeric} value). Default: \code{1e6}.}
 }
 \value{
 A data frame containing consensus segments with the following columns:

@@ -30,7 +30,7 @@ Generate a silhouette plot for a specified clustering result within a
 \examples{
 library("ggplot2")
 
-# Load a muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 plotSil(muscadet_obj, k = 3)
 

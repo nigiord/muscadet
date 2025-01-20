@@ -37,7 +37,7 @@
 #' @export
 #'
 #' @examples
-#' # Load muscadet object
+#' # Load example muscadet object
 #' data(muscadet_obj)
 #'
 #' # Select clustering result for k = 3
@@ -174,7 +174,7 @@ assignClusters <- function(x, k = NULL, clusters = NULL, mapping = NULL) {
 #' @export
 #'
 #' @examples
-#' # Load muscadet objects
+#' # Load example muscadet objects
 #' data(muscadet_obj)
 #' data(muscadet_obj_ref)
 #'
@@ -265,9 +265,10 @@ addAlleleCounts <- function(x, allele_counts) {
 #' @export
 #'
 #' @examples
-#' # Load muscadet objects
+#' # Load example muscadet objects
 #' data(muscadet_obj)
 #' data(muscadet_obj_ref)
+#'
 #' # Merge counts from all omics from both sample and reference
 #' muscadet_obj <- mergeCounts(muscadet_obj, muscadet_obj_ref)
 #'

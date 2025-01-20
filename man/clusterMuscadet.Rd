@@ -109,8 +109,10 @@ Finally, a default optimal number of cluster (\code{k}) is found based on averag
 silhouette widths.
 }
 \examples{
-# Clutering on muscadet object
+# Load example muscadet object
 data(muscadet_obj)
+
+# Clustering on muscadet object
 muscadet_obj <- clusterMuscadet(
   muscadet_obj,
   dist_method = "euclidean",

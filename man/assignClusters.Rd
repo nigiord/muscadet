@@ -46,7 +46,7 @@ argument.
 }
 }
 \examples{
-# Load muscadet object
+# Load example muscadet object
 data(muscadet_obj)
 
 # Select clustering result for k = 3

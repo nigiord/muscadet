@@ -40,7 +40,7 @@ specific SNP positions (e.g. found by bulk sequencing) before Copy Number
 Alterations (CNAs) calling.
 }
 \examples{
-# Load muscadet objects
+# Load example muscadet objects
 data(muscadet_obj)
 data(muscadet_obj_ref)
 
