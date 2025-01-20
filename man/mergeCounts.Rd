@@ -4,7 +4,7 @@
 \alias{mergeCounts}
 \title{Merge counts for \code{muscadet} objects}
 \usage{
-mergeCounts(x, reference)
+mergeCounts(x, reference, nor.het = TRUE)
 }
 \arguments{
 \item{x}{A \code{\link{muscadet}} object containing sample data (\code{muscadet}).
@@ -13,12 +13,18 @@ This object must include clustering assignments in the
 
 \item{reference}{A \code{\link{muscadet}} object containing reference data
 (\code{muscadet}).}
+
+\item{nor.het}{A logical value to specify if normal reference allele counts
+are modified to: total depth counts divided by 2, to set positions as
+heterozygous in allelic data (e.g. when heterozygous SNP positions are retrieve based on
+matched WGS data) before combining coverage and allelic data. Default is
+\code{TRUE}.}
 }
 \value{
 A modified \code{\link{muscadet}} object corresponding to the \code{x} muscadet object,
 with updated \code{cnacalling} slot containing:
 \itemize{
-\item \code{allelic.counts}: Processed allelic counts on SNP positions, for all omics
+\item \code{allelic.counts}: Processed allelic counts on SNP positions, for all omics.
 \item \code{coverage.counts}: Processed coverage counts merged with the reference.
 \item \code{combined.counts}: Combined data for allelic and coverage counts.
 }

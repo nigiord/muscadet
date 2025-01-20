@@ -241,12 +241,17 @@ addAlleleCounts <- function(x, allele_counts) {
 #'   `cnacalling$clusters` slot.
 #' @param reference A \code{\link{muscadet}} object containing reference data
 #'   (`muscadet`).
+#' @param nor.het A logical value to specify if normal reference allele counts
+#'   are modified to: total depth counts divided by 2, to set positions as
+#'   heterozygous in allelic data (e.g. when heterozygous SNP positions are retrieve based on
+#'   matched WGS data) before combining coverage and allelic data. Default is
+#'   `TRUE`.
 #'
 #' @return
 #' A modified \code{\link{muscadet}} object corresponding to the `x` muscadet object,
 #' with updated `cnacalling` slot containing:
 #' \itemize{
-#'   \item \code{allelic.counts}: Processed allelic counts on SNP positions, for all omics
+#'   \item \code{allelic.counts}: Processed allelic counts on SNP positions, for all omics.
 #'   \item \code{coverage.counts}: Processed coverage counts merged with the reference.
 #'   \item \code{combined.counts}: Combined data for allelic and coverage counts.
 #' }
@@ -272,7 +277,9 @@ addAlleleCounts <- function(x, allele_counts) {
 #' # Merge counts from all omics from both sample and reference
 #' muscadet_obj <- mergeCounts(muscadet_obj, muscadet_obj_ref)
 #'
-mergeCounts <- function(x, reference) {
+mergeCounts <- function(x,
+                        reference,
+                        nor.het = TRUE) {
 
     # Validate input: x and reference must be muscadet objects
     stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
@@ -366,6 +373,13 @@ mergeCounts <- function(x, reference) {
 
     x@cnacalling[["allelic.counts"]] <- as.data.frame(snp)
 
+
+    # Auto set normal SNP positions as heterozygous before combining
+    if(nor.het == TRUE) {
+        snp[, "RD.all.NOR"] <- round(snp[, "DP.all.NOR"] / 2, 0)
+    }
+
+
     # Coverage Data Processing -------------------------------------------------
     # Extract coverage counts for all omics in both sample and reference
     coverage_sample <- Reduce(rbind, lapply(x@omics, function(omic) {
@@ -413,15 +427,13 @@ mergeCounts <- function(x, reference) {
     # Combine Allelic and Coverage Data ----------------------------------------
 
     # Format data
-    snp <- snp[, c("CHROM", "POS", "DP.all.NOR", "RD.all.NOR", "DP.all.TUM", "RD.all.TUM", "cluster", "signal")]
+    snp <- snp[, c("CHROM", "POS", "DP.all.NOR", "RD.all.NOR", "DP.all.TUM", "RD.all.TUM", "cluster", "signal", "omic", "id")]
     snp <- unique(snp)
-    cov <- cov[, c("CHROM", "POS", "DP.NOR", "DP.NOR", "DP.TUM", "DP.TUM", "cluster", "signal")]
+    cov <- cov[, c("CHROM", "POS", "DP.NOR", "DP.NOR", "DP.TUM", "DP.TUM", "cluster", "signal", "omic", "id")]
     cov <- unique(cov)
 
-    colnames(snp) <- c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD", "cluster", "signal")
+    colnames(snp) <- c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD", "cluster", "signal", "omic", "id")
     colnames(cov) <- colnames(snp)
-
-    # snp$NOR.RD = round(snp$NOR.RD / 2, 0)
 
     # Make sure the levels match for binding
     levels(snp$Chromosome) <- union(levels(snp$Chromosome), levels(cov$Chromosome))
