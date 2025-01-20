@@ -773,6 +773,10 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 #'   is "brown2".
 #'
 #' @return A multi-panel plot of CNA profiles is produced.
+#'
+#' @import graphics
+#' @import grDevices
+#'
 #' @export
 #'
 #' @examples
@@ -822,10 +826,12 @@ plotProfile <- function(x,
         pos <- x@cnacalling$positions.allcells
         segs <- x@cnacalling$segments.allcells
         ploidy <- x@cnacalling$ploidy.allcells
+        dipLogR <- x@cnacalling$dipLogR.allcells
     } else {
         pos <- x@cnacalling$positions
         segs <- x@cnacalling$segments
         ploidy <- x@cnacalling$ploidy.clusters
+        dipLogR <- x@cnacalling$dipLogR.clusters
     }
     stopifnot(
         "'data' must be 'allcells' or a valid cluster identifier." =
@@ -1049,6 +1055,8 @@ plotProfile <- function(x,
 #' @import ggplot2
 #' @importFrom dplyr mutate
 #' @importFrom dplyr left_join
+#' @importFrom stats complete.cases
+#' @importFrom rlang .data
 #'
 #' @export
 #'
@@ -1073,13 +1081,13 @@ plotCNA <- function(
 
     # Extract genome
     if (x@genome == "hg38") {
-        genome_chrom <- muscadet:::hg38_chrom
+        genome_chrom <- hg38_chrom
     }
     if (x@genome == "hg19") {
-        genome_chrom <- muscadet:::hg19_chrom
+        genome_chrom <- hg19_chrom
     }
     if (x@genome == "mm10") {
-        genome_chrom <- muscadet:::mm10_chrom
+        genome_chrom <- mm10_chrom
     }
     chromSizes <- as.data.frame(genome_chrom)
 
@@ -1107,8 +1115,8 @@ plotCNA <- function(
 
     # Add chromosomes start and end coordinates on x axis
     df <- dplyr::left_join(data, chromStarts, by = "chrom") %>%
-        dplyr::mutate(start.x = start + chrom.start,
-                      end.x = end + chrom.start)
+        dplyr::mutate(start.x = .data$start + .data$chrom.start,
+                      end.x = .data$end + .data$chrom.start)
 
     # Remove consensus segs that have no data in a cluster
     df <- df[complete.cases(df$cluster),]
@@ -1124,8 +1132,8 @@ plotCNA <- function(
 
     # Add clusters coordinates on y axis
     df <- df %>%
-        dplyr::mutate(start.y = prop_starts[as.character(cluster)],
-                      end.y = prop_ends[as.character(cluster)])
+        dplyr::mutate(start.y = prop_starts[as.character(.data$cluster)],
+                      end.y = prop_ends[as.character(.data$cluster)])
 
     # Ordered levels for CNA states
     df$cna_state <- factor(df$cna_state, levels = c("gain", "loss", "cnloh"))
@@ -1134,12 +1142,12 @@ plotCNA <- function(
     cna_plot <- ggplot2::ggplot(
         df,
         aes(
-            xmin = start.x,
-            xmax = end.x,
-            ymin = start.y,
-            ymax = end.y,
-            fill = cna_state,
-            alpha = cf.em)) +
+            xmin = .data$start.x,
+            xmax = .data$end.x,
+            ymin = .data$start.y,
+            ymax = .data$end.y,
+            fill = .data$cna_state,
+            alpha = .data$cf.em)) +
         geom_rect() +
         # lines between chromosomes
         geom_vline(

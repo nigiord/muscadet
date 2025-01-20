@@ -80,8 +80,11 @@ SNPs in a genome are not evenly spaced, and loci are sampled within the specifie
 window (\code{snp.nbhd}) to reduce serial correlation.
 }
 \examples{
+library("facets")
+
 # Load example muscadet object
 data(muscadet_obj)
+
 counts <- muscadet_obj$cnacalling$combined.counts
 counts <- counts[complete.cases(counts),]
 counts_clus <- counts[which(counts$cluster == 1),]

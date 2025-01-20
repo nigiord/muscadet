@@ -310,7 +310,7 @@ cnaCalling <- function(
 
     jseg_full <- dplyr::left_join(jseg_full,
                                   outclust_full[, c("seg", "segclust")],
-                                  by="seg")
+                                  by = "seg")
 
 
     # FIND DIPLOID Log ratio ---------------------------------------------------
@@ -340,7 +340,7 @@ cnaCalling <- function(
 
     # Compute median of vafT per segment
     jseg_full <- jseg_full %>%
-        dplyr::group_by(seg) %>%
+        dplyr::group_by(.data$seg) %>%
         dplyr::mutate(vafT.median = median(.data$vafT[.data$signal == "allelic"], na.rm = TRUE))
     out_full <- dplyr::left_join(out_full, unique(jseg_full[, c("seg", "vafT.median")]), by="seg")
 
@@ -421,7 +421,7 @@ cnaCalling <- function(
 
     # Compute median of vafT per segment
     jseg_allcells <- jseg_allcells %>%
-        dplyr::group_by(seg) %>%
+        dplyr::group_by(.data$seg) %>%
         dplyr::mutate(vafT.median = median(.data$vafT[.data$signal == "allelic"], na.rm = TRUE))
     out_allcells <- dplyr::left_join(out_allcells, unique(jseg_allcells[, c("seg", "vafT.median")]), by="seg")
 
@@ -655,8 +655,11 @@ cnaCalling <- function(
 #' @export
 #'
 #' @examples
+#' library("facets")
+#'
 #' # Load example muscadet object
 #' data(muscadet_obj)
+#'
 #' counts <- muscadet_obj$cnacalling$combined.counts
 #' counts <- counts[complete.cases(counts),]
 #' counts_clus <- counts[which(counts$cluster == 1),]
