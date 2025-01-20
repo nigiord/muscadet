@@ -16,6 +16,7 @@ Tumor Sequencing}. R package version 0.6.2,
 \usage{
 cnaCalling(
   x,
+  omics.coverage = NULL,
   depthmin.a.clusters = 30,
   depthmin.c.clusters = 50,
   depthmin.a.allcells = 30,
@@ -41,6 +42,11 @@ cnaCalling(
 \item Combined allelic and coverage counts per cluster in the
 \code{cnacalling$combined.counts} slot (use \code{\link[=mergeCounts]{mergeCounts()}}).
 }}
+
+\item{omics.coverage}{A vector of omics names to select for coverage log R
+ratio data. RECOMMENDED: select "ATAC" when ATAC and RNA omics are
+available, the ATAC coverage (DNA) signal is less noisy than RNA signal. By
+default, \code{NULL} selects all available data.}
 
 \item{depthmin.a.clusters}{Minimum allelic depth per clusters in tumor cells
 (default: 30).}
@@ -162,9 +168,11 @@ object by processing allelic and coverage counts across clusters and
 evaluating cell fractions and copy numbers.
 }
 \examples{
-# Example usage:
-library(facets)
+library("facets")
+
+# Load example muscadet object
 data(muscadet_obj)
+
 muscadet_obj <- cnaCalling(muscadet_obj,
                            depthmin.a.clusters = 3, # set low thresholds for example data
                            depthmin.c.clusters = 5,

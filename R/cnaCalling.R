@@ -9,6 +9,10 @@
 #'   (use [assignClusters()]).
 #'   - Combined allelic and coverage counts per cluster in the
 #'   `cnacalling$combined.counts` slot (use [mergeCounts()]).
+#' @param omics.coverage A vector of omics names to select for coverage log R
+#'   ratio data. RECOMMENDED: select "ATAC" when ATAC and RNA omics are
+#'   available, the ATAC coverage (DNA) signal is less noisy than RNA signal. By
+#'   default, `NULL` selects all available data.
 #' @param depthmin.a.clusters Minimum allelic depth per clusters in tumor cells
 #'   (default: 30).
 #' @param depthmin.c.clusters Minimum coverage depth per clusters in tumor cells
@@ -136,9 +140,11 @@
 #' @export
 #'
 #' @examples
-#' # Example usage:
-#' library(facets)
+#' library("facets")
+#'
+#' # Load example muscadet object
 #' data(muscadet_obj)
+#'
 #' muscadet_obj <- cnaCalling(muscadet_obj,
 #'                            depthmin.a.clusters = 3, # set low thresholds for example data
 #'                            depthmin.c.clusters = 5,
@@ -148,6 +154,7 @@
 #'
 cnaCalling <- function(
         x,
+        omics.coverage = NULL,
         depthmin.a.clusters = 30,
         depthmin.c.clusters = 50,
         depthmin.a.allcells = 30,
@@ -202,6 +209,20 @@ cnaCalling <- function(
     if (is.null(rcmat) || is.null(clusters)) {
         stop("The input muscadet object must contain valid 'combined.counts' and 'clusters'.")
     }
+
+    # Filter coverage data based on selected omics
+    if(!is.null(omics.coverage)) {
+        stopifnot(
+            "The omics.coverage argument must match one or more omic name (unique(x@cnacalling$combined.counts$omic))" =
+                omics.coverage %in% unique(rcmat$omic)
+        )
+        rcmat <- rcmat[sort(c(
+            which(rcmat$signal == "coverage" & rcmat$omic %in% omics.coverage),
+            which(rcmat$signal == "allelic")
+        )), ]
+    }
+    # Remove unnecessary columns 'omic' and 'id'
+    rcmat <- rcmat[, 1:8]
 
     # Ensure no missing values in combined counts
     rcmat <- na.omit(rcmat)
@@ -261,8 +282,6 @@ cnaCalling <- function(
     # Rename segments with unique number
     out_full$seg_ori <- out_full$seg
     out_full$seg <- 1:nrow(out_full)
-
-
 
     # Bind "jointseg" table of segment data from all clusters
     jseg_full <- lapply(oo_list, function(x) {
