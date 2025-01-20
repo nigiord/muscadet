@@ -51,7 +51,7 @@ test_that("computeLogRatioATAC gives a correct object as output", {
         quiet = TRUE
     )
 
-    expect_identical(names(obj_atac), c("matTumor","matRef","params","coord"))
+    expect_identical(names(obj_atac), c("matTumor", "matRef", "params", "coord"))
 })
 
 test_that("ComputeLogRatioRNA gives a correct object as output", {
