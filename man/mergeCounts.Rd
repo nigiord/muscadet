@@ -40,9 +40,10 @@ Abbreviations:
 }
 }
 \description{
-This function combines allelic and coverage counts from all omics per cluster
-for both sample and reference. The resulting merged data is
-stored in the \code{cnacalling} slot of the sample \code{muscadet} object.
+This function combines allelic (counts at single nucleotide polymorphisms
+(SNPs)) and coverage counts (counts on features) from all omics per cluster
+for both sample and reference. The resulting merged data is stored in the
+\code{cnacalling} slot of the sample \code{muscadet} object.
 }
 \examples{
 # Load example muscadet objects

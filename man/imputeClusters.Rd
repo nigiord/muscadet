@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustering.R
 \name{imputeClusters}
 \alias{imputeClusters}
-\title{Impute Cluster Assignments for Missing Cells by Similarity}
+\title{Impute cluster assignments for missing cells by similarity}
 \usage{
 imputeClusters(mat_list, clusters, knn_imp = 10)
 }

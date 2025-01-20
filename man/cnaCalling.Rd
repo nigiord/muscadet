@@ -174,6 +174,7 @@ library("facets")
 data(muscadet_obj)
 
 muscadet_obj <- cnaCalling(muscadet_obj,
+                           omics.coverage = "ATAC",
                            depthmin.a.clusters = 3, # set low thresholds for example data
                            depthmin.c.clusters = 5,
                            depthmin.a.allcells = 3,

@@ -232,9 +232,10 @@ addAlleleCounts <- function(x, allele_counts) {
 
 #' Merge counts for `muscadet` objects
 #'
-#' This function combines allelic and coverage counts from all omics per cluster
-#' for both sample and reference. The resulting merged data is
-#' stored in the `cnacalling` slot of the sample `muscadet` object.
+#' This function combines allelic (counts at single nucleotide polymorphisms
+#' (SNPs)) and coverage counts (counts on features) from all omics per cluster
+#' for both sample and reference. The resulting merged data is stored in the
+#' `cnacalling` slot of the sample `muscadet` object.
 #'
 #' @param x A \code{\link{muscadet}} object containing sample data (`muscadet`).
 #'   This object must include clustering assignments in the

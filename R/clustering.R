@@ -489,7 +489,7 @@ weightedSNF <- function(
 }
 
 
-#' Impute Cluster Assignments for Missing Cells by Similarity
+#' Impute cluster assignments for missing cells by similarity
 #'
 #' @description
 #' This function imputes cluster assignments for cells missing in some omics
