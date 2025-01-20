@@ -1,3 +1,574 @@
+#' Copy Number Alteration (CNA) Calling from muscadet object
+#'
+#' Performs copy number alteration (CNA) analysis on a \code{\link{muscadet}}
+#' object by processing allelic and coverage counts across clusters and
+#' evaluating cell fractions and copy numbers.
+#'
+#' @param x A \code{\link{muscadet}} object. Must contain:
+#'   - Clustering assignments in the `cnacalling$clusters` slot
+#'   (use [assignClusters()]).
+#'   - Combined allelic and coverage counts per cluster in the
+#'   `cnacalling$combined.counts` slot (use [mergeCounts()]).
+#' @param depthmin.a.clusters Minimum allelic depth per clusters in tumor cells
+#'   (default: 30).
+#' @param depthmin.c.clusters Minimum coverage depth per clusters in tumor cells
+#'   (default: 50).
+#' @param depthmin.a.allcells Minimum allelic depth for all tumor cells
+#'   (default: 30).
+#' @param depthmin.c.allcells Minimum coverage depth for all tumor cells
+#'   (default: 50).
+#' @param depthmin.nor Minimum coverage depth for normal sample (default: 0).
+#' @param depthmax.nor Maximum coverage depth for normal sample (default: 1000).
+#' @param het.thresh VAF (Variant Allele Frequency) threshold to call SNP
+#'   heterozygous for [preProcSample2()] (default: 0.25).
+#' @param snp.nbhd Window size for selecting SNP loci to reduce serial
+#'   correlation for [preProcSample2()] (default: 250).
+#' @param hetscale Logical value indicating whether log odds ratio (logOR)
+#'   should be scaled to give more weight in the test statistics for
+#'   segmentation and clustering [preProcSample2()]. (default: `TRUE`)
+#' @param cval1 Critical value for segmentation for [preProcSample2()] (default:
+#'   25).
+#' @param cval2 Critical value for segmentation for [facets::procSample()]
+#'   (default: 150).
+#' @param min.nhet Minimum number of heterozygous SNPs in a segment for
+#'   [facets::procSample()] and [facets::emcncf()] (default: 5).
+#' @param clonal.thresh Threshold of minimum cell proportion to label a
+#'   segment as clonal (default: 0.9).
+#' @param dist.breakpoints Minimum distance between breakpoints to define
+#'   distinct segments (default: 1e6).
+#' @param ploidy Specifies ploidy assumption: `"auto"`, `"median"`, or numeric
+#'   value (default: `"auto"`).
+#'
+#' @return
+#' A modified \code{\link{muscadet}} object with added CNA analysis results in
+#' the `cnacalling` slot, including: filtered counts and positions, segmentation
+#' data for clusters and all cells, consensus segments across clusters based on
+#' breakpoints, diploid log R ratio, purity and ploidy.
+#'
+#' Details of the cnacalling slot:
+#' \itemize{
+#'   \item \code{combined.counts.filtered}: Filtered counts per clusters.
+#'   \item \code{combined.counts.allcells}: Counts summed for all cells (no
+#'   cluster distinction).
+#'   \item \code{combined.counts.allcells.filtered}: Filtered counts summed for
+#'   all cells (no cluster distinction).
+#'
+#'   \item \code{positions}: Data frame of positions from the per cluster
+#'   analysis. Positions in rows and associated data in columns: `chrom`,
+#'   `maploc` (position), `rCountT` (read count in tumor), `rCountN` (read count
+#'   in normal), `vafT` (variant allele frequency in tumor), `vafN` (variant
+#'   allele frequency in normal), `cluster` (cluster id), `signal` (whether the
+#'   counts come from coverage or allelic data), `het` (heterozygous status),
+#'   `keep` (whether to keep position), `gcpct` (GC percentage), `gcbias` (GC
+#'   bias correction), `cnlr` (log R ratio), `valor` (log odds ratio), `lorvar`
+#'   (variance of log odds ratio), `seg0`, `seg_ori` (segment original id within
+#'   each cluster), `seg` (segment id), `segclust` (cluster of segments id),
+#'   `vafT.allcells` (vairiant allele frequency in all tumor cells), `colSNP`
+#'   (integer for allelic position color depending on `vafT.allcells`).
+#'
+#'   \item \code{segments}: Data frame of segments from the per cluster
+#'   analysis. Segments in rows and associated data in columns: `chrom`, `seg`
+#'   (segment id), `num.mark` (number of positions in segment), `nhet` (number
+#'   of heterezygous positions in segment), `cnlr.median` (segment log R ratio
+#'   median), `mafR` (segment square of expected log odds ratio), vafT.median
+#'   (segment variant allele frequency median), `cluster` (cluster id),
+#'   `seg_ori` (segment original id within each cluster), `segclust` (cluster of
+#'   segments id), `cnlr.median.clust` (segment cluster log R ratio median),
+#'   `mafR.clust` (segment cluster square of expected log odds ratio), `cf`
+#'   (cell fraction), `tcn` (total copy number), `lcn` (lower copy number),
+#'   `start`, `end`, `cf.em` (cell fraction computed with EM algorithm),
+#'   `tcn.em`, (total copy number computed with EM algorithm), `lcn.em` (lower
+#'   copy number computed with EM algorithm).
+#'
+#'   \item \code{positions.allcells}: Same as `positions` but from the all cells analysis.
+#'   \item \code{segments.allcells}: Same as `segments` but from the all cells analysis.
+#'
+#'   \item \code{consensus.segs}: Data frame of unique consensus segments across
+#'   clusters, with the `cna` (`logical`) and `cna_clonal` (`logical`)
+#'   information.
+#'
+#'   \item \code{table}: Data frame of consensus segments across clusters with
+#'   associated information per cluster in columns: `chrom`, `start`, `end`, `id`,
+#'   `cluster`, `cf.em` (cell fraction computed with EM algorithm), `tcn.em`
+#'   (total copy number computed with EM algorithm), `lcn.em` (lower copy number
+#'   computed with EM algorithm), `ncells` (number of cells in cluster),
+#'   `prop.cluster` (proportion of cells per cluster), `gnl` (gain;neutral;loss :
+#'   1;0;-1), `loh` (loss of heterozygosity status), `state` (state of segments),
+#'   `cna` (whether the segment is a CNA), `cna_state` (state of CNA segments),
+#'   `prop.tot` (proportion of cells with the same state per segment),
+#'   `state_clonal` (state of the segment if its `prop.tot` is above
+#'   `clonal.thresh`), `cna_clonal` (whether the segment is a clonal CNA),
+#'   `cna_clonal_state` (state of clonal CNA segments).
+#'
+#'   \item \code{ncells}: Vector of number of cells per cluster.
+#'   \item \code{dipLogR.clusters}: Diploid log R ratio from the per cluster analysis.
+#'   \item \code{dipLogR.allcells}: Diploid log R ratio from the all cells analysis.
+#'   \item \code{purity.clusters}: Purity from the per cluster analysis.
+#'   \item \code{purity.allcells}: Purity from the all cells analysis.
+#'   \item \code{ploidy.clusters}: Ploidy from the per cluster analysis.
+#'   \item \code{ploidy.allcells}: Ploidy from the all cells analysis.
+#' }
+#'
+#' @import dplyr
+#' @import facets
+#' @importFrom GenomicRanges GRanges
+#' @importFrom stats na.omit
+#' @importFrom rlang .data
+#'
+#' @seealso [muscadet::assignClusters()], [muscadet::mergeCounts()],
+#' [muscadet::preProcSample2()]
+#'
+#'
+#' @source This function uses several functions from the [facets] package,
+#'   including: [facets::clustersegs()], [facets::emcncf()],
+#'   [facets::findDiploidLogR()], [facets::fitcncf()], [facets::procSample()],
+#'   [facets::procSnps()], and adapted function [muscadet::preProcSample2()].
+#'
+#'   Seshan VE, Shen R (2021). _facets: Cellular Fraction and Copy Numbers from
+#'   Tumor Sequencing_. R package version 0.6.2,
+#'   [https://github.com/mskcc/facets](https://github.com/mskcc/facets).
+#'
+#' @references Shen R, Seshan VE. FACETS: allele-specific copy number and clonal
+#'   heterogeneity analysis tool for high-throughput DNA sequencing. Nucleic
+#'   Acids Res. 2016 Sep 19;44(16):e131. doi:
+#'   [10.1093/nar/gkw520](http://doi.org/10.1093/nar/gkw520).
+#'
+#' @export
+#'
+#' @examples
+#' # Example usage:
+#' library(facets)
+#' data(muscadet_obj)
+#' muscadet_obj <- cnaCalling(muscadet_obj,
+#'                            depthmin.a.clusters = 3, # set low thresholds for example data
+#'                            depthmin.c.clusters = 5,
+#'                            depthmin.a.allcells = 3,
+#'                            depthmin.c.allcells = 5,
+#'                            depthmin.nor = 0)
+#'
+cnaCalling <- function(
+        x,
+        depthmin.a.clusters = 30,
+        depthmin.c.clusters = 50,
+        depthmin.a.allcells = 30,
+        depthmin.c.allcells = 50,
+        depthmin.nor = 5,
+        depthmax.nor = 1000,
+        het.thresh = 0.25,
+        snp.nbhd = 250,
+        hetscale = TRUE,
+        cval1 = 25,
+        cval2 = 150,
+        min.nhet = 5,
+        clonal.thresh = 0.9,
+        dist.breakpoints = 1e6,
+        ploidy = "auto"
+) {
+
+    # Argument validation
+    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+    stopifnot(
+        is.numeric(depthmin.a.clusters),
+        is.numeric(depthmin.c.clusters),
+        is.numeric(depthmin.a.allcells),
+        is.numeric(depthmin.c.allcells),
+        is.numeric(depthmin.nor),
+        is.numeric(depthmax.nor),
+        is.numeric(het.thresh),
+        is.numeric(snp.nbhd),
+        is.numeric(min.nhet),
+        is.numeric(cval1),
+        is.numeric(cval2),
+        is.numeric(clonal.thresh),
+        is.numeric(dist.breakpoints)
+    )
+    stopifnot(
+        "The 'ploidy' argument must be either numeric or 'median' or 'auto'." =
+            is.character(ploidy) && ploidy %in% c("auto", "median") || is.numeric(ploidy)
+    )
+
+    # Get internal functions from facets package (to avoid using `:::`)
+    clustersegs <- utils::getFromNamespace("clustersegs", "facets")
+    findDiploidLogR <- utils::getFromNamespace("findDiploidLogR", "facets")
+    fitcncf <- utils::getFromNamespace("fitcncf", "facets")
+    emcncf <- utils::getFromNamespace("emcncf", "facets")
+    procSnps <- utils::getFromNamespace("procSnps", "facets")
+
+    # Extract and validate required slots
+    gbuild <- x$genome
+    rcmat <- x@cnacalling$combined.counts
+    clusters <- x@cnacalling$clusters
+
+    if (is.null(rcmat) || is.null(clusters)) {
+        stop("The input muscadet object must contain valid 'combined.counts' and 'clusters'.")
+    }
+
+    # Ensure no missing values in combined counts
+    rcmat <- na.omit(rcmat)
+
+    chromlevels <- levels(rcmat$Chromosome)
+    nX <- length(chromlevels)
+    ncells <- table(clusters)
+
+    # 1. PER CLUSTER -----------------------------------------------------------
+
+    # FILTER POSITIONS ---------------------------------------------------------
+
+    # Filter positions based on counts per clusters
+    rcmat_filtered <- subset(
+        rcmat,
+        (rcmat$signal == "allelic" &
+             rcmat$TUM.DP >= depthmin.a.clusters) |
+            (rcmat$signal == "coverage" &
+                 rcmat$TUM.DP >= depthmin.c.clusters &
+                 rcmat$NOR.DP >= depthmin.nor)
+    )
+
+    x@cnacalling[["combined.counts.filtered"]] <- rcmat_filtered
+
+
+    # GET SEGMENTS AND ASSOCIATED DATA -----------------------------------------
+
+    oo_list <- list()
+    for(i in as.integer(sort(unique(rcmat_filtered$cluster)))){
+        rcmat_clus <- filter(rcmat_filtered, .data$cluster==i)
+        if(length(unique(rcmat_clus$signal))==2) {
+            xx <- preProcSample2(rcmat_clus,
+                                 het.thresh = het.thresh,
+                                 cval = cval1,
+                                 snp.nbhd = snp.nbhd,
+                                 gbuild = gbuild,
+                                 ndepth = depthmin.nor,
+                                 ndepthmax = depthmax.nor)
+            oo <- facets::procSample(xx, cval = cval2, min.nhet = min.nhet, dipLogR = NULL)
+            oo[["clusters"]] <- i
+            oo_list[[i]] <- oo
+        }
+    }
+
+    # Add cluster column to output "out" table
+    oo_list <- lapply(oo_list, function(x) {
+        x$out$cluster <- x[["clusters"]]
+        return(x)
+    })
+    # Bind "out" table of segments from all clusters
+    out_full <- lapply(oo_list, function(x) {
+        x$out[,c(1:6,13)]
+    })
+    out_full <- do.call(rbind, out_full)
+    out_full <- out_full[order(out_full[, "seg"]), ]
+    out_full <- out_full[order(out_full[, "chrom"]), ]
+    # Rename segments with unique number
+    out_full$seg_ori <- out_full$seg
+    out_full$seg <- 1:nrow(out_full)
+
+
+
+    # Bind "jointseg" table of segment data from all clusters
+    jseg_full <- lapply(oo_list, function(x) {
+        x$jointseg[, 1:17]
+    })
+    jseg_full <- do.call(rbind, jseg_full)
+    jseg_full <- jseg_full[order(jseg_full[, "maploc"]), ]
+    jseg_full <- jseg_full[order(jseg_full[, "chrom"]), ]
+    # Add the new unique segment number
+    jseg_full$seg_ori <- jseg_full$seg
+    jseg_full <- dplyr::left_join(dplyr::select(jseg_full, colnames(jseg_full)[colnames(jseg_full) != "seg"]),
+                                  out_full[, c("seg", "cluster", "seg_ori")],
+                                  by =c("cluster", "seg_ori"))
+
+    # Cluster segments and add the segclust IDs to the jointseg complete data table
+    outclust_full <- tryCatch(
+        expr = {
+            clustersegs(out_full, jseg_full, min.nhet = min.nhet)
+        },
+        error = function(e) {
+            message("Error using facets::clustersegs(), consider modifying the `min.nhet` argument.")
+            message(e)
+            stop()
+        }
+    )
+
+    jseg_full <- dplyr::left_join(jseg_full,
+                                  outclust_full[, c("seg", "segclust")],
+                                  by="seg")
+
+
+    # FIND DIPLOID Log ratio ---------------------------------------------------
+
+    oo_full <- findDiploidLogR(outclust_full, jseg_full$cnlr)
+    dipLogR <- oo_full$dipLogR
+
+
+    # COMPUTE CF, TCN, LCN -----------------------------------------------------
+
+    # Compute CF Cell fraction and CN Copy Number (L for lower, T for total)
+    outclust_full <- fitcncf(outclust_full, dipLogR, nX)
+    oo_full <- c(
+        list(
+            jointseg = jseg_full,
+            out = outclust_full,
+            nX = nX,
+            chromlevels = chromlevels,
+            clusters = unique(outclust_full$cluster)
+        ),
+        oo_full[-1]
+    )
+    # Compute CF Cell fraction and CN Copy Number with EM algorithm
+    fit_full <- emcncf(oo_full, min.nhet = min.nhet)
+    # Add CF and CN computed with EM to table
+    out_full <- cbind(oo_full$out, fit_full$cncf[, c("start", "end", "cf.em", "tcn.em", "lcn.em")])
+
+    # Compute median of vafT per segment
+    jseg_full <- jseg_full %>%
+        dplyr::group_by(seg) %>%
+        dplyr::mutate(vafT.median = median(.data$vafT[.data$signal == "allelic"], na.rm = TRUE))
+    out_full <- dplyr::left_join(out_full, unique(jseg_full[, c("seg", "vafT.median")]), by="seg")
+
+    jseg_full <- jseg_full[, colnames(jseg_full) != "vafT.median"]
+    out_full <- out_full[, colnames(out_full)[c(1:6, 20, 7:19)]]
+
+    # Rename chr X instead of 23
+    out_full$chrom[out_full$chrom == 23] <- "X"
+    jseg_full$chrom[jseg_full$chrom == 23] <- "X"
+
+
+    # CF CORRECTION ------------------------------------------------------------
+
+    # Get maximum CF that is not 1
+    max.cf <- max(out_full$cf.em[out_full$cf.em < 1], na.rm = T)
+    # Correct CN depending on CF
+    out_full <- mutate(
+        out_full,
+        cf.em = case_when(.data$cf.em < 1 ~ .data$cf.em / max.cf, .default = .data$cf.em),
+        tcn.em = case_when(!is.na(.data$cf.em) ~ .data$tcn.em * .data$cf.em + 2 * (1 - .data$cf.em), .default = .data$tcn.em),
+        lcn.em = case_when(!is.na(.data$cf.em) ~ .data$lcn.em * .data$cf.em + (1 - .data$cf.em), .default = .data$lcn.em)
+    )
+
+
+
+    # 2. ON ALL CELLS ----------------------------------------------------------
+
+    # Gather all cluster data
+    rcmat_allcells <- rcmat %>%
+        dplyr::group_by(.data$Chromosome, .data$Position, .data$signal) %>%
+        dplyr::mutate(TUM.DP = sum(.data$TUM.DP, na.rm = T),
+                      TUM.RD = sum(.data$TUM.RD, na.rm = T)) %>%
+        dplyr::mutate(cluster = "allcells") %>%
+        dplyr::ungroup() %>%
+        unique()
+    rcmat_allcells <- rcmat_allcells %>% dplyr::arrange(.data$Chromosome, .data$Position)
+
+    x@cnacalling[["combined.counts.allcells"]] <- rcmat_allcells
+
+
+    # FILTER POSITIONS ---------------------------------------------------------
+
+    # Filter positions based on counts for all cells
+    rcmat_allcells_filtered <- subset(
+        rcmat_allcells,
+        (rcmat_allcells$signal == "allelic" &
+             rcmat_allcells$TUM.DP >= depthmin.a.allcells) |
+            (rcmat_allcells$signal == "coverage" &
+                 rcmat_allcells$TUM.DP >= depthmin.c.allcells &
+                 rcmat_allcells$NOR.DP >= depthmin.nor)
+    )
+
+    x@cnacalling[["combined.counts.allcells.filtered"]] <- rcmat_allcells_filtered
+
+
+    # GET SEGMENTS AND ASSOCIATED DATA -----------------------------------------
+
+    xx_allcells <- preProcSample2(
+        rcmat_allcells_filtered,
+        cval = cval1,
+        snp.nbhd = snp.nbhd,
+        gbuild = gbuild,
+        ndepth = depthmin.nor,
+        ndepthmax = depthmax.nor)
+    oo_allcells <- facets::procSample(xx_allcells,
+                                      cval = cval2,
+                                      min.nhet = min.nhet,
+                                      dipLogR = NULL)
+
+
+    # COMPUTE CF, TCN, LCN -----------------------------------------------------
+
+    # Compute CF Cell fraction and CN Copy Number with EM algorithm
+    fit_allcells <- emcncf(oo_allcells, min.nhet=min.nhet)
+    # Add CF and CN computed with EM to table
+    out_allcells <- cbind(oo_allcells$out, fit_allcells$cncf[, c("start", "end", "cf.em", "tcn.em", "lcn.em")])
+    jseg_allcells <- oo_allcells$jointseg
+
+    # Compute median of vafT per segment
+    jseg_allcells <- jseg_allcells %>%
+        dplyr::group_by(seg) %>%
+        dplyr::mutate(vafT.median = median(.data$vafT[.data$signal == "allelic"], na.rm = TRUE))
+    out_allcells <- dplyr::left_join(out_allcells, unique(jseg_allcells[, c("seg", "vafT.median")]), by="seg")
+
+    jseg_allcells <- jseg_allcells[, colnames(jseg_allcells) != "vafT.median"]
+    out_allcells <- out_allcells[, colnames(out_allcells)[c(1:6, 18, 7:17)]]
+
+
+    # Rename chr X instead of 23
+    out_allcells$chrom[out_allcells$chrom == 23] <- "X"
+    jseg_allcells$chrom[jseg_allcells$chrom == 23] <- "X"
+
+    # CF CORRECTION ------------------------------------------------------------
+
+    # Get maximum CF that is not 1
+    max.cf <- max(out_allcells$cf.em[out_allcells$cf.em < 1], na.rm = T)
+    # Correct CN depending on CF
+    out_allcells <- mutate(
+        out_allcells,
+        cf.em = case_when(.data$cf.em < 1 ~ .data$cf.em / max.cf, .default = .data$cf.em),
+        tcn.em = case_when(!is.na(.data$cf.em) ~ .data$tcn.em * .data$cf.em + 2 * (1 - .data$cf.em), .default = .data$tcn.em),
+        lcn.em = case_when(!is.na(.data$cf.em) ~ .data$lcn.em * .data$cf.em + (1 - .data$cf.em), .default = .data$lcn.em)
+    )
+
+
+    # GET VARIANT ALLELE FREQUENCIES -------------------------------------------
+
+    # Get vafT from allcells to set colors for SNP depending on all cells frequency
+    pmat_allcells_filtered <- procSnps(
+        rcmat_allcells_filtered,
+        snp.nbhd = snp.nbhd,
+        nX = nX,
+        ndepth = depthmin.nor,
+        ndepthmax = depthmax.nor)
+    colnames(pmat_allcells_filtered)[7:8] <- c("cluster", "signal")  # Rename columns
+
+    # Create new column colSNP depending on VAF in tumor cells
+    pmat_allcells_filtered$colSNP <- rep(NA, nrow(pmat_allcells_filtered))
+    pmat_allcells_filtered$colSNP[which(pmat_allcells_filtered$vafT >= 0.5 &
+                                            pmat_allcells_filtered$signal == "allelic")] <- 1
+    pmat_allcells_filtered$colSNP[which(pmat_allcells_filtered$vafT < 0.5 &
+                                            pmat_allcells_filtered$signal == "allelic")] <- 2
+    colnames(pmat_allcells_filtered)[colnames(pmat_allcells_filtered) == "vafT"] <- "vafT.allcells"
+    # Rename chr X instead of 23
+    pmat_allcells_filtered$chrom[pmat_allcells_filtered$chrom == 23] <- "X"
+
+    # Add new columns to tables of data
+    jseg_full <- dplyr::left_join(jseg_full,
+                                  pmat_allcells_filtered[, c("chrom", "maploc", "signal", "vafT.allcells", "colSNP")],
+                                  by = c("chrom", "maploc", "signal"))
+    jseg_allcells <- dplyr::left_join(jseg_allcells,
+                                      pmat_allcells_filtered[, c("chrom", "maploc", "signal", "vafT.allcells", "colSNP")],
+                                      by = c("chrom", "maploc", "signal"))
+
+
+    # SAVE OBJECTS -------------------------------------------------------------
+
+    x@cnacalling[["positions"]] <- jseg_full
+    x@cnacalling[["segments"]] <- out_full
+
+    x@cnacalling[["positions.allcells"]] <- jseg_allcells
+    x@cnacalling[["segments.allcells"]] <- out_allcells
+
+
+    # 3. GET CONSENSUS SEGMENTS ------------------------------------------------
+
+    consensus_segs <- getSegConsensus(out_full,
+                                      ncells = ncells,
+                                      dist.breakpoints = dist.breakpoints)
+
+
+    # DEFINE PLOIDY ------------------------------------------------------------
+
+    if(ploidy == "median") { ploidy <- round(median(out_full$tcn)) }
+    if (ploidy == "auto") {
+        # define ploidy based on the number of segments being 2:1 or 4:2
+        diploid <- length(which(out_full$tcn == 2 & out_full$lcn == 1))
+        tetraploid <- length(which(out_full$tcn == 4 & out_full$lcn == 2))
+        if (diploid >= tetraploid) ploidy <- 2
+        if (diploid < tetraploid) ploidy <- 4
+    }
+
+    # GET SEGMENTS DATA --------------------------------------------------------
+
+    out.segs <- Map(function(cluster) {
+        clusGR <- GenomicRanges::GRanges(out_full[out_full$cluster == cluster,
+                                                  c("chrom", "start", "end", "cluster", "cf.em","tcn.em", "lcn.em")])
+        idx_segs <- GenomicRanges::findOverlaps(
+            GenomicRanges::GRanges(consensus_segs),
+            clusGR,
+            minoverlap = dist.breakpoints,
+            select = "first")
+
+        cbind(cbind(consensus_segs, data.frame(id = row_number(consensus_segs))),
+              as.data.frame(clusGR)[idx_segs, -c(1:5)])
+    },
+    unique(out_full$cluster)
+    )
+    out.segs <- Reduce(rbind, out.segs)
+
+    # Add number of cells and proportion of each cluster
+    out.segs$ncells <- ncells[as.character(out.segs$cluster)]
+    prop.ncells <- ncells/sum(ncells)
+    out.segs$prop.cluster <- prop.ncells[as.character(out.segs$cluster)]
+
+    # Add gain-neutral-loss (gnl) status, state gain-neu-loss-cnloh
+    out.segs <- dplyr::mutate(
+        out.segs,
+        gnl = dplyr::case_when(
+            round(.data$tcn.em) - ploidy > 0 ~ 1,
+            round(.data$tcn.em) - ploidy < 0 ~ -1,
+            round(.data$tcn.em) - ploidy == 0 ~ 0
+        ),
+        loh = dplyr::case_when(round(.data$lcn.em) == 0 ~ T, round(.data$lcn.em) > 0 ~ F),
+        state = dplyr::case_when(
+            .data$gnl == 1 ~ "gain",
+            .data$gnl == -1 ~ "loss",
+            .data$gnl == 0 & .data$lcn.em == 0 ~ "cnloh",
+            .data$gnl == 0 & .data$lcn.em != 0 ~ "neu"
+        ),
+        cna = dplyr::case_when(.data$gnl == 0 & .data$lcn.em != 0 ~ F, .data$gnl != 0 | .data$lcn.em == 0 ~ T),
+        cna_state = dplyr::case_when(.data$cna == T ~ .data$state, .data$cna == F ~ NA)
+    )
+
+    # Add proportion across all clusters with same state
+    # group by segment id and by state (to separate the same segment if this one has different states across clusters)
+    out.segs <- out.segs %>%
+        dplyr::group_by(.data$id, .data$state) %>%
+        dplyr::mutate(prop.tot = sum(.data$prop.cluster)) %>%
+        dplyr::ungroup()
+
+    # Add info if CNA is clonal and state
+    out.segs <- dplyr::mutate(
+        out.segs,
+        state_clonal = dplyr::case_when(.data$prop.tot >= clonal.thresh ~ .data$state),
+        cna_clonal = dplyr::case_when(
+            .data$cna == T & .data$prop.tot >= clonal.thresh  ~ T,
+            .data$cna == T & .data$prop.tot <= clonal.thresh  ~ F,
+            .data$cna == F ~ F
+        ),
+        cna_clonal_state = dplyr::case_when(.data$cna_clonal == T ~ .data$state)
+    )
+
+    # Add CNA information to consensus segments
+    consensus_segs <- dplyr::left_join(consensus_segs,
+                                       out.segs[, c("chrom", "start", "end", "cna", "cna_clonal")],
+                                       by = c("chrom", "start", "end")) %>%
+        dplyr::group_by(.data$chrom, .data$start) %>%
+        dplyr::mutate(cna = any(.data$cna)) %>%
+        dplyr::mutate(cna_clonal = any(.data$cna_clonal)) %>%
+        unique()
+
+    # SAVE OBJECTS -------------------------------------------------------------
+
+    x@cnacalling[["consensus.segs"]] <- consensus_segs
+    x@cnacalling[["table"]] <- out.segs
+    x@cnacalling[["ncells"]] <- ncells
+
+    x@cnacalling[["dipLogR.clusters"]] <- dipLogR
+    x@cnacalling[["dipLogR.allcells"]] <- fit_allcells$dipLogR
+    x@cnacalling[["purity.clusters"]] <- fit_full$purity
+    x@cnacalling[["purity.allcells"]] <- fit_allcells$purity
+    x@cnacalling[["ploidy.clusters"]] <- fit_full$ploidy
+    x@cnacalling[["ploidy.allcells"]] <- fit_allcells$ploidy
+
+    return(x)
+}
 
 
 #' Process read count matrix and segmentation
@@ -65,7 +636,7 @@
 #' @export
 #'
 #' @examples
-#' # Load muscadet object
+#' # Load example muscadet object
 #' data(muscadet_obj)
 #' counts <- muscadet_obj$cnacalling$combined.counts
 #' counts <- counts[complete.cases(counts),]
@@ -190,7 +761,7 @@ preProcSample2 <- function(
 #'   in the `cluster` column of `x`.
 #' @param dist.breakpoints A numeric value specifying the minimum genomic
 #'   distance between adjacent breakpoints to be grouped into the same consensus
-#'   segment (`numeric` value). Default: `10e6`.
+#'   segment (`numeric` value). Default: `1e6`.
 #'
 #' @return A data frame containing consensus segments with the following columns:
 #'   - `chrom`: Chromosome name.
@@ -223,7 +794,7 @@ preProcSample2 <- function(
 #'                                   dist.breakpoints = 1e6)
 #' print(consensus_segs)
 #'
-getSegConsensus <- function(x, ncells, dist.breakpoints = 10e6) {
+getSegConsensus <- function(x, ncells, dist.breakpoints = 1e6) {
     # Check if x is a data frame
     if (!is.data.frame(x)) {
         stop("'x' must be a data frame.")
