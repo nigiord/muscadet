@@ -35,7 +35,7 @@ library("ggplot2")
 # Load example muscadet object
 data(muscadet_obj)
 
-# plot CNA segments
+# Plot CNA segments
 plot <- plotCNA(muscadet_obj, title = "Copy Number Alterations in Example Data")
 print(plot)
 }

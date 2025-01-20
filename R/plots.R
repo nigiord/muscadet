@@ -747,7 +747,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 #'
 #' @param x A \code{\link{muscadet}} object containing CNA calling data to be
 #'   visualized (generated using [muscadet::cnaCalling()]).
-#' @param on.data Either a cluster identifier to plot data of a cluster or
+#' @param data Either a cluster identifier to plot data of a cluster or
 #' "allcells" to plot data on all cells.
 #' @param title An optional title for the plot. Default is `NULL`.
 #' @param allelic.type A character string indicating the allelic metric to plot:
@@ -781,11 +781,11 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 #'
 #' # Plot profile for all cells
 #' pdf("CNAprofile_allcells.pdf", width = 15, height = 7.5) # Save as PDF
-#' plotProfile(muscadet_obj, on.data = "allcells", title = "Example data - all cells")
+#' plotProfile(muscadet_obj, data = "allcells", title = "Example data - all cells")
 #' dev.off()
 #'
 plotProfile <- function(x,
-                        on.data,
+                        data,
                         title = NULL,
                         allelic.type = "lor",
                         point.size = 2,
@@ -795,7 +795,6 @@ plotProfile <- function(x,
                         cf.colors = c("white", "steelblue", "bisque2"),
                         dipLogR.color = c("magenta4"),
                         seg.color = c("brown2")) {
-
 
     # Argument checks
     stopifnot(
@@ -819,7 +818,7 @@ plotProfile <- function(x,
     )
 
     # Extract data -------------------------------------------------------------
-    if(on.data == "allcells") {
+    if(data == "allcells") {
         pos <- x@cnacalling$positions.allcells
         segs <- x@cnacalling$segments.allcells
         ploidy <- x@cnacalling$ploidy.allcells
@@ -829,22 +828,22 @@ plotProfile <- function(x,
         ploidy <- x@cnacalling$ploidy.clusters
     }
     stopifnot(
-        "'on.data' must be 'allcells' or a valid cluster identifier." =
-            (on.data == "allcells" || on.data %in% unique(pos$cluster))
+        "'data' must be 'allcells' or a valid cluster identifier." =
+            (data == "allcells" || data %in% unique(pos$cluster))
     )
-    if (on.data != "allcells") {
-        pos <- pos[which(pos$cluster == on.data), ]
-        segs <- segs[which(segs$cluster == on.data), ]
+    if (data != "allcells") {
+        pos <- pos[which(pos$cluster == data), ]
+        segs <- segs[which(segs$cluster == data), ]
     }
 
     # Adjust chromosomes levels to get only numeric chromosomes
     pos$chrom <- factor(pos$chrom, levels = unique(pos$chrom))
     segs$chrom <- factor(segs$chrom, levels = unique(segs$chrom))
+    chromlevels <- levels(pos$chrom)
     levels(pos$chrom) <- 1:length(levels(pos$chrom))
     levels(segs$chrom) <- 1:length(levels(segs$chrom))
     pos$chrom <- as.numeric(pos$chrom)
     segs$chrom <- as.numeric(segs$chrom)
-    chomlevels <- unique(pos$chrom)
 
     # Chromosome alternating dual colors
     chrcol <- 1 + rep(segs$chrom - 2 * floor(segs$chrom / 2), segs$num.mark)
@@ -864,7 +863,6 @@ plotProfile <- function(x,
     par(mar = c(0.25, 3, 0.25, 1),
         mgp = c(1.75, 0.6, 0),
         oma = c(3, 1, 1.5, 0))
-
 
     # 1- Plot the LRR data -----------------------------------------------------
     plot(
@@ -1060,7 +1058,7 @@ plotProfile <- function(x,
 #' # Load example muscadet object
 #' data(muscadet_obj)
 #'
-#' # plot CNA segments
+#' # Plot CNA segments
 #' plot <- plotCNA(muscadet_obj, title = "Copy Number Alterations in Example Data")
 #' print(plot)
 plotCNA <- function(

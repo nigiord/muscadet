@@ -6,7 +6,7 @@
 \usage{
 plotProfile(
   x,
-  on.data,
+  data,
   title = NULL,
   allelic.type = "lor",
   point.size = 2,
@@ -22,7 +22,7 @@ plotProfile(
 \item{x}{A \code{\link{muscadet}} object containing CNA calling data to be
 visualized (generated using \code{\link[=cnaCalling]{cnaCalling()}}).}
 
-\item{on.data}{Either a cluster identifier to plot data of a cluster or
+\item{data}{Either a cluster identifier to plot data of a cluster or
 "allcells" to plot data on all cells.}
 
 \item{title}{An optional title for the plot. Default is \code{NULL}.}
@@ -70,7 +70,7 @@ data(muscadet_obj)
 
 # Plot profile for all cells
 pdf("CNAprofile_allcells.pdf", width = 15, height = 7.5) # Save as PDF
-plotProfile(muscadet_obj, on.data = "allcells", title = "Example data - all cells")
+plotProfile(muscadet_obj, data = "allcells", title = "Example data - all cells")
 dev.off()
 
 }
