@@ -900,7 +900,7 @@ plotProfile <- function(x,
     if (any(lor.colors == "none")) {
         cols <- chrom.colors[chrcol]
     } else {
-        cols <- lor.colors[pos$colSNP]
+        cols <- lor.colors[pos$colVAR]
     }
     if (allelic.type == "lor") {
         plot(

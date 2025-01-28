@@ -23,8 +23,8 @@
 #'   (default: 50).
 #' @param depthmin.nor Minimum coverage depth for normal sample (default: 0).
 #' @param depthmax.nor Maximum coverage depth for normal sample (default: 1000).
-#' @param het.thresh VAF (Variant Allele Frequency) threshold to call SNP
-#'   heterozygous for [preProcSample2()] (default: 0.25).
+#' @param het.thresh VAF (Variant Allele Frequency) threshold to call variant
+#'   positions heterozygous for [preProcSample2()] (default: 0.25).
 #' @param snp.nbhd Window size for selecting SNP loci to reduce serial
 #'   correlation for [preProcSample2()] (default: 250).
 #' @param hetscale Logical value indicating whether log odds ratio (logOR)
@@ -34,7 +34,7 @@
 #'   25).
 #' @param cval2 Critical value for segmentation for [facets::procSample()]
 #'   (default: 150).
-#' @param min.nhet Minimum number of heterozygous SNPs in a segment for
+#' @param min.nhet Minimum number of heterozygous positions in a segment for
 #'   [facets::procSample()] and [facets::emcncf()] (default: 5).
 #' @param clonal.thresh Threshold of minimum cell proportion to label a
 #'   segment as clonal (default: 0.9).
@@ -67,7 +67,7 @@
 #'   bias correction), `cnlr` (log R ratio), `valor` (log odds ratio), `lorvar`
 #'   (variance of log odds ratio), `seg0`, `seg_ori` (segment original id within
 #'   each cluster), `seg` (segment id), `segclust` (cluster of segments id),
-#'   `vafT.allcells` (vairiant allele frequency in all tumor cells), `colSNP`
+#'   `vafT.allcells` (vairiant allele frequency in all tumor cells), `colVAR`
 #'   (integer for allelic position color depending on `vafT.allcells`).
 #'
 #'   \item \code{segments}: Data frame of segments from the per cluster
@@ -449,7 +449,7 @@ cnaCalling <- function(
 
     # GET VARIANT ALLELE FREQUENCIES -------------------------------------------
 
-    # Get vafT from allcells to set colors for SNP depending on all cells frequency
+    # Get vafT from allcells to set colors for variant positions depending on all cells frequency
     pmat_allcells_filtered <- procSnps(
         rcmat_allcells_filtered,
         snp.nbhd = snp.nbhd,
@@ -458,11 +458,11 @@ cnaCalling <- function(
         ndepthmax = depthmax.nor)
     colnames(pmat_allcells_filtered)[7:8] <- c("cluster", "signal")  # Rename columns
 
-    # Create new column colSNP depending on VAF in tumor cells
-    pmat_allcells_filtered$colSNP <- rep(NA, nrow(pmat_allcells_filtered))
-    pmat_allcells_filtered$colSNP[which(pmat_allcells_filtered$vafT >= 0.5 &
+    # Create new column colVAR depending on VAF in tumor cells
+    pmat_allcells_filtered$colVAR <- rep(NA, nrow(pmat_allcells_filtered))
+    pmat_allcells_filtered$colVAR[which(pmat_allcells_filtered$vafT >= 0.5 &
                                             pmat_allcells_filtered$signal == "allelic")] <- 1
-    pmat_allcells_filtered$colSNP[which(pmat_allcells_filtered$vafT < 0.5 &
+    pmat_allcells_filtered$colVAR[which(pmat_allcells_filtered$vafT < 0.5 &
                                             pmat_allcells_filtered$signal == "allelic")] <- 2
     colnames(pmat_allcells_filtered)[colnames(pmat_allcells_filtered) == "vafT"] <- "vafT.allcells"
     # Rename chr X instead of 23
@@ -470,10 +470,10 @@ cnaCalling <- function(
 
     # Add new columns to tables of data
     jseg_full <- dplyr::left_join(jseg_full,
-                                  pmat_allcells_filtered[, c("chrom", "maploc", "signal", "vafT.allcells", "colSNP")],
+                                  pmat_allcells_filtered[, c("chrom", "maploc", "signal", "vafT.allcells", "colVAR")],
                                   by = c("chrom", "maploc", "signal"))
     jseg_allcells <- dplyr::left_join(jseg_allcells,
-                                      pmat_allcells_filtered[, c("chrom", "maploc", "signal", "vafT.allcells", "colSNP")],
+                                      pmat_allcells_filtered[, c("chrom", "maploc", "signal", "vafT.allcells", "colVAR")],
                                       by = c("chrom", "maploc", "signal"))
 
 
@@ -602,7 +602,7 @@ cnaCalling <- function(
 #'
 #' @param rcmat A data frame with 8 required columns: `Chrom`, `Pos`, `NOR.DP`,
 #'   `NOR.RD`, `TUM.DP`, `TUM.RD`, `cluster`, and `signal` (`data.frame`).
-#' @param het.thresh VAF (Variant Allele Frequency) threshold to call SNP
+#' @param het.thresh VAF (Variant Allele Frequency) threshold to call variant positions
 #'   heterozygous (`numeric`). Default: 0.25.
 #' @param snp.nbhd Window size for selecting loci to reduce serial correlation
 #'   (`numeric`). Default: 250.
@@ -626,16 +626,17 @@ cnaCalling <- function(
 #'   \item{nX}{Chromosome number for X (e.g., 23 for human, 20 for mouse).}
 #'   \item{clusters}{Unique clusters from the processed data.}
 #'   \item{seg.tree}{Segmentation tree for each chromosome.}
-#'   \item{jointseg}{Segmented SNP data.}
+#'   \item{jointseg}{Segmented variant positions data.}
 #'   \item{hscl}{Scaling factor for logOR data.}
 #' }
 #' @details
-#' The function processes SNP data to generate a segmentation tree. It uses
-#' \code{\link[facets]{procSnps}} to compute initial values, adjusts the log ratio
-#' for allelic signals, and computes segmentation using \code{\link[facets]{segsnps}}.
+#' The function processes variant positions data to generate a segmentation
+#' tree. It uses \code{\link[facets]{procSnps}} to compute initial values,
+#' adjusts the log ratio for allelic signals, and computes segmentation using
+#' \code{\link[facets]{segsnps}}.
 #'
-#' SNPs in a genome are not evenly spaced, and loci are sampled within the specified
-#' window (\code{snp.nbhd}) to reduce serial correlation.
+#' SNPs (or variants) in a genome are not evenly spaced, and loci are sampled
+#' within the specified window (\code{snp.nbhd}) to reduce serial correlation.
 #'
 #' @seealso \code{\link[facets]{preProcSample}}, \code{\link[facets]{procSnps}},
 #'   \code{\link[facets]{segsnps}}

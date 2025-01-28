@@ -158,13 +158,13 @@ assignClusters <- function(x, k = NULL, clusters = NULL, mapping = NULL) {
 #' objects later with this `addAlleleCounts` function, before using the
 #' [muscadet::mergeCounts()] function.
 #'
-#' This function is also useful to add allele counts for sample-specific SNP
-#' positions to a common `muscadet` object, for example for the reference
-#' `muscadet` object: a common `muscadet` object with reference coverage data
-#' can be stored as a unique object to use as reference for computing log R
-#' ratios for all samples, and then it can updated with allele counts at sample
-#' specific SNP positions (e.g. found by bulk sequencing) before Copy Number
-#' Alterations (CNAs) calling.
+#' This function is also useful to add allele counts for individual-specific
+#' variant positions to a common `muscadet` object, for example for the
+#' reference `muscadet` object: a common `muscadet` object with reference
+#' coverage data can be stored as a unique object to use as reference for
+#' computing log R ratios for all samples, and then it can updated with allele
+#' counts at individual-specific variant positions (e.g. found by bulk
+#' sequencing) before Copy Number Alterations (CNAs) calling.
 #'
 #' @seealso [muscadet::CreateMuscomicObject()], [muscadet::mergeCounts()]
 #'
@@ -232,10 +232,11 @@ addAlleleCounts <- function(x, allele_counts) {
 
 #' Merge counts for `muscadet` objects
 #'
-#' This function combines allelic (counts at single nucleotide polymorphisms
-#' (SNPs)) and coverage counts (counts on features) from all omics per cluster
-#' for both sample and reference. The resulting merged data is stored in the
-#' `cnacalling` slot of the sample `muscadet` object.
+#' This function combines allelic (counts at variant positions, either common
+#' SNPs or individual-specific heterozygous positions) and coverage counts
+#' (counts on features) from all omics per cluster for both sample and
+#' reference. The resulting merged data is stored in the `cnacalling` slot of
+#' the sample `muscadet` object.
 #'
 #' @param x A \code{\link{muscadet}} object containing sample data (`muscadet`).
 #'   This object must include clustering assignments in the
@@ -243,16 +244,17 @@ addAlleleCounts <- function(x, allele_counts) {
 #' @param reference A \code{\link{muscadet}} object containing reference data
 #'   (`muscadet`).
 #' @param nor.het A logical value to specify if normal reference allele counts
-#'   are modified to: total depth counts divided by 2, to set positions as
-#'   heterozygous in allelic data (e.g. when heterozygous SNP positions are retrieve based on
-#'   matched WGS data) before combining coverage and allelic data. Default is
-#'   `TRUE`.
+#'   are modified to: total normal depth counts divided by 2, to force these
+#'   positions to be heterozygous in the normal reference in allelic data (e.g.
+#'   when heterozygous positions are retrieve based on matched bulk sequencing
+#'   data, and are thereby assumed to be heterozygous) before combining coverage
+#'   and allelic data. Default is `TRUE`.
 #'
 #' @return
 #' A modified \code{\link{muscadet}} object corresponding to the `x` muscadet object,
 #' with updated `cnacalling` slot containing:
 #' \itemize{
-#'   \item \code{allelic.counts}: Processed allelic counts on SNP positions, for all omics.
+#'   \item \code{allelic.counts}: Processed allelic counts on variant positions, for all omics.
 #'   \item \code{coverage.counts}: Processed coverage counts merged with the reference.
 #'   \item \code{combined.counts}: Combined data for allelic and coverage counts.
 #' }
@@ -363,7 +365,7 @@ mergeCounts <- function(x,
     allele_ref <- subset(allele_ref, !duplicated(allele_ref))
 
     # Merge sample and reference allelic data
-    snp <- dplyr::left_join(
+    var <- dplyr::left_join(
         allele_sample,
         allele_ref,
         by = c("CHROM", "POS", "REF", "ALT", "id", "GT", "omic"),
@@ -372,12 +374,12 @@ mergeCounts <- function(x,
         dplyr::arrange(.data$CHROM, .data$POS, .data$cluster) %>%
         dplyr::mutate(signal = "allelic")
 
-    x@cnacalling[["allelic.counts"]] <- as.data.frame(snp)
+    x@cnacalling[["allelic.counts"]] <- as.data.frame(var)
 
 
-    # Auto set normal SNP positions as heterozygous before combining
+    # Auto set normal variant positions as heterozygous before combining
     if(nor.het == TRUE) {
-        snp[, "RD.all.NOR"] <- round(snp[, "DP.all.NOR"] / 2, 0)
+        var[, "RD.all.NOR"] <- round(var[, "DP.all.NOR"] / 2, 0)
     }
 
 
@@ -428,20 +430,20 @@ mergeCounts <- function(x,
     # Combine Allelic and Coverage Data ----------------------------------------
 
     # Format data
-    snp <- snp[, c("CHROM", "POS", "DP.all.NOR", "RD.all.NOR", "DP.all.TUM", "RD.all.TUM", "cluster", "signal", "omic", "id")]
-    snp <- unique(snp)
+    var <- var[, c("CHROM", "POS", "DP.all.NOR", "RD.all.NOR", "DP.all.TUM", "RD.all.TUM", "cluster", "signal", "omic", "id")]
+    var <- unique(var)
     cov <- cov[, c("CHROM", "POS", "DP.NOR", "DP.NOR", "DP.TUM", "DP.TUM", "cluster", "signal", "omic", "id")]
     cov <- unique(cov)
 
-    colnames(snp) <- c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD", "cluster", "signal", "omic", "id")
-    colnames(cov) <- colnames(snp)
+    colnames(var) <- c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD", "cluster", "signal", "omic", "id")
+    colnames(cov) <- colnames(var)
 
     # Make sure the levels match for binding
-    levels(snp$Chromosome) <- union(levels(snp$Chromosome), levels(cov$Chromosome))
-    levels(cov$Chromosome) <- union(levels(snp$Chromosome), levels(cov$Chromosome))
+    levels(var$Chromosome) <- union(levels(var$Chromosome), levels(cov$Chromosome))
+    levels(cov$Chromosome) <- union(levels(var$Chromosome), levels(cov$Chromosome))
 
     # Combine both data
-    combined <- rbind(snp, cov) %>%
+    combined <- rbind(var, cov) %>%
         arrange(.data$Chromosome, .data$Position)
 
     x@cnacalling[["combined.counts"]] <- as.data.frame(combined)

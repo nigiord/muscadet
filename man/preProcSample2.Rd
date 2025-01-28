@@ -26,7 +26,7 @@ preProcSample2(
 \item{rcmat}{A data frame with 8 required columns: \code{Chrom}, \code{Pos}, \code{NOR.DP},
 \code{NOR.RD}, \code{TUM.DP}, \code{TUM.RD}, \code{cluster}, and \code{signal} (\code{data.frame}).}
 
-\item{het.thresh}{VAF (Variant Allele Frequency) threshold to call SNP
+\item{het.thresh}{VAF (Variant Allele Frequency) threshold to call variant positions
 heterozygous (\code{numeric}). Default: 0.25.}
 
 \item{snp.nbhd}{Window size for selecting loci to reduce serial correlation
@@ -57,7 +57,7 @@ A list containing:
 \item{nX}{Chromosome number for X (e.g., 23 for human, 20 for mouse).}
 \item{clusters}{Unique clusters from the processed data.}
 \item{seg.tree}{Segmentation tree for each chromosome.}
-\item{jointseg}{Segmented SNP data.}
+\item{jointseg}{Segmented variant positions data.}
 \item{hscl}{Scaling factor for logOR data.}
 }
 }
@@ -72,12 +72,13 @@ log ratio (\code{cnlr}) mean between the previous and next coverage positions.
 }
 }
 \details{
-The function processes SNP data to generate a segmentation tree. It uses
-\code{\link[facets]{procSnps}} to compute initial values, adjusts the log ratio
-for allelic signals, and computes segmentation using \code{\link[facets]{segsnps}}.
+The function processes variant positions data to generate a segmentation
+tree. It uses \code{\link[facets]{procSnps}} to compute initial values,
+adjusts the log ratio for allelic signals, and computes segmentation using
+\code{\link[facets]{segsnps}}.
 
-SNPs in a genome are not evenly spaced, and loci are sampled within the specified
-window (\code{snp.nbhd}) to reduce serial correlation.
+SNPs (or variants) in a genome are not evenly spaced, and loci are sampled
+within the specified window (\code{snp.nbhd}) to reduce serial correlation.
 }
 \examples{
 library("facets")

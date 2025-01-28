@@ -13,17 +13,17 @@ A data frame with columns based on the \href{https://en.wikipedia.org/wiki/Varia
 It contains the following columns:
 \describe{
 \item{\code{cell}}{Barcodes of cells (\code{character}).}
-\item{\code{id}}{SNP unique identifier defined as
+\item{\code{id}}{Variant unique identifier defined as
 CHROM_POS_REF_ALT, e.g. "1_920949_C_G" (\code{character}).}
 \item{\code{CHROM}}{Chromosome in integer format, e.g. 15 (X and Y chromosomes
 are not included) (\code{integer}).}
-\item{\code{POS}}{Position of the SNP (1-base positions) (\code{integer}).}
+\item{\code{POS}}{Position of the variant (1-base positions) (\code{integer}).}
 \item{\code{REF}}{Reference allele base, "A" "C" "G" or "T" (\code{character}).}
 \item{\code{ALT}}{Alternative allele base, "A" "C" "G" or "T" (\code{character}).}
 \item{\code{RD}}{Reference allele depth/count (\code{integer}).}
 \item{\code{AD}}{Alternative allele depth/count (\code{integer}).}
 \item{\code{DP}}{Total depth/count (\code{integer}).}
-\item{\code{GT}}{Genotype, "0|1" or 1|0" (can be "0/1" if unphased) (\code{character}).}
+\item{\code{GT}}{Genotype: "0/1" or "1/0" if unphased; "0|1" or "1|0" if phased.) (\code{character}).}
 }
 }
 \usage{
@@ -36,7 +36,8 @@ allele_counts_rna_tumor
 allele_counts_rna_ref
 }
 \description{
-Data frames of allele counts at single nucleotide polymorphisms (SNPs)
-positions per cell.
+Data frames of allele counts at variant positions per cell. Variant positions
+can be either common single nucleotide polymorphisms (SNPs) positions or
+individual-specific heterozygous positions retrieved by bulk sequencing.
 }
 \keyword{datasets}

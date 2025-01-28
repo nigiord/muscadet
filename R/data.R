@@ -75,8 +75,9 @@
 #' Example data: Allele counts at variation positions
 #'
 #' @description
-#' Data frames of allele counts at single nucleotide polymorphisms (SNPs)
-#' positions per cell.
+#' Data frames of allele counts at variant positions per cell. Variant positions
+#' can be either common single nucleotide polymorphisms (SNPs) positions or
+#' individual-specific heterozygous positions retrieved by bulk sequencing.
 #'
 #' @name allele_counts
 #' @rdname allele_counts
@@ -87,17 +88,17 @@
 #' It contains the following columns:
 #' \describe{
 #'   \item{`cell`}{Barcodes of cells (`character`).}
-#'   \item{`id`}{SNP unique identifier defined as
+#'   \item{`id`}{Variant unique identifier defined as
 #'   CHROM_POS_REF_ALT, e.g. "1_920949_C_G" (`character`).}
 #'   \item{`CHROM`}{Chromosome in integer format, e.g. 15 (X and Y chromosomes
 #'   are not included) (`integer`).}
-#'   \item{`POS`}{Position of the SNP (1-base positions) (`integer`).}
+#'   \item{`POS`}{Position of the variant (1-base positions) (`integer`).}
 #'   \item{`REF`}{Reference allele base, "A" "C" "G" or "T" (`character`).}
 #'   \item{`ALT`}{Alternative allele base, "A" "C" "G" or "T" (`character`).}
 #'   \item{`RD`}{Reference allele depth/count (`integer`).}
 #'   \item{`AD`}{Alternative allele depth/count (`integer`).}
 #'   \item{`DP`}{Total depth/count (`integer`).}
-#'   \item{`GT`}{Genotype, "0|1" or 1|0" (can be "0/1" if unphased) (`character`).}
+#'   \item{`GT`}{Genotype: "0/1" or "1/0" if unphased; "0|1" or "1|0" if phased.) (`character`).}
 #' }
 #'
 "allele_counts_atac_tumor"

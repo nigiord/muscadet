@@ -11,8 +11,9 @@
 #'   (`character`).
 #' @slot label.omic Label to display for the single-cell omic (`character`).
 #' @slot coverage Coverage data on features (`list`).
-#' @slot allelic Allelic data at single nucleotide polymorphisms (SNPs)
-#'   positions (`list`).
+#' @slot allelic Allelic data at variant positions (common SNPs or
+#'   individual-specific heterozygous positions) (`list`).
+#'
 #'
 #' @aliases muscomic
 #'
@@ -90,8 +91,11 @@ methods::setClass(
 #' @param mat_counts Matrix of raw counts *features x cells* (`matrix` or
 #'   `dgCMatrix`). Rows are features (they must correspond to the id column of
 #'   `features`), and columns are cells.
-#' @param allele_counts Data frame of allele counts at single nucleotide
-#'   polymorphisms (SNPs) positions per cell (`data.frame`). It must contain the
+#' @param allele_counts Data frame of allele counts at variant positions per
+#'   cell (`data.frame`). Variant positions can be either common single
+#'   nucleotide polymorphisms (SNPs) positions or individual-specific
+#'   heterozygous positions retrieved by bulk sequencing. The data frame format
+#'   is based on the Variant Calling Format (VCF), thereby it must contain the
 #'   following columns : `cell`, `id`, `CHROM`, `POS`, `REF`, `ALT`, `RD`, `AD`,
 #'   `DP`, `GT`. See [allele_counts] for details.
 #' @param features Data frame of features (peaks, genes...) coordinates on
@@ -729,7 +733,7 @@ setMethod(
                 label = i@label.omic,
                 cells = ncol(i@coverage[[matrix_type]]),
                 features = nrow(i@coverage[[matrix_type]]),
-                snps = length(unique(i@allelic$table.counts$id)),
+                vars = length(unique(i@allelic$table.counts$id)),
                 feature_labels = i@coverage$label.features,
                 matrix_used = matrix_type
             )
@@ -742,7 +746,7 @@ setMethod(
             summary$matrix_used, "coverage data matrix", "\n",
             summary$cells, "cells", "\n",
             summary$features, "features:", summary$feature_labels, "\n",
-            summary$snps, "SNPs", "\n"
+            summary$vars, "variant positions", "\n"
         )
     }
 )
@@ -792,7 +796,7 @@ setMethod(
                 label = i@label.omic,
                 cells = ncol(i@coverage[[matrix_type]]),
                 features = nrow(i@coverage[[matrix_type]]),
-                snps = length(unique(i@allelic$table.counts$id)),
+                vars = length(unique(i@allelic$table.counts$id)),
                 feature_labels = i@coverage$label.features,
                 matrix_used = matrix_type
             )
@@ -804,9 +808,22 @@ setMethod(
         omic_labels <- sapply(omic_summary, function(x) x$label)
         omic_cells <- sapply(omic_summary, function(x) x$cells)
         omic_features <- sapply(omic_summary, function(x) x$features)
-        omic_snps <- sapply(omic_summary, function(x) x$snps)
+        omic_vars <- sapply(omic_summary, function(x) x$vars)
         omic_feature_labels <- sapply(omic_summary, function(x) x$feature_labels)
         omic_matrix_used <- sapply(omic_summary, function(x) x$matrix_used)
+
+
+        if (!is.null(object@cnacalling$consensus.segs)) {
+            cnacall_txt <- paste(
+                "k =",
+                length(unique(object@cnacalling$clusters)),
+                ";",
+                nrow(object@cnacalling$consensus.segs),
+                "consensus segments including",
+                sum(object@cnacalling$consensus.segs$cna, na.rm = TRUE),
+                "CNA segments"
+            )
+        }
 
         cat(
             "A muscadet object", "\n",
@@ -816,7 +833,7 @@ setMethod(
             "coverage data matrix:", paste(omic_matrix_used, collapse = ", "), "\n",
             "cells:", paste(omic_cells, collapse = ", "), paste0("(common: ", length(Reduce(intersect, Cells(object))), ", total: ", length(Reduce(union, Cells(object))), ")"), "\n", "features:", paste(omic_features, collapse = ", "), "\n",
             "feature labels:", paste(omic_feature_labels, collapse = ", "), "\n",
-            "SNPs:", paste(omic_snps, collapse = ", "), "\n",
+            "variant positions:", paste(omic_vars, collapse = ", "), "\n",
             "data from paired bulk sequencing:", ifelse(
                 is.null(object@bulk.data$label),
                 "None", object@bulk.data$label), "\n",
@@ -826,7 +843,7 @@ setMethod(
                 paste("k =", paste(names(object@clustering$clusters), collapse = ", "),
                       "; optimal k =", object@clustering$k.opt)
             ), "\n",
-            "CNA calling:", ifelse(length(object@cnacalling) == 0, "None", ""), "\n",
+            "CNA calling:", ifelse(is.null(object@cnacalling$consensus.segs), "None", cnacall_txt), "\n",
             "genome:", object@genome
         )
     }

@@ -21,8 +21,11 @@ CreateMuscomicObject(
 \code{dgCMatrix}). Rows are features (they must correspond to the id column of
 \code{features}), and columns are cells.}
 
-\item{allele_counts}{Data frame of allele counts at single nucleotide
-polymorphisms (SNPs) positions per cell (\code{data.frame}). It must contain the
+\item{allele_counts}{Data frame of allele counts at variant positions per
+cell (\code{data.frame}). Variant positions can be either common single
+nucleotide polymorphisms (SNPs) positions or individual-specific
+heterozygous positions retrieved by bulk sequencing. The data frame format
+is based on the Variant Calling Format (VCF), thereby it must contain the
 following columns : \code{cell}, \code{id}, \code{CHROM}, \code{POS}, \code{REF}, \code{ALT}, \code{RD}, \code{AD},
 \code{DP}, \code{GT}. See \link{allele_counts} for details.}
 

@@ -19,8 +19,8 @@ single-cell omic dataset used as primary input for muscadet analysis.
 
 \item{\code{coverage}}{Coverage data on features (\code{list}).}
 
-\item{\code{allelic}}{Allelic data at single nucleotide polymorphisms (SNPs)
-positions (\code{list}).}
+\item{\code{allelic}}{Allelic data at variant positions (common SNPs or
+individual-specific heterozygous positions) (\code{list}).}
 }}
 
 \seealso{

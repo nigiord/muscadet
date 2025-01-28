@@ -64,8 +64,8 @@ default, \code{NULL} selects all available data.}
 
 \item{depthmax.nor}{Maximum coverage depth for normal sample (default: 1000).}
 
-\item{het.thresh}{VAF (Variant Allele Frequency) threshold to call SNP
-heterozygous for \code{\link[=preProcSample2]{preProcSample2()}} (default: 0.25).}
+\item{het.thresh}{VAF (Variant Allele Frequency) threshold to call variant
+positions heterozygous for \code{\link[=preProcSample2]{preProcSample2()}} (default: 0.25).}
 
 \item{snp.nbhd}{Window size for selecting SNP loci to reduce serial
 correlation for \code{\link[=preProcSample2]{preProcSample2()}} (default: 250).}
@@ -80,7 +80,7 @@ segmentation and clustering \code{\link[=preProcSample2]{preProcSample2()}}. (de
 \item{cval2}{Critical value for segmentation for \code{\link[facets:procSample]{facets::procSample()}}
 (default: 150).}
 
-\item{min.nhet}{Minimum number of heterozygous SNPs in a segment for
+\item{min.nhet}{Minimum number of heterozygous positions in a segment for
 \code{\link[facets:procSample]{facets::procSample()}} and \code{\link[facets:emcncf]{facets::emcncf()}} (default: 5).}
 
 \item{clonal.thresh}{Threshold of minimum cell proportion to label a
@@ -116,7 +116,7 @@ counts come from coverage or allelic data), \code{het} (heterozygous status),
 bias correction), \code{cnlr} (log R ratio), \code{valor} (log odds ratio), \code{lorvar}
 (variance of log odds ratio), \code{seg0}, \code{seg_ori} (segment original id within
 each cluster), \code{seg} (segment id), \code{segclust} (cluster of segments id),
-\code{vafT.allcells} (vairiant allele frequency in all tumor cells), \code{colSNP}
+\code{vafT.allcells} (vairiant allele frequency in all tumor cells), \code{colVAR}
 (integer for allelic position color depending on \code{vafT.allcells}).
 
 \item \code{segments}: Data frame of segments from the per cluster

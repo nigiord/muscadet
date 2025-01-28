@@ -31,13 +31,13 @@ ratios and cell clustering, they are not mandatory at the creation of
 objects later with this \code{addAlleleCounts} function, before using the
 \code{\link[=mergeCounts]{mergeCounts()}} function.
 
-This function is also useful to add allele counts for sample-specific SNP
-positions to a common \code{muscadet} object, for example for the reference
-\code{muscadet} object: a common \code{muscadet} object with reference coverage data
-can be stored as a unique object to use as reference for computing log R
-ratios for all samples, and then it can updated with allele counts at sample
-specific SNP positions (e.g. found by bulk sequencing) before Copy Number
-Alterations (CNAs) calling.
+This function is also useful to add allele counts for individual-specific
+variant positions to a common \code{muscadet} object, for example for the
+reference \code{muscadet} object: a common \code{muscadet} object with reference
+coverage data can be stored as a unique object to use as reference for
+computing log R ratios for all samples, and then it can updated with allele
+counts at individual-specific variant positions (e.g. found by bulk
+sequencing) before Copy Number Alterations (CNAs) calling.
 }
 \examples{
 # Load example muscadet objects

@@ -134,7 +134,7 @@ usethis::use_data(mat_counts_rna_ref, overwrite = TRUE)
 # Subsampling allele count tables ----------------------------------------------
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# The SNP REF and ALT alleles have been previously randomized for example data
+# The variants REF and ALT alleles have been previously randomized for example data
 allele_counts_atac_tumor <- read.delim(file.path(dir, "sample.atac.allele_counts.tsv"))
 allele_counts_atac_ref <- read.delim(file.path(dir, "reference.atac.allele_counts.tsv"))
 allele_counts_rna_tumor <- read.delim(file.path(dir, "sample.rna.allele_counts.tsv"))
@@ -153,39 +153,39 @@ allele_counts_rna_tumor <- allele_counts_rna_tumor[which(allele_counts_rna_tumor
 allele_counts_rna_ref <- allele_counts_rna_ref[which(allele_counts_rna_ref[, "cell"] %in% barcodes_rna_ref), ]
 
 
-# subsampling by common SNP identifiers
+# subsampling by common variant identifiers
 
-snp_atac <- intersect(unique(allele_counts_atac_tumor[, "id"]),
+var_atac <- intersect(unique(allele_counts_atac_tumor[, "id"]),
                       unique(allele_counts_atac_ref[, "id"]))
 
-snp_atac_tumor <- c(snp_atac, sample(
-    setdiff(unique(allele_counts_atac_tumor[, "id"]), snp_atac), 100))
+var_atac_tumor <- c(var_atac, sample(
+    setdiff(unique(allele_counts_atac_tumor[, "id"]), var_atac), 100))
 
-snp_atac_ref <- c(snp_atac, sample(
-    setdiff(unique(allele_counts_atac_ref[, "id"]), snp_atac), 100))
+var_atac_ref <- c(var_atac, sample(
+    setdiff(unique(allele_counts_atac_ref[, "id"]), var_atac), 100))
 
-snp_rna <- intersect(unique(allele_counts_rna_tumor[, "id"]),
+var_rna <- intersect(unique(allele_counts_rna_tumor[, "id"]),
                       unique(allele_counts_rna_ref[, "id"]))
 
-snp_rna_tumor <- c(snp_rna, sample(
-    setdiff(unique(allele_counts_rna_tumor[, "id"]), snp_rna), 100))
+var_rna_tumor <- c(var_rna, sample(
+    setdiff(unique(allele_counts_rna_tumor[, "id"]), var_rna), 100))
 
-snp_rna_ref <- c(snp_rna, sample(
-    setdiff(unique(allele_counts_rna_ref[, "id"]), snp_rna), 100))
+var_rna_ref <- c(var_rna, sample(
+    setdiff(unique(allele_counts_rna_ref[, "id"]), var_rna), 100))
 
-allele_counts_atac_tumor <- allele_counts_atac_tumor[which(allele_counts_atac_tumor[, "id"] %in% snp_atac_tumor), ]
+allele_counts_atac_tumor <- allele_counts_atac_tumor[which(allele_counts_atac_tumor[, "id"] %in% var_atac_tumor), ]
 allele_counts_atac_tumor <- allele_counts_atac_tumor[order(allele_counts_atac_tumor[, "POS"]), ]
 allele_counts_atac_tumor <- allele_counts_atac_tumor[order(allele_counts_atac_tumor[, "CHROM"]), ]
 
-allele_counts_rna_tumor <- allele_counts_rna_tumor[which(allele_counts_rna_tumor[, "id"] %in% snp_rna_tumor), ]
+allele_counts_rna_tumor <- allele_counts_rna_tumor[which(allele_counts_rna_tumor[, "id"] %in% var_rna_tumor), ]
 allele_counts_rna_tumor <- allele_counts_rna_tumor[order(allele_counts_rna_tumor[, "POS"]), ]
 allele_counts_rna_tumor <- allele_counts_rna_tumor[order(allele_counts_atac_tumor[, "CHROM"]), ]
 
-allele_counts_atac_ref <- allele_counts_atac_ref[which(allele_counts_atac_ref[, "id"] %in% snp_atac_ref), ]
+allele_counts_atac_ref <- allele_counts_atac_ref[which(allele_counts_atac_ref[, "id"] %in% var_atac_ref), ]
 allele_counts_atac_ref <- allele_counts_atac_ref[order(allele_counts_atac_ref[, "POS"]), ]
 allele_counts_atac_ref <- allele_counts_atac_ref[order(allele_counts_atac_ref[, "CHROM"]), ]
 
-allele_counts_rna_ref <- allele_counts_rna_ref[which(allele_counts_rna_ref[, "id"] %in% snp_rna_ref), ]
+allele_counts_rna_ref <- allele_counts_rna_ref[which(allele_counts_rna_ref[, "id"] %in% var_rna_ref), ]
 allele_counts_rna_ref <- allele_counts_rna_ref[order(allele_counts_rna_ref[, "POS"]), ]
 allele_counts_rna_ref <- allele_counts_rna_ref[order(allele_counts_atac_ref[, "CHROM"]), ]
 

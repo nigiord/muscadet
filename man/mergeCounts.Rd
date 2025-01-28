@@ -15,16 +15,17 @@ This object must include clustering assignments in the
 (\code{muscadet}).}
 
 \item{nor.het}{A logical value to specify if normal reference allele counts
-are modified to: total depth counts divided by 2, to set positions as
-heterozygous in allelic data (e.g. when heterozygous SNP positions are retrieve based on
-matched WGS data) before combining coverage and allelic data. Default is
-\code{TRUE}.}
+are modified to: total normal depth counts divided by 2, to force these
+positions to be heterozygous in the normal reference in allelic data (e.g.
+when heterozygous positions are retrieve based on matched bulk sequencing
+data, and are thereby assumed to be heterozygous) before combining coverage
+and allelic data. Default is \code{TRUE}.}
 }
 \value{
 A modified \code{\link{muscadet}} object corresponding to the \code{x} muscadet object,
 with updated \code{cnacalling} slot containing:
 \itemize{
-\item \code{allelic.counts}: Processed allelic counts on SNP positions, for all omics.
+\item \code{allelic.counts}: Processed allelic counts on variant positions, for all omics.
 \item \code{coverage.counts}: Processed coverage counts merged with the reference.
 \item \code{combined.counts}: Combined data for allelic and coverage counts.
 }
@@ -40,10 +41,11 @@ Abbreviations:
 }
 }
 \description{
-This function combines allelic (counts at single nucleotide polymorphisms
-(SNPs)) and coverage counts (counts on features) from all omics per cluster
-for both sample and reference. The resulting merged data is stored in the
-\code{cnacalling} slot of the sample \code{muscadet} object.
+This function combines allelic (counts at variant positions, either common
+SNPs or individual-specific heterozygous positions) and coverage counts
+(counts on features) from all omics per cluster for both sample and
+reference. The resulting merged data is stored in the \code{cnacalling} slot of
+the sample \code{muscadet} object.
 }
 \examples{
 # Load example muscadet objects
