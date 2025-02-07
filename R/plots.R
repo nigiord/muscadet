@@ -38,13 +38,22 @@
 #'   (cells with missing data in at least one omic) in the heatmaps (`logical`).
 #'   Default is `TRUE`.
 #'
-#' @param white_scale Numeric vector of length 2 with values between 0 and 1,
-#'   defining the white color boundaries (`numeric` vector). This parameter
-#'   specifies the quantiles of the LRR reference data that will define
-#'   the boundaries for the white color in the heatmap. LRR values falling
-#'   within this range are considered close enough to the majority of the LRR
-#'   reference data, indicating no significant gain or loss of coverage, thereby
-#'   are represented as white on the heatmap.
+#' @param white_scale Numeric vector of length 2 or a list of numeric vectors
+#'   (`numeric` vector or `list`).
+#' - If a numeric vector of length 2, the same white color boundaries are
+#'   applied to all omics in the muscadet object. E.g. `c(0.3, 0.7)` (default).
+#' - If a list (named or not with omics name), it must have the same length as
+#'   the number of omics in the muscadet object, where each vector element
+#'   applies the white color boundaries for a specific omic. E.g. `list(c(0.3,
+#'   0.7), c(0.4, 0.6))` uses 0.3 and 0.7 quantiles of LRR ref data for the 1st
+#'   omic heatmap, and 0.4 and 0.6 quantiles for the second.
+#'
+#'  Values of the vectors must be between 0 and
+#'   1, specifying the quantiles of the LRR reference data that define the
+#'   boundaries for the white color in each heatmap. LRR values falling within
+#'   this range are considered close to the majority of the LRR reference data,
+#'   indicating no significant gain or loss of coverage, and are represented as
+#'   white on the heatmap. Default is `c(0.3, 0.7)`.
 #'
 #'
 #' @param colors Vector of colors for the cluster annotation (`character`
@@ -110,7 +119,7 @@
 #'         muscadet_obj$clustering$params[["dist_method"]],
 #'         muscadet_obj$clustering$params[["hclust_method"]],
 #'         "|",
-#'         paste0("k=", k) ,
+#'         paste0("k=", k),
 #'         "|",
 #'         "Weights of omics:",
 #'         paste(muscadet_obj$clustering$params[["weights"]], collapse = ", ")
@@ -163,20 +172,51 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     }
 
     # Validate white_scale
-    stopifnot(
-        "white_scale must be a numeric vector of length 2." = length(white_scale) == 2
-    )
-    stopifnot(
-        "white_scale values must be between 0 and 1." = all(white_scale >= 0 & white_scale <= 1)
-    )
-    white_scale <- round(white_scale, 2)
-    stopifnot(
-        "The two elements of white_scale must not be equal." = white_scale[1] != white_scale[2]
-    )
-    if (white_scale[1] > white_scale[2]) {
-        message("The first element of white_scale is greater than the second. Reversing the values.")
-        white_scale <- sort(white_scale)
+    if (is.numeric(white_scale) && length(white_scale) == 2) {
+
+        stopifnot(
+            "white_scale must be a numeric vector of length 2." = length(white_scale) == 2
+        )
+        stopifnot(
+            "white_scale values must be between 0 and 1." = all(white_scale >= 0 & white_scale <= 1)
+        )
+        # Single pair of values applied to all omics
+        white_scale <- round(sort(white_scale), 2)
+        white_scale <- rep(list(white_scale), length(x@omics))  # Ensure list matches omics count
+        names(white_scale) <- names(x@omics)  # Assign omic names for consistency
+
+     } else if (is.list(white_scale)) {
+
+        stopifnot(
+            "white_scale must have the same length as the number of omics in muscadet object." =
+                length(white_scale) == length(x@omics)
+        )
+
+        stopifnot(
+            "All elements of white_scale must be numeric vectors of length 2." =
+                all(vapply(white_scale, function(x) is.numeric(x) && length(x) == 2, logical(1)))
+        )
+
+        white_scale <- lapply(white_scale, function(x) {
+            x <- round(x, 2)
+            stopifnot("The two elements of white_scale vectors must not be equal." = x[1] != x[2])
+            if (x[1] > x[2]) x <- sort(x)
+            return(x)
+        })
+
+        # If white_scale is unnamed, assign names based on omics order
+        if (is.null(names(white_scale))) {
+            names(white_scale) <- names(x@omics)
+        } else {
+            stopifnot(
+                "Named white_scale list must have names matching the omics in muscadet." =
+                    all(names(white_scale) %in% names(x@omics))
+            )
+        }
+    } else {
+        stop("white_scale must be either a numeric vector of length 2 or a list of such vectors.")
     }
+
 
     # Set default color palette for clusters if not provided
     if (is.null(colors)) {
@@ -216,7 +256,9 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     }
 
     # Create list of heatmap objects
-    list_ht <- lapply(slot(x, "omics"), function(muscomic) {
+    list_ht <- lapply(names(x@omics), function(omic_name) {
+
+        muscomic <- x@omics[[omic_name]]
 
         pdf(file = NULL)
         ht_opt(message = F)
@@ -226,7 +268,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
         chrom <- factor(coord[coord$keep, "CHROM"], levels = unique(coord[coord$keep, "CHROM"]))
 
         # Define color breaks for heatmap using white_scale argument
-        col_breaks <- c(-5, muscomic@coverage$ref.log.ratio.perc[as.character(white_scale)], 5)
+        col_breaks <- c(-5, muscomic@coverage$ref.log.ratio.perc[as.character(white_scale[[omic_name]])], 5)
 
         # Extract log R ratio matrix
         if (show_missing == TRUE) {
@@ -340,7 +382,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             # 3. Custom cluster assignments vector
             n_cells <- table(clusters)
             ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                                 row_split = factor(clusters[all_cells], levels=sort(unique(clusters))),
+                                 row_split = factor(clusters[common_cells], levels=sort(unique(clusters))),
                                  row_order = names(clusters), cluster_rows = F, merge_legend = TRUE)
         }
     }

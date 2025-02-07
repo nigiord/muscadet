@@ -47,13 +47,23 @@ available in the muscadet object.}
 (cells with missing data in at least one omic) in the heatmaps (\code{logical}).
 Default is \code{TRUE}.}
 
-\item{white_scale}{Numeric vector of length 2 with values between 0 and 1,
-defining the white color boundaries (\code{numeric} vector). This parameter
-specifies the quantiles of the LRR reference data that will define
-the boundaries for the white color in the heatmap. LRR values falling
-within this range are considered close enough to the majority of the LRR
-reference data, indicating no significant gain or loss of coverage, thereby
-are represented as white on the heatmap.}
+\item{white_scale}{Numeric vector of length 2 or a list of numeric vectors
+(\code{numeric} vector or \code{list}).
+\itemize{
+\item If a numeric vector of length 2, the same white color boundaries are
+applied to all omics in the muscadet object. E.g. \code{c(0.3, 0.7)} (default).
+\item If a list (named or not with omics name), it must have the same length as
+the number of omics in the muscadet object, where each vector element
+applies the white color boundaries for a specific omic. E.g. \code{list(c(0.3, 0.7), c(0.4, 0.6))} uses 0.3 and 0.7 quantiles of LRR ref data for the 1st
+omic heatmap, and 0.4 and 0.6 quantiles for the second.
+}
+
+Values of the vectors must be between 0 and
+1, specifying the quantiles of the LRR reference data that define the
+boundaries for the white color in each heatmap. LRR values falling within
+this range are considered close to the majority of the LRR reference data,
+indicating no significant gain or loss of coverage, and are represented as
+white on the heatmap. Default is \code{c(0.3, 0.7)}.}
 
 \item{colors}{Vector of colors for the cluster annotation (\code{character}
 vector). Default is \code{NULL}, which uses predefined colors.}
@@ -121,7 +131,7 @@ for (k in names(muscadet_obj$clustering$clusters)) {
         muscadet_obj$clustering$params[["dist_method"]],
         muscadet_obj$clustering$params[["hclust_method"]],
         "|",
-        paste0("k=", k) ,
+        paste0("k=", k),
         "|",
         "Weights of omics:",
         paste(muscadet_obj$clustering$params[["weights"]], collapse = ", ")
