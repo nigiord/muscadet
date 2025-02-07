@@ -119,7 +119,7 @@ methods::setClass(
 #'
 #' @import dplyr
 #' @importClassesFrom Matrix dgCMatrix
-#' @importFrom Matrix Matrix
+#' @importFrom Matrix Matrix summary
 #' @importFrom stringr str_remove
 #' @importFrom gtools mixedsort
 #' @importFrom methods new
@@ -844,7 +844,7 @@ setMethod(
                       "; optimal k =", object@clustering$k.opt)
             ), "\n",
             "CNA calling:", ifelse(is.null(object@cnacalling$consensus.segs), "None", cnacall_txt), "\n",
-            "genome:", object@genome
+            "genome:", object@genome, "\n"
         )
     }
 )

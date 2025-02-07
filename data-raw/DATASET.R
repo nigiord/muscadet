@@ -2,15 +2,16 @@
 
 # directory of files: dir
 
-library("usethis")
-library("Matrix")
-library("SeuratObject")
-library("BSgenome")
-library("BSgenome.Hsapiens.UCSC.hg38")
-library("BSgenome.Hsapiens.UCSC.hg19")
-library("BSgenome.Mmusculus.UCSC.mm10")
-library("GenomeInfoDb")
-library("GenomicRanges")
+library(usethis)
+library(Matrix)
+library(SeuratObject)
+library(facets)
+library(BSgenome)
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(BSgenome.Hsapiens.UCSC.hg19)
+library(BSgenome.Mmusculus.UCSC.mm10)
+library(GenomeInfoDb)
+library(GenomicRanges)
 
 set.seed(123)
 

@@ -51,16 +51,18 @@ Mbp).}
     \item{\code{slidingSize}}{Distance between start positions of sliding windows in base pairs
 (\code{integer} value). If set to the same value as \code{windowSize}, the windows
 don't overlap. By default: \code{2e6} (2 Mbp).}
-    \item{\code{minReads}}{Minimum read average per window (\code{integer} value). By
-default: \code{5}.}
-    \item{\code{thresh_capping}}{Threshold to cap the range of log R ratio values
-(\code{numeric} value). By default: \code{3}.}
+    \item{\code{minReads}}{Minimum read average per window in reference cells (\code{integer}
+value). By default: \code{5}.}
+    \item{\code{minPeaks}}{Minimum number of peaks per window (\code{integer} value). By
+default: \code{100}.}
     \item{\code{genesPerWindow}}{Number of genes per moving window (\code{integer} value). By
 default: \code{101}.}
     \item{\code{refReads}}{Minimum of reads in reference cells (\code{integer} value). By
 default: \code{100}.}
     \item{\code{refMeanReads}}{Minimum of average reads per reference cell (\code{integer}
 value). By default: \code{0.01}.}
+    \item{\code{thresh_capping}}{Threshold to cap the range of log R ratio values
+(\code{numeric} value). By default: \code{3}.}
   }}
 }
 \value{

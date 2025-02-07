@@ -26,9 +26,9 @@
 #' @param quiet `TRUE` or `FALSE` (`logical`). Whether to turn off messages. By
 #'   default: `FALSE`.
 #'
-#' @inheritDotParams computeLogRatioATAC windowSize slidingSize minReads
-#'   minPeaks thresh_capping
-#' @inheritDotParams computeLogRatioRNA genesPerWindow refReads refMeanReads
+#'
+#' @inheritDotParams computeLogRatioATAC windowSize slidingSize minReads minPeaks
+#' @inheritDotParams computeLogRatioRNA genesPerWindow refReads refMeanReads thresh_capping
 #'
 #' @return
 #' A \code{\link{muscadet}} object corresponding to the sample
@@ -153,6 +153,8 @@ computeLogRatio <- function(x,
         # Check label features
         if (is.null(new.label.features)) {
             new.label.features <- c(ATAC = "windows of peaks")
+        } else {
+            names(new.label.features) <- omic
         }
 
         if (quiet == FALSE) {
@@ -163,6 +165,7 @@ computeLogRatio <- function(x,
             matTumor = x@omics[[omic]]@coverage[["mat.counts"]],
             matRef = reference@omics[[omic]]@coverage[["mat.counts"]],
             peaksCoord = x@omics[[omic]]@coverage[["coord.features"]],
+            genome = x@genome,
             quiet = quiet,
             ...
         )
@@ -181,6 +184,8 @@ computeLogRatio <- function(x,
         # Check label features
         if (is.null(new.label.features)) {
             new.label.features <- c(RNA = x@omics[[omic]]@coverage[["label.features"]])
+        }  else {
+            names(new.label.features) <- omic
         }
 
         if (quiet == FALSE) {
@@ -191,6 +196,7 @@ computeLogRatio <- function(x,
             matTumor = x@omics[[omic]]@coverage[["mat.counts"]],
             matRef = reference@omics[[omic]]@coverage[["mat.counts"]],
             genesCoord = x@omics[[omic]]@coverage[["coord.features"]],
+            genome = x@genome,
             quiet = quiet,
             ...
         )
@@ -243,8 +249,8 @@ computeLogRatio <- function(x,
 #' @param slidingSize Distance between start positions of sliding windows in base pairs
 #'   (`integer` value). If set to the same value as `windowSize`, the windows
 #'   don't overlap. By default: `2e6` (2 Mbp).
-#' @param minReads Minimum read average per window (`integer` value). By
-#'   default: `5`.
+#' @param minReads Minimum read average per window in reference cells (`integer`
+#'   value). By default: `5`.
 #' @param minPeaks Minimum number of peaks per window (`integer` value). By
 #'   default: `100`.
 #' @param thresh_capping Threshold to cap the range of log R ratio values
@@ -294,12 +300,11 @@ computeLogRatio <- function(x,
 #'
 #' @family computeLogRatio
 #'
-#' @import Matrix
 #' @import dplyr
+#' @importClassesFrom Matrix dgCMatrix
+#' @importFrom Matrix colSums rowSums rowMeans
 #' @importFrom BiocGenerics width
-#' @importFrom GenomicRanges GRanges
-#' @importFrom GenomicRanges slidingWindows
-#' @importFrom GenomicRanges findOverlaps
+#' @importFrom GenomicRanges GRanges slidingWindows findOverlaps
 #' @importFrom stats sd
 #'
 #' @export
@@ -734,8 +739,9 @@ computeLogRatioATAC <- function(matTumor,
 #'
 #' @family computeLogRatio
 #'
-#' @import Matrix
 #' @import dplyr
+#' @importClassesFrom Matrix dgCMatrix
+#' @importFrom Matrix rowSums rowMeans
 #' @importFrom stats na.omit sd
 #' @importFrom sparseMatrixStats rowSds
 #' @importFrom caTools runmean

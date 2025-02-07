@@ -115,6 +115,7 @@
 #'
 #' @import dplyr
 #' @import facets
+#' @import pctGCdata
 #' @importFrom GenomicRanges GRanges
 #' @importFrom stats na.omit
 #' @importFrom rlang .data
@@ -508,7 +509,7 @@ cnaCalling <- function(
 
     out.segs <- Map(function(cluster) {
         clusGR <- GenomicRanges::GRanges(out_full[out_full$cluster == cluster,
-                                                  c("chrom", "start", "end", "cluster", "cf.em","tcn.em", "lcn.em")])
+                                                  c("chrom", "start", "end", "cluster", "cf.em", "tcn.em", "lcn.em")])
         idx_segs <- GenomicRanges::findOverlaps(
             GenomicRanges::GRanges(consensus_segs),
             clusGR,
@@ -653,6 +654,7 @@ cnaCalling <- function(
 #'
 #' @import dplyr
 #' @import facets
+#' @import pctGCdata
 #'
 #' @export
 #'

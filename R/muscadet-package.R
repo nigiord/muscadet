@@ -3,7 +3,6 @@
 
 ## usethis namespace: start
 #' @import facets
-#' @import Matrix
 #' @importFrom BiocGenerics width
 #' @importFrom caTools runmean
 #' @importFrom circlize colorRamp2
@@ -21,6 +20,11 @@
 #' @importFrom grid grid.rect
 #' @importFrom grid grid.text
 #' @importFrom grid unit
+#' @importFrom Matrix colSums
+#' @importFrom Matrix Matrix
+#' @importFrom Matrix rowMeans
+#' @importFrom Matrix rowSums
+#' @importFrom Matrix summary
 #' @importFrom methods setClass
 #' @importFrom RANN nn2
 #' @importFrom Rfast Dist

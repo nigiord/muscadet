@@ -38,8 +38,8 @@ Mbp).}
 (\code{integer} value). If set to the same value as \code{windowSize}, the windows
 don't overlap. By default: \code{2e6} (2 Mbp).}
 
-\item{minReads}{Minimum read average per window (\code{integer} value). By
-default: \code{5}.}
+\item{minReads}{Minimum read average per window in reference cells (\code{integer}
+value). By default: \code{5}.}
 
 \item{minPeaks}{Minimum number of peaks per window (\code{integer} value). By
 default: \code{100}.}

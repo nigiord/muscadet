@@ -40,6 +40,7 @@ Imports:
     Matrix,
     matrixStats,
     methods,
+    pctGCdata,
     RANN,
     Rfast,
     rlang,
