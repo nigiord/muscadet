@@ -399,6 +399,13 @@ CreateMuscadetObject <- function(omics,
       )))
   )
 
+  # Check at least one common cell name between all omics
+  common_cells <- Reduce(intersect, lapply(omics, Cells))
+  stopifnot(
+      "No common cells found between omics. Check matrices columns (cell names) for the different omics." =
+          length(common_cells) != 0
+  )
+
   # Check bulk data
   if (!is.null(bulk.lrr)) {
       # default names for bulk df columns

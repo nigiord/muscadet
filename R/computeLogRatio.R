@@ -112,7 +112,7 @@ computeLogRatio <- function(x,
                             reference,
                             omic,
                             method = NULL,
-                            new.label.features = c(ATAC = "windows of peaks", RNA = "genes"),
+                            new.label.features = NULL,
                             remove.raw = TRUE,
                             quiet = FALSE,
                             ...) {
@@ -125,6 +125,16 @@ computeLogRatio <- function(x,
         "'omic' argument must corresponds to an omic name in both muscadet objects 'x' and 'reference'." =
             omic %in% names(x@omics) &
             omic %in% names(reference@omics)
+    )
+
+    # Check that cell names do not overlap between x and reference
+    common_cells <- intersect(Cells(x), Cells(reference))
+    stopifnot(
+        "Cells in 'x' and 'reference' must have different names.
+        Found overlapping cell names between the two muscadet objects:
+        - Verify that the same matrix is not used in both, or that some cells are not present in both.
+        - Or rename cells to have unique cell names between the two objects (e.g. when names are numbers)." =
+            length(common_cells) == 0
     )
 
     # Check method

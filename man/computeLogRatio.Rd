@@ -9,7 +9,7 @@ computeLogRatio(
   reference,
   omic,
   method = NULL,
-  new.label.features = c(ATAC = "windows of peaks", RNA = "genes"),
+  new.label.features = NULL,
   remove.raw = TRUE,
   quiet = FALSE,
   ...

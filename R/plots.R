@@ -239,7 +239,7 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
         message("---- Heatmap Parameters ----")
         message("Omics in the muscadet object: ", paste(sapply(slot(x, "omics"), function(n) slot(n, "label.omic")), collapse = ", "))
         omic_dims <- sapply(slot(x, "omics"), function(m) {
-            paste0(m@label.omic, ": ", nrow(muscadet::matLogRatio(m)), " cells x ", ncol(muscadet::matLogRatio(m)), " features")
+            paste0(m@label.omic, ": ", ncol(muscadet::matLogRatio(m)), " cells x ", nrow(muscadet::matLogRatio(m)), " features")
         })
         message("Omics log R ratio data dimensions:\n  ", paste(omic_dims, collapse = "\n  "))
 
