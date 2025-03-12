@@ -587,46 +587,50 @@ imputeClusters <- function(mat_list,
             # Identify missing cells in the current matrix that are present in the other matrix
             cells_NA_other <- cells_NA[which(cells_NA %in% rownames(other_mat[[j]]))]
 
-            # Find k-nearest neighbors using the other matrix
-            nearest <- RANN::nn2(
-                data = other_mat[[j]][common_cells_mat, ],
-                query = other_mat[[j]][cells_NA_other, , drop = FALSE],
-                k = knn_imp
-            )
+            # Skip if there are no missing cells to impute
+            if (length(cells_NA_other) > 0) {
 
-            # Extract neighbor indices and map them to cell barcodes
-            knn <- nearest[["nn.idx"]]
-            rownames(knn) <- cells_NA_other
-            knn <- apply(knn, c(1, 2), function(x) common_cells_mat[x])
-
-            # Add NA placeholders for cells not found in this matrix
-            missing_knn <- matrix(
-              NA,
-              nrow = length(setdiff(
-                cells_NA_all, cells_NA_other
-              )),
-              ncol = ncol(knn),
-              dimnames = list(
-                setdiff(cells_NA_all, cells_NA_other),
-                colnames(knn)
-              )
-            )
-            knn <- rbind(knn, missing_knn)
-            knn <- knn[sort(rownames(knn)), ]
-
-            # Assign clusters for each k value using nearest neighbors
-            clusters_NA <- lapply(k_list, function(k) {
-                cl <- matrix(
-                    clusters[[as.character(k)]][match(knn, names(clusters[[as.character(k)]]))],
-                    nrow = nrow(knn),
-                    ncol = ncol(knn),
-                    dimnames = list(rownames(knn))
+                # Find k-nearest neighbors using the other matrix
+                nearest <- RANN::nn2(
+                    data = other_mat[[j]][common_cells_mat, ],
+                    query = other_mat[[j]][cells_NA_other, , drop = FALSE],
+                    k = knn_imp
                 )
-                return(cl)
-            })
 
-            # Store the clusters for this matrix
-            knn_list[[names(other_mat[j])]] <- clusters_NA
+                # Extract neighbor indices and map them to cell barcodes
+                knn <- nearest[["nn.idx"]]
+                rownames(knn) <- cells_NA_other
+                knn <- apply(knn, c(1, 2), function(x) common_cells_mat[x])
+
+                # Add NA placeholders for cells not found in this matrix
+                missing_knn <- matrix(
+                    NA,
+                    nrow = length(setdiff(
+                        cells_NA_all, cells_NA_other
+                    )),
+                    ncol = ncol(knn),
+                    dimnames = list(
+                        setdiff(cells_NA_all, cells_NA_other),
+                        colnames(knn)
+                    )
+                )
+                knn <- rbind(knn, missing_knn)
+                knn <- knn[sort(rownames(knn)), ]
+
+                # Assign clusters for each k value using nearest neighbors
+                clusters_NA <- lapply(k_list, function(k) {
+                    cl <- matrix(
+                        clusters[[as.character(k)]][match(knn, names(clusters[[as.character(k)]]))],
+                        nrow = nrow(knn),
+                        ncol = ncol(knn),
+                        dimnames = list(rownames(knn))
+                    )
+                    return(cl)
+                })
+
+                # Store the clusters for this matrix
+                knn_list[[names(other_mat[j])]] <- clusters_NA
+            }
         }
 
         # Combine cluster assignments from all other matrices for each k value
