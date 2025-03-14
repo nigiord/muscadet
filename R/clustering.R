@@ -98,6 +98,7 @@
 #' @importFrom dendextend cutree
 #' @importFrom cluster silhouette
 #' @importFrom methods slot slot<-
+#' @importFrom utils packageVersion
 #'
 #' @export
 #'
@@ -177,7 +178,7 @@ clusterMuscadet <- function(x, # muscadet object
         # for version <=2.1, Rfast returns a similarity matrix for cosine with 0
         # values in diagonal. The result should be converted into distance.
         # See https://github.com/RfastOfficial/Rfast/issues/119 for more info
-        if(dist_method == "cosine" & packageVersion("Rfast") <= "2.1.0") {
+        if(dist_method == "cosine" & utils::packageVersion("Rfast") <= "2.1.0") {
             diag(dist) <- 1
             dist <- 1-dist
         }
