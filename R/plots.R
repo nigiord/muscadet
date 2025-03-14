@@ -1243,3 +1243,289 @@ plotCNA <- function(
     return(cna_plot)
 }
 
+
+#' Create heatmap and distribution plots of the different steps of computing log
+#' R ratios
+#'
+#' This function generates heatmap and distribution plots for tumor and
+#' reference cells for any step of computing log R ratios matrices. The
+#' input object corresponds to the output of [computeLogRatioATAC()] or
+#' [computeLogRatioRNA()] with the argument `all_steps = TRUE`.
+#'
+#' @param obj A list provided as output by the [computeLogRatioATAC()] or
+#'   [computeLogRatioRNA()] functions with the argument `all_steps = TRUE`. It
+#'   includes tumor and reference matrices at each step of the computing of log
+#'   R ratio matrices.
+#' @param step The step within the `obj` list to use for plotting (`character`
+#'   string). It must match one of the names in `obj`.
+#' @param filename File path to save the output plot (`character` string). The
+#'   file format is inferred from the extension (".png" or ".pdf").
+#' @param title Title of the plot (`character` string). If `NULL`, the title is
+#'   automatically generated using the provided step argument and its
+#'   corresponding value name (`obj[[step]]$name`).
+#' @param col_quantiles A numeric vector of length 4, specifying the quantiles
+#'   to use for the color breaks in the heatmap (`numeric`). Default is `c(0.1,
+#'   0.4, 0.6, 0.9)`.
+#' @param col_boundaries A character vector of 4 colors used for the color scale
+#'   of the heatmap (`character` vector). Default is `c("#00008E", "white",
+#'   "white", "#630000")`.
+#'
+#' @return The function does not return any value but saves a heatmaps-histograms plot to the specified file.
+#'
+#' @import ggplot2
+#' @importFrom rlang .data
+#' @importFrom ComplexHeatmap Heatmap draw
+#' @importFrom circlize colorRamp2
+#' @importFrom grid unit grid.grab
+#' @importFrom patchwork wrap_plots plot_layout plot_annotation
+#'
+#' @examples
+#'
+#' # Create muscomic objects
+#' atac <- CreateMuscomicObject(
+#'     type = "ATAC",
+#'     mat_counts = mat_counts_atac_tumor,
+#'     allele_counts = allele_counts_atac_tumor,
+#'     features = peaks
+#' )
+#' rna <- CreateMuscomicObject(
+#'     type = "RNA",
+#'     mat_counts = mat_counts_rna_tumor,
+#'     allele_counts = allele_counts_rna_tumor,
+#'     features = genes
+#' )
+#' atac_ref <- CreateMuscomicObject(
+#'     type = "ATAC",
+#'     mat_counts = mat_counts_atac_ref,
+#'     allele_counts = allele_counts_atac_ref,
+#'     features = peaks
+#' )
+#' rna_ref <- CreateMuscomicObject(
+#'     type = "RNA",
+#'     mat_counts = mat_counts_rna_ref,
+#'     allele_counts = allele_counts_rna_ref,
+#'     features = genes
+#' )
+#'
+#' # Create muscadet objects
+#' muscadet <- CreateMuscadetObject(
+#'     omics = list(atac, rna),
+#'     bulk.lrr = bulk_lrr,
+#'     bulk.label = "WGS",
+#'     genome = "hg38"
+#' )
+#' muscadet_ref <- CreateMuscadetObject(
+#'     omics = list(atac_ref, rna_ref),
+#'     genome = "hg38"
+#' )
+#'
+#' # Compute log R ratios with `all_steps = TRUE`
+#' obj_atac_all <- computeLogRatioATAC(
+#'     matTumor = matCounts(muscadet)$ATAC,
+#'     matRef = matCounts(muscadet_ref)$ATAC,
+#'     peaksCoord = coordFeatures(muscadet)$ATAC,
+#'     genome = slot(muscadet, "genome"),
+#'     minReads = 1, # low value for example subsampled datasets
+#'     minPeaks = 1, # low value for example subsampled datasets
+#'     all_steps = TRUE
+#' )
+#' names(obj_atac_all)
+#'
+#' # Plot heatmap and distribution of values for Step04
+#' heatmapStep(obj = obj_atac_all,
+#'             step = "step01",
+#'             filename = "step01.png",
+#'             title = "Example data - Step 01")
+#'
+#' @export
+#'
+heatmapStep <- function(
+        obj,
+        step,
+        filename,
+        title = NULL,
+        col_quantiles = c(0.1, 0.4, 0.6, 0.9),
+        col_boundaries = c("#00008E", "white", "white", "#630000")) {
+
+    # Argument checks
+    if (!is.list(obj)) {
+        stop("The 'obj' argument must be a list.")
+    }
+
+    if (!(step %in% names(obj))) {
+        stop(paste("The specified 'step' ('", step, "') is not found in 'obj'.", sep = ""))
+    }
+
+    if (!grepl(".(png|pdf)$", filename)) {
+        stop("The 'filename' must end with either .png or .pdf.")
+    }
+
+    if (!is.numeric(col_quantiles) || length(col_quantiles) != 4) {
+        stop("The 'col_quantiles' argument should be a numeric vector of length 4.")
+    }
+
+    if (!is.character(col_boundaries) || length(col_boundaries) != 4) {
+        stop("The 'col_boundaries' argument should be a character vector of length 4.")
+    }
+
+    # Extract the tumor and reference matrices
+    matTumor <- t(obj[[step]]$matTumor)
+    matRef <- t(obj[[step]]$matRef)
+    name <- obj[[step]]$name
+
+    # Generate title if NULL
+    if (is.null(title)) {
+        title <- paste(step, "-", name)
+    }
+
+    # Chromosome factor from coordinates
+    coord <- obj$coord
+    chrom <- coord[which(colnames(matTumor) %in% coord$id), "CHROM"]
+    chrom <- factor(chrom, levels = unique(chrom))
+
+    # Combine matrices and calculate breaks for color scale
+    mat <- rbind(matTumor, matRef)
+    col_breaks <- quantile(mat, col_quantiles)
+
+    # Color scale function
+    col_fun <- circlize::colorRamp2(col_breaks, col_boundaries)
+
+    # Calculate bin_width
+    bin_width <- (max(mat) - min(mat)) / 1000
+
+    # Create heatmaps
+    ht_Tum <- ComplexHeatmap::Heatmap(
+        matTumor,
+        name = "Tumor",
+        heatmap_legend_param = list(title = name),
+        row_title = "Tumor cells",
+        row_title_gp = gpar(fontsize = 12),
+        show_column_names = FALSE,
+        show_row_names = FALSE,
+        cluster_columns = FALSE,
+        cluster_rows = TRUE,
+        column_split = chrom,
+        column_title_gp = gpar(fontsize = 10),
+        border_gp = gpar(col = "black", lwd = 1),
+        heatmap_height = unit(12, "cm"),
+        heatmap_width = unit(18, "cm"),
+        col = col_fun,
+        raster_device = "png",
+        raster_quality = 3
+    )
+
+    ht_Ref <- ComplexHeatmap::Heatmap(
+        matRef,
+        name = "Ref",
+        heatmap_legend_param = list(title = name),
+        row_title = "Reference cells",
+        row_title_gp = gpar(fontsize = 12),
+        show_column_names = FALSE,
+        show_row_names = FALSE,
+        cluster_columns = FALSE,
+        cluster_rows = TRUE,
+        column_split = chrom,
+        column_title_gp = gpar(fontsize = 10),
+        border_gp = gpar(col = "black", lwd = 1),
+        heatmap_height = unit(12, "cm"),
+        heatmap_width = unit(18, "cm"),
+        col = col_fun,
+        raster_device = "png",
+        raster_quality = 3
+    )
+
+    # Draw heatmaps
+    pdf(file = NULL)  # Temporarily create the plot device for heatmap images
+    ht_Tum_2 <- ComplexHeatmap::draw(ht_Tum, column_title = paste(name, "in tumor cells"))
+    ht_Tum_grob <- grid.grab()  # Capture heatmap as grob
+    ht_Ref_2 <- ComplexHeatmap::draw(ht_Ref, column_title = paste(name, "in reference cells"))
+    ht_Ref_grob <- grid.grab()  # Capture heatmap as grob
+    dev.off()
+
+    # Histogram calculations and data preparation
+    data_Tum <- as.data.frame(as.table(matTumor))
+    data_Ref <- as.data.frame(as.table(matRef))
+    colnames(data_Tum) <- colnames(data_Ref) <- c("Row", "Column", "Value")
+
+    # Create bins based on the bin_width and compute frequency for gradient bar
+    data_Tum$Value_bin <- cut(data_Tum$Value,
+                              breaks = seq(floor(min(data_Tum$Value)),
+                                           ceiling(max(data_Tum$Value)),
+                                           by = bin_width),
+                              include.lowest = TRUE,
+                              right = FALSE,
+                              labels = FALSE)
+
+    gradient_data_Tum <- data.frame(
+        x_min = seq(min(matTumor), max(matTumor), length.out = 500)[-500],
+        x_max = seq(min(matTumor), max(matTumor), length.out = 500)[-1],
+        y_min = rep(-(max(table(data_Tum$Value_bin)) * 0.02), 499),
+        y_max = rep(-(max(table(data_Tum$Value_bin)) * 0.1), 499)
+    )
+    gradient_data_Tum$fill <- col_fun((gradient_data_Tum$x_min + gradient_data_Tum$x_max) / 2)
+
+    data_Ref$Value_bin <- cut(data_Ref$Value,
+                              breaks = seq(floor(min(data_Ref$Value)),
+                                           ceiling(max(data_Ref$Value)),
+                                           by = bin_width),
+                              include.lowest = TRUE,
+                              right = FALSE,
+                              labels = FALSE)
+
+    gradient_data_Ref <- data.frame(
+        x_min = seq(min(matRef), max(matRef), length.out = 500)[-500],
+        x_max = seq(min(matRef), max(matRef), length.out = 500)[-1],
+        y_min = rep(-(max(table(data_Ref$Value_bin)) * 0.02), 499),
+        y_max = rep(-(max(table(data_Ref$Value_bin)) * 0.1), 499)
+    )
+    gradient_data_Ref$fill <- col_fun((gradient_data_Ref$x_min + gradient_data_Ref$x_max) / 2)
+
+    # Create histograms
+    hist_Tum <- ggplot(data_Tum, aes(x = .data$Value)) +
+        geom_histogram(aes(y = after_stat(.data$count)), binwidth = bin_width, color = "black", fill = "black") +
+        geom_rect(data = gradient_data_Tum,
+                  aes(xmin = .data$x_min, xmax = .data$x_max, ymin = .data$y_min, ymax = .data$y_max, fill = .data$fill),
+                  inherit.aes = FALSE) +
+        scale_fill_identity() +
+        labs(title = paste(name, "distribution in tumor cells"), x = "Value", y = "Frequency") +
+        theme_classic()
+
+    hist_Ref <- ggplot(data_Ref, aes(x = .data$Value)) +
+        geom_histogram(aes(y = after_stat(.data$count)), binwidth = bin_width, color = "black", fill = "black") +
+        geom_rect(data = gradient_data_Ref,
+                  aes(xmin = .data$x_min, xmax = .data$x_max, ymin = .data$y_min, ymax = .data$y_max, fill = .data$fill),
+                  inherit.aes = FALSE) +
+        scale_fill_identity() +
+        labs(title = paste(name, "distribution in reference cells"), x = "Value", y = "Frequency") +
+        theme_classic()
+
+    # Combine heatmap and histogram plots
+    final_plot <- patchwork::wrap_plots(c(list(ht_Tum_grob, ht_Ref_grob), list(hist_Tum, hist_Ref)), ncol = 2) +
+        plot_layout(nrow = 2, heights = c(3, 1)) +
+        plot_annotation(
+            title = title,
+            theme = theme(plot.title = element_text(size = 16))
+        )
+
+    # Output to file
+    if (grepl(".png", basename(filename))) {
+        png(
+            filename = filename,
+            width = ht_Tum_2@ht_list_param[["width"]] + ht_Ref_2@ht_list_param[["width"]],
+            height = ht_Tum_2@ht_list_param[["height"]] * 1.75,
+            units = "mm",
+            res = 300
+        )
+        print(final_plot)
+        dev.off()
+
+    } else if (grepl(".pdf", basename(filename))) {
+        pdf(
+            file = filename,
+            width = (ht_Tum_2@ht_list_param[["width"]] + ht_Ref_2@ht_list_param[["width"]]) / 25.4,  # in inches
+            height = (ht_Tum_2@ht_list_param[["height"]] * 1.75) / 25.4  # in inches
+        )
+        print(final_plot)
+        dev.off()
+    }
+}
