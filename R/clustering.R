@@ -33,6 +33,9 @@
 #'   (`integer`). Default is `10`.
 #' @param k_range Numeric vector specifying the range of clusters (k) to
 #'   evaluate (`numeric` vector). Default is from 2 to 10.
+#' @param no_aff Logical, whether to not go through a distance-to-affinity
+#'   matrix conversion step if only one omic has a non-zero weight. Default is
+#'   `FALSE` (distance matrix converted to affinity matrix).
 #'
 #'
 #' @return
@@ -133,7 +136,8 @@ clusterMuscadet <- function(x, # muscadet object
                             iter_SNF = 50,
                             weights = rep(1, length(slot(x, "omics"))),
                             knn_imp = 10,
-                            k_range = seq(2, 10, 1)) {
+                            k_range = seq(2, 10, 1),
+                            no_aff = FALSE) {
 
     # Validate input: x must be a muscadet object
     stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
@@ -187,24 +191,38 @@ clusterMuscadet <- function(x, # muscadet object
       }
     )
 
-    # Compute affinity matrices for each omic
-    aff_list <- lapply(dist_list, function(dist) {
-        aff <- SNFtool::affinityMatrix(dist, K = knn_affinity, sigma = var_affinity)
-        aff <- aff[sort(rownames(aff)), sort(colnames(aff))]
-        return(aff)
-    })
+    omic_index <- which(weights != 0)
 
-    # Similarity Network Fusion (SNF) -------------------------------------------
+    if (no_aff == FALSE) {
+        # Compute affinity matrices for each omic
+        aff_list <- lapply(dist_list, function(dist) {
+            aff <- SNFtool::affinityMatrix(dist, K = knn_affinity, sigma = var_affinity)
+            aff <- aff[sort(rownames(aff)), sort(colnames(aff))]
+            return(aff)
+        })
 
-    # Apply Similarity Network Fusion (SNF)
-    matSNF <- weightedSNF(aff_list, K = knn_SNF, t = iter_SNF, weights = weights)
-    slot(x, "clustering")[["SNF"]] <- matSNF
+        # Similarity Network Fusion (SNF) -------------------------------------------
 
-    # Convert the fused affinity matrix to a distance matrix
-    tmp <- matSNF
-    diag(tmp) <- 0
-    dist <- stats::as.dist(max(tmp) - matSNF)
-    slot(x, "clustering")[["dist"]] <- as.matrix(dist)
+        # Apply Similarity Network Fusion (SNF)
+        matSNF <- weightedSNF(aff_list,
+                              K = knn_SNF,
+                              t = iter_SNF,
+                              weights = weights)
+        slot(x, "clustering")[["SNF"]] <- matSNF
+
+        # Convert the fused affinity matrix to a distance matrix
+        tmp <- matSNF
+        diag(tmp) <- 0
+        dist <- stats::as.dist(max(tmp) - matSNF)
+        slot(x, "clustering")[["dist"]] <- as.matrix(dist)
+
+    } else if (no_aff == TRUE & length(omic_index) == 1) {
+
+        dist <- as.dist(dist_list[[omic_index]])
+
+        slot(x, "clustering")[["SNF"]] <- NULL
+        slot(x, "clustering")[["dist"]] <- as.matrix(dist)
+    }
 
     # Clustering ----------------------------------------------------------------
 

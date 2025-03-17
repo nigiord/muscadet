@@ -14,7 +14,8 @@ clusterMuscadet(
   iter_SNF = 50,
   weights = rep(1, length(slot(x, "omics"))),
   knn_imp = 10,
-  k_range = seq(2, 10, 1)
+  k_range = seq(2, 10, 1),
+  no_aff = FALSE
 )
 }
 \arguments{
@@ -54,6 +55,10 @@ imputation of missing clusters with \code{\link[=imputeClusters]{imputeClusters(
 
 \item{k_range}{Numeric vector specifying the range of clusters (k) to
 evaluate (\code{numeric} vector). Default is from 2 to 10.}
+
+\item{no_aff}{Logical, whether to not go through a distance-to-affinity
+matrix conversion step if only one omic has a non-zero weight. Default is
+\code{FALSE} (distance matrix converted to affinity matrix).}
 }
 \value{
 A \code{\link{muscadet}} object with updated clustering results
