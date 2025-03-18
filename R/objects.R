@@ -233,6 +233,14 @@ CreateMuscomicObject <- function(type = c("ATAC", "RNA"),
   # Sort and filter matrix based on provided features
   mat_counts <- mat_counts[features$id[features$id %in% rownames(mat_counts)], ]
 
+  # Filter matrix to remove cells with zero counts
+  zero_count_cells <- colnames(mat_counts)[colSums(mat_counts) == 0]
+  if (length(zero_count_cells) > 0) {
+      warning("The following cells are removed due to zero counts in `mat_counts`: ",
+              paste(zero_count_cells, collapse = ", "))
+  }
+  mat_counts <- mat_counts[, colSums(mat_counts) > 0, drop = FALSE]
+
   # Get unique index value for features
   coord.df <- dplyr::mutate(features, index = as.numeric(1:nrow(features)))
   # Generate table of raw counts by converting matrix to summary data frame
