@@ -9,8 +9,8 @@
 #' used. Additionally, LRR values from bulk sequencing data can be plotted as an
 #' annotation under the heatmaps.
 #'
-#' @param x A \code{\link{muscadet}} object containing LRR data for all omics (with
-#'   [muscadet::computeLogRatio()]) and clustering data (with
+#' @param x A \code{\link{muscadet}} object containing LRR data for all omics
+#'   (with [muscadet::computeLogRatio()]) and clustering data (with
 #'   [muscadet::clusterMuscadet()]) (`muscadet`).
 #'
 #' @param filename (Optional) Character string specifying the file path to save
@@ -48,12 +48,12 @@
 #'   0.7), c(0.4, 0.6))` uses 0.3 and 0.7 quantiles of LRR ref data for the 1st
 #'   omic heatmap, and 0.4 and 0.6 quantiles for the second.
 #'
-#'  Values of the vectors must be between 0 and
-#'   1, specifying the quantiles of the LRR reference data that define the
-#'   boundaries for the white color in each heatmap. LRR values falling within
-#'   this range are considered close to the majority of the LRR reference data,
-#'   indicating no significant gain or loss of coverage, and are represented as
-#'   white on the heatmap. Default is `c(0.3, 0.7)`.
+#'   Values of the vectors must be between 0 and 1, specifying the quantiles of
+#'   the LRR reference data that define the boundaries for the white color in
+#'   each heatmap. LRR values falling within this range are considered close to
+#'   the majority of the LRR reference data, indicating no significant gain or
+#'   loss of coverage, and are represented as white on the heatmap. Default is
+#'   `c(0.3, 0.7)`.
 #'
 #'
 #' @param colors Vector of colors for the cluster annotation (`character`
@@ -62,8 +62,7 @@
 #' @param quiet Logical value indicating whether to suppress messages. Default
 #'   is `FALSE`.
 #'
-#' @return
-#' A list containing:
+#' @return A list containing:
 #' - `plot`: A \code{\link{gTree}} object created with [grid::grid.grab()] (\code{\link{gTree}}).
 #' - `width`: Width of the heatmap plot in mm (\code{\link{unit}}).
 #' - `height`: Height of the heatmap plot in mm (\code{\link{unit}}).
@@ -132,75 +131,80 @@
 #'     )
 #' }
 #'
-heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title = "",
-                            add_bulk_lrr = NULL, show_missing = TRUE, white_scale = c(0.3, 0.7),
-                            colors = NULL, quiet = FALSE) {
-
+heatmapMuscadet <- function(x,
+                            filename = NULL,
+                            k = NULL,
+                            clusters = NULL,
+                            title = "",
+                            add_bulk_lrr = NULL,
+                            show_missing = TRUE,
+                            white_scale = c(0.3, 0.7),
+                            colors = NULL,
+                            quiet = FALSE) {
     # Validate input: x must be a muscadet object
-    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+    stopifnot("Input object `x` must be of class `muscadet`." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(
-        "The muscadet object 'x' does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+        "The muscadet object `x` does not contain clustering data (use `clusterMuscadet()` to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
     )
 
     # Validate the clustering result for the specified k
     stopifnot(
-        "The muscadet object must contain clustering results for the specified k." =
+        "The muscadet object `x` must contain clustering results for the specified `k`." =
             as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
     )
 
     # Set to no missing cells if only one omic
-    if(length(x@omics) == 1) show_missing <- FALSE
+    if (length(x@omics) == 1)
+        show_missing <- FALSE
 
     # Validate k and clusters
-    stopifnot(
-        "Both k and clusters cannot be NULL." = !(is.null(k) && is.null(clusters))
-    )
+    stopifnot("Both `k` and `clusters` cannot be NULL." = !(is.null(k) &&
+                                                                is.null(clusters)))
 
     # Validate k in clustering slot
     if (!is.null(k)) {
         stopifnot(
-            "The muscadet object must contain the clustering results for the k provided." = as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
+            "The muscadet object `x` must contain the clustering results for the `k` provided." = as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
         )
     }
 
     # Default addition of bulk data
-    if(is.null(add_bulk_lrr)) {
+    if (is.null(add_bulk_lrr)) {
         add_bulk_lrr <- !is.null(x@bulk.data$log.ratio)
     }
 
     # Validate white_scale
     if (is.numeric(white_scale) && length(white_scale) == 2) {
-
+        stopifnot("`white_scale` must be a numeric vector of length 2." = length(white_scale) == 2)
         stopifnot(
-            "white_scale must be a numeric vector of length 2." = length(white_scale) == 2
-        )
-        stopifnot(
-            "white_scale values must be between 0 and 1." = all(white_scale >= 0 & white_scale <= 1)
+            "`white_scale` values must be between 0 and 1." = all(white_scale >= 0 &
+                                                                      white_scale <= 1)
         )
         # Single pair of values applied to all omics
         white_scale <- round(sort(white_scale), 2)
         white_scale <- rep(list(white_scale), length(x@omics))  # Ensure list matches omics count
         names(white_scale) <- names(x@omics)  # Assign omic names for consistency
 
-     } else if (is.list(white_scale)) {
-
+    } else if (is.list(white_scale)) {
         stopifnot(
-            "white_scale must have the same length as the number of omics in muscadet object." =
+            "`white_scale` must have the same length as the number of omics in muscadet object `x`." =
                 length(white_scale) == length(x@omics)
         )
 
-        stopifnot(
-            "All elements of white_scale must be numeric vectors of length 2." =
-                all(vapply(white_scale, function(x) is.numeric(x) && length(x) == 2, logical(1)))
-        )
+        stopifnot("All elements of `white_scale` must be numeric vectors of length 2." =
+                      all(
+                          vapply(white_scale, function(x)
+                              is.numeric(x) && length(x) == 2, logical(1))
+                      ))
 
         white_scale <- lapply(white_scale, function(x) {
             x <- round(x, 2)
-            stopifnot("The two elements of white_scale vectors must not be equal." = x[1] != x[2])
-            if (x[1] > x[2]) x <- sort(x)
+            stopifnot("The two elements of `white_scale` vectors must not be equal." = x[1] != x[2])
+            if (x[1] > x[2])
+                x <- sort(x)
             return(x)
         })
 
@@ -209,26 +213,44 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             names(white_scale) <- names(x@omics)
         } else {
             stopifnot(
-                "Named white_scale list must have names matching the omics in muscadet." =
+                "Named `white_scale` list must have names matching the omics in muscadet object `x`." =
                     all(names(white_scale) %in% names(x@omics))
             )
         }
     } else {
-        stop("white_scale must be either a numeric vector of length 2 or a list of such vectors.")
+        stop(
+            "`white_scale` must be either a numeric vector of length 2 or a list of such vectors."
+        )
     }
 
 
     # Set default color palette for clusters if not provided
     if (is.null(colors)) {
-        colors <- c("#FABC2A", "#7FC97F", "#EE6C4D", "#39ADBD", "#BEAED4",
-                              "#FEE672", "#F76F8E", "#487BEA", "#B67BE6", "#F38D68",
-                              "#7FD8BE", "#F2AFC0")
+        colors <- c(
+            "#FABC2A",
+            "#7FC97F",
+            "#EE6C4D",
+            "#39ADBD",
+            "#BEAED4",
+            "#FEE672",
+            "#F76F8E",
+            "#487BEA",
+            "#B67BE6",
+            "#F38D68",
+            "#7FD8BE",
+            "#F2AFC0"
+        )
     }
     # Set palette
     palette(colors)
 
     # Check if output directory exists
-    if(!is.null(filename)) stopifnot("The directory doesn't exist" = file.exists(dirname(filename)))
+    if (!is.null(filename))
+        stopifnot("The directory doesn't exist" = file.exists(dirname(filename)))
+
+    if (!grepl(".(png|pdf)$", filename)) {
+        stop("The `filename` argument must end with either .png or .pdf.")
+    }
 
     # Get common and all cells in clustering order
     common_cells <- sort(Reduce(intersect, lapply(muscadet::matLogRatio(x), colnames)))
@@ -237,27 +259,42 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     if (quiet == FALSE) {
         # Print information messages
         message("---- Heatmap Parameters ----")
-        message("Omics in the muscadet object: ", paste(sapply(slot(x, "omics"), function(n) slot(n, "label.omic")), collapse = ", "))
+        message("Omics in the muscadet object: ",
+                paste(sapply(slot(x, "omics"), function(n)
+                    slot(n, "label.omic")), collapse = ", "))
         omic_dims <- sapply(slot(x, "omics"), function(m) {
-            paste0(m@label.omic, ": ", ncol(muscadet::matLogRatio(m)), " cells x ", nrow(muscadet::matLogRatio(m)), " features")
+            paste0(
+                m@label.omic,
+                ": ",
+                ncol(muscadet::matLogRatio(m)),
+                " cells x ",
+                nrow(muscadet::matLogRatio(m)),
+                " features"
+            )
         })
-        message("Omics log R ratio data dimensions:\n  ", paste(omic_dims, collapse = "\n  "))
+        message("Omics log R ratio data dimensions:\n  ",
+                paste(omic_dims, collapse = "\n  "))
 
-        if (!is.null(k))
-            message("Number of clusters (k): ", k)
-        if (!is.null(clusters))
-            message("Custom clusters provided: ", length(unique(clusters)), " clusters.")
-        message("Number of cells: ", length(all_cells), " total (", length(common_cells), " common across all omics).")
+        if (!is.null(k)) message("Number of clusters (k): ", k)
+        if (!is.null(clusters)) message("Custom clusters provided: ", length(unique(clusters)), " clusters.")
+
+        message(
+            "Number of cells: ",
+            length(all_cells),
+            " total (",
+            length(common_cells),
+            " common across all omics)."
+        )
 
         message("Show missing cells: ", show_missing)
-        message("Bulk LRR annotations: ", ifelse(add_bulk_lrr, slot(x, "bulk.data")[["label"]], add_bulk_lrr))
+        message("Bulk LRR annotations: ",
+                ifelse(add_bulk_lrr, slot(x, "bulk.data")[["label"]], add_bulk_lrr))
         message("White scale quantiles: ", paste(white_scale, collapse = " - "))
         message("Output file: ", ifelse(is.null(filename), "None", filename))
     }
 
     # Create list of heatmap objects
     list_ht <- lapply(names(x@omics), function(omic_name) {
-
         muscomic <- x@omics[[omic_name]]
 
         pdf(file = NULL)
@@ -275,8 +312,12 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             mat <- t(muscadet::matLogRatio(muscomic))
             cells.diff <- setdiff(all_cells, rownames(mat)) # identify missing cells
             if (length(cells.diff) > 0) {
-                mat.na <- matrix(data = NA, nrow = length(cells.diff), ncol = ncol(mat),
-                                 dimnames = list(cells.diff, colnames(mat)))
+                mat.na <- matrix(
+                    data = NA,
+                    nrow = length(cells.diff),
+                    ncol = ncol(mat),
+                    dimnames = list(cells.diff, colnames(mat))
+                )
                 mat <- rbind(mat, mat.na)[all_cells, ] # add empty rows to matrix
             } else {
                 mat <- mat[all_cells, ]
@@ -296,13 +337,19 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             show_row_names = F,
             cluster_columns = F,
             column_split = chrom,
-            column_title = paste(muscomic@label.omic, "coverage on", muscomic@coverage$label.features),
+            column_title = paste(
+                muscomic@label.omic,
+                "coverage on",
+                muscomic@coverage$label.features
+            ),
             row_title_gp = gpar(fontsize = 10),
             column_title_gp = gpar(fontsize = 10),
             border_gp = gpar(col = "black", lwd = 1),
             heatmap_height = unit(12, "cm"),
             heatmap_width = unit(18, "cm"),
-            col = circlize::colorRamp2(col_breaks, c("#00008E", "white", "white", "#630000")),
+            col = circlize::colorRamp2(col_breaks, c(
+                "#00008E", "white", "white", "#630000"
+            )),
             row_title_rot = 0,
             raster_device = "png",
             raster_quality = 3
@@ -310,10 +357,12 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 
         # Add empty chromosome annotation
         emp <- ComplexHeatmap::anno_empty(border = FALSE, height = unit(2, "mm"))
-        ht <- ComplexHeatmap::attach_annotation(ht, columnAnnotation(
-            emp_annot = emp,
-            name = paste0("chrom_", muscomic@label.omic)
-        ), side = "top")
+        ht <- ComplexHeatmap::attach_annotation(ht,
+                                                columnAnnotation(
+                                                    emp_annot = emp,
+                                                    name = paste0("chrom_", muscomic@label.omic)
+                                                ),
+                                                side = "top")
         # Rename chromosome annotation
         ht@top_annotation@anno_list[["emp_annot"]]@name <- paste0("chrom_", muscomic@label.omic)
         ht@top_annotation@anno_list[["emp_annot"]]@label <- paste0("chrom_", muscomic@label.omic)
@@ -325,10 +374,14 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             # Retrieve bulk lrr values on features
             bulk_df <- muscadet::getLogRatioBulk(muscomic, x@bulk.data$log.ratio)
             # Define color scale
-            bulk_col <- list(circlize::colorRamp2(c(min(bulk_df$bulk.lrr, na.rm = TRUE),
-                                                    median(bulk_df$bulk.lrr, na.rm = TRUE),
-                                                    max(bulk_df$bulk.lrr, na.rm = TRUE)),
-                                                  c("#00008E", "white", "#630000")))
+            bulk_col <- list(circlize::colorRamp2(
+                c(
+                    min(bulk_df$bulk.lrr, na.rm = TRUE),
+                    median(bulk_df$bulk.lrr, na.rm = TRUE),
+                    max(bulk_df$bulk.lrr, na.rm = TRUE)
+                ),
+                c("#00008E", "white", "#630000")
+            ))
             names(bulk_col) = paste0("bulk_", muscomic@label.omic)
             # Create data frame for annotation
             bulk_df <- as.data.frame(bulk_df$bulk.lrr)
@@ -364,10 +417,16 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
         }
         n_cells <- table(clusters)
 
-        ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                             row_split = factor(clusters[all_cells], levels=sort(unique(clusters))),
-                             row_order = names(clusters),
-                             cluster_rows = F, merge_legend = TRUE)
+        ht_all <- ComplexHeatmap::draw(
+            ht_list,
+            column_title = title,
+            ht_gap = unit(1, "cm"),
+            row_split = factor(clusters[all_cells], levels =
+                                   sort(unique(clusters))),
+            row_order = names(clusters),
+            cluster_rows = F,
+            merge_legend = TRUE
+        )
 
 
     } else if (show_missing == FALSE) {
@@ -376,14 +435,30 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
             hc <- x@clustering$hclust # hclust object to print the dendrogram on the heatmap
             n_cells <- table(dendextend::cutree(hc, k, order_clusters_as_data = FALSE))
 
-            ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                                 cluster_rows = hc, row_split = as.integer(k), row_dend_reorder = FALSE, merge_legend = TRUE)
+            ht_all <- ComplexHeatmap::draw(
+                ht_list,
+                column_title = title,
+                ht_gap = unit(1, "cm"),
+                cluster_rows = hc,
+                row_split = as.integer(k),
+                row_dend_reorder = FALSE,
+                merge_legend = TRUE
+            )
         } else {
             # 3. Custom cluster assignments vector
             n_cells <- table(clusters)
-            ht_all <- ComplexHeatmap::draw(ht_list, column_title = title, ht_gap = unit(1, "cm"),
-                                 row_split = factor(clusters[common_cells], levels=sort(unique(clusters))),
-                                 row_order = names(clusters), cluster_rows = F, merge_legend = TRUE)
+            ht_all <- ComplexHeatmap::draw(
+                ht_list,
+                column_title = title,
+                ht_gap = unit(1, "cm"),
+                row_split = factor(clusters[common_cells], levels =
+                                       sort(unique(
+                                           clusters
+                                       ))),
+                row_order = names(clusters),
+                cluster_rows = F,
+                merge_legend = TRUE
+            )
         }
     }
     dev.off()
@@ -405,10 +480,20 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     print(ht_all)
 
     # Add annotation: number of cells per cluster
-    for(i in 1:length(n_cells)) {
+    for (i in 1:length(n_cells)) {
         ComplexHeatmap::decorate_annotation("ncells", slice = i, envir = environment(), {
-            grid.rect(x = 1, width = unit(2, "mm"), gp = gpar(fill = colors[i], col = NA), just = "right")
-            grid.text(n_cells[i], x = 0.7, just = "right", gp = gpar(cex = 0.75))
+            grid.rect(
+                x = 1,
+                width = unit(2, "mm"),
+                gp = gpar(fill = colors[i], col = NA),
+                just = "right"
+            )
+            grid.text(
+                n_cells[i],
+                x = 0.7,
+                just = "right",
+                gp = gpar(cex = 0.75)
+            )
         })
     }
 
@@ -416,9 +501,14 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
     for (ht_name in names(ht_all@ht_list)[-1]) {
         chrom_names <- unique(names(ht_all@ht_list[[ht_name]]@column_order_list))
         for (i in 1:length(chrom_names)) {
-            ComplexHeatmap::decorate_annotation(paste0("chrom_", ht_name), slice = i, envir = environment(), {
-                grid.text(chrom_names[i], just = "center", gp = gpar(fontsize=8.5))
-            })
+            ComplexHeatmap::decorate_annotation(paste0("chrom_", ht_name),
+                                                slice = i,
+                                                envir = environment(),
+                                                {
+                                                    grid.text(chrom_names[i],
+                                                              just = "center",
+                                                              gp = gpar(fontsize = 8.5))
+                                                })
         }
     }
 
@@ -482,28 +572,36 @@ heatmapMuscadet <- function(x, filename = NULL, k = NULL, clusters = NULL, title
 #' }
 #'
 plotSil <- function(x, k, colors = NULL, title = NULL) {
-
     # Validate input: x must be a muscadet object
-    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+    stopifnot("Input object `x` must be of class `muscadet`." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(
-        "The muscadet object 'x' does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+        "The muscadet object `x` does not contain clustering data (use `clusterMuscadet()` to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
     )
 
     # Validate the clustering result for the specified k
     stopifnot(
-        "The muscadet object must contain clustering results for the specified k." =
+        "The muscadet object `x` must contain clustering results for the specified `k`." =
             as.character(k) %in% names(slot(x, "clustering")[["clusters"]])
     )
 
     # Set default color palette for clusters if not provided
     if (is.null(colors)) {
         colors <- c(
-            "#FABC2A", "#7FC97F", "#EE6C4D", "#39ADBD", "#BEAED4",
-            "#FEE672", "#F76F8E", "#487BEA", "#B67BE6", "#F38D68",
-            "#7FD8BE", "#F2AFC0"
+            "#FABC2A",
+            "#7FC97F",
+            "#EE6C4D",
+            "#39ADBD",
+            "#BEAED4",
+            "#FEE672",
+            "#F76F8E",
+            "#487BEA",
+            "#B67BE6",
+            "#F38D68",
+            "#7FD8BE",
+            "#F2AFC0"
         )
     }
 
@@ -535,7 +633,12 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
     })
 
     # Create the ggplot object
-    p <- ggplot(df, aes(x = .data$sil_width, y = .data$name, fill = .data$cluster)) +
+    p <- ggplot(df,
+                aes(
+                    x = .data$sil_width,
+                    y = .data$name,
+                    fill = .data$cluster
+                )) +
         geom_bar(stat = "identity", width = 1) +
         scale_y_discrete(limits = rev) +
         theme_bw() +
@@ -555,12 +658,18 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
             y = "",
             title = title,
             subtitle = paste0(
-                "Average Silhouette Width = ", round(mean(df$sil_width), 4), "\n",
+                "Average Silhouette Width = ",
+                round(mean(df$sil_width), 4),
+                "\n",
                 "Annotation: cluster | number of cells | average silhouette width"
             )
         ) +
         ggplot2::xlim(c(min(df$sil_width), max(df$sil_width) + 0.25)) +
-        geom_vline(xintercept = mean(df$sil_width), linetype = "dashed", color = "red")
+        geom_vline(
+            xintercept = mean(df$sil_width),
+            linetype = "dashed",
+            color = "red"
+        )
 
     # Add annotations for each cluster
     for (i in seq_along(cluster_positions)) {
@@ -646,23 +755,33 @@ plotSil <- function(x, k, colors = NULL, title = NULL) {
 #' # Plot specific indexes
 #' plotIndexes(muscadet_obj, index = "silhouette")
 #'
-plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
-
+plotIndexes <- function(x,
+                        index = NULL,
+                        colors = NULL,
+                        title = NULL) {
     # Validate input: x must be a muscadet object
-    stopifnot("Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+    stopifnot("Input object `x` must be of class `muscadet`." = inherits(x, "muscadet"))
 
     # Validate the muscadet object contains clustering results
     stopifnot(
-        "The muscadet object 'x' does not contain clustering data (use clusterMuscadet() to perform clustering of log R ratio data)." =
+        "The muscadet object `x` does not contain clustering data (use `clusterMuscadet()` to perform clustering of log R ratio data)." =
             !is.null(slot(x, "clustering"))
     )
 
     # Define default indexes if none are provided
     if (is.null(index)) {
-        index <- c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c")
+        index <- c("silhouette",
+                   "dunn2",
+                   "davisbouldin",
+                   "pearsongamma",
+                   "c")
     }
     # Check for indexes correct names
-    index <- match.arg(index, c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c"), several.ok = TRUE)
+    index <- match.arg(
+        index,
+        c("silhouette", "dunn2", "davisbouldin", "pearsongamma", "c"),
+        several.ok = TRUE
+    )
 
     # Set default colors if not provided
     if (is.null(colors)) {
@@ -689,7 +808,6 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 
     # Compute selected indexes for each k
     for (k in k_clusters) {
-
         # Extract cluster assignments for the current k
         clusters <- x@clustering$clusters[[as.character(k)]]
         clusters <- clusters[names(dist)] # Restrict to common cells in dist
@@ -718,7 +836,7 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
     }
 
     # If multiple indexes selected:
-    if( length(index) > 1) {
+    if (length(index) > 1) {
         # Normalize indexes to values between 0 and 1
         df_indexes[, 2:ncol(df_indexes)] <- apply(df_indexes[, 2:ncol(df_indexes)], 2, function(x) {
             (x - min(x)) / diff(range(x))
@@ -751,17 +869,16 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
     df_plot$Index <- factor(df_plot$Index, levels = index) # Maintain order of indexes
 
     # Generate the plot
-    plot <- ggplot(df_plot, aes(
-        x = .data$k,
-        y = .data$Value,
-        color = .data$Index,
-        group = .data$Index
-    )) +
+    plot <- ggplot(df_plot,
+                   aes(
+                       x = .data$k,
+                       y = .data$Value,
+                       color = .data$Index,
+                       group = .data$Index
+                   )) +
         geom_line(linewidth = 1) +
-        geom_point(data = df_plot[which(df_plot$k == opt_k),]) +
-        labs(x = "Number of Clusters (k)",
-             y = "Normalized Index Value",
-             title = title) +
+        geom_point(data = df_plot[which(df_plot$k == opt_k), ]) +
+        labs(x = "Number of Clusters (k)", y = "Normalized Index Value", title = title) +
         scale_x_continuous(breaks = unique(df_plot$k)) +
         scale_color_manual(
             values = colors,
@@ -784,13 +901,14 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 #' Plot CNA profiles from muscadet object
 #'
 #' This function generates a multi-panel plot of copy number alteration (CNA)
-#' profiles from a \code{\link{muscadet}} object, including: log R ratios values, log odds
-#' ratio (or variant allele frequency), copy numbers and cell fractions.
+#' profiles from a \code{\link{muscadet}} object, including: log R ratios
+#' values, log odds ratio (or variant allele frequency), copy numbers and cell
+#' fractions.
 #'
 #' @param x A \code{\link{muscadet}} object containing CNA calling data to be
 #'   visualized (generated using [muscadet::cnaCalling()]).
 #' @param data Either a cluster identifier to plot data of a cluster or
-#' "allcells" to plot data on all cells.
+#'   "allcells" to plot data on all cells.
 #' @param title An optional title for the plot. Default is `NULL`.
 #' @param allelic.type A character string indicating the allelic metric to plot:
 #'   "lor" for log odds ratio or "vaf" for variant allele frequency. Default is
@@ -801,8 +919,8 @@ plotIndexes <- function(x, index = NULL, colors = NULL, title = NULL) {
 #'   chromosome colors. Default is `c("slategrey", "skyblue")`.
 #' @param lor.colors A character vector of length 2 for log odds ratio point
 #'   colors depending of variant allele frequency in all cells. Use "none" to
-#'   use the alternating chromosome colors (defined by `chrom.colors`). Default is
-#'   `c("peachpuff2", "paleturquoise3")`.
+#'   use the alternating chromosome colors (defined by `chrom.colors`). Default
+#'   is `c("peachpuff2", "paleturquoise3")`.
 #' @param cn.colors A character vector of length 2 for total copy number and
 #'   minor allele copy number segment colors. Default is `c("black", "brown2")`.
 #' @param cf.colors A character vector of length 3 for cellular fraction
@@ -841,30 +959,29 @@ plotProfile <- function(x,
                         cf.colors = c("white", "steelblue", "bisque2"),
                         dipLogR.color = c("magenta4"),
                         seg.color = c("brown2")) {
-
     # Argument checks
     stopifnot(
-        "Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"),
-        "Invalid 'allelic.type'. Use 'lor' or 'vaf'." = allelic.type %in% c("lor", "vaf"),
-        "'point.size' must be a numeric value." = is.numeric(point.size) &&
+        "Input object `x` must be of class `muscadet`." = inherits(x, "muscadet"),
+        "Invalid `allelic.type'. Use allelic.type = \"lor\" or allelic.type = \"vaf\"." = allelic.type %in% c("lor", "vaf"),
+        "`point.size` must be a numeric value." = is.numeric(point.size) &&
             length(point.size) == 1,
-        "'chrom.colors' must be a character vector of length 2." = is.character(chrom.colors) &&
+        "`chrom.colors` must be a character vector of length 2." = is.character(chrom.colors) &&
             length(chrom.colors) == 2,
-        "'lor.colors' must be a character vector of length 2 or 'none'." = (is.character(lor.colors) &&
+        "`lor.colors` must be a character vector of length 2 or `none`." = (is.character(lor.colors) &&
                                                                                 length(lor.colors) == 2) ||
             all(lor.colors == "none"),
-        "'cn.colors' must be a character vector of length 2." = is.character(cn.colors) &&
+        "`cn.colors` must be a character vector of length 2." = is.character(cn.colors) &&
             length(cn.colors) == 2,
-        "'cf.colors' must be a character vector of length 3." = is.character(cf.colors) &&
+        "`cf.colors `must be a character vector of length 3." = is.character(cf.colors) &&
             length(cf.colors) == 3,
-        "'dipLogR.color' must be a single character value." = is.character(dipLogR.color) &&
+        "`dipLogR.color` must be a single character value." = is.character(dipLogR.color) &&
             length(dipLogR.color) == 1,
-        "'seg.color' must be a single character value." = is.character(seg.color) &&
+        "`seg.color` must be a single character value." = is.character(seg.color) &&
             length(seg.color) == 1
     )
 
     # Extract data -------------------------------------------------------------
-    if(data == "allcells") {
+    if (data == "allcells") {
         pos <- x@cnacalling$positions.allcells
         segs <- x@cnacalling$segments.allcells
         ploidy <- x@cnacalling$ploidy.allcells
@@ -876,7 +993,7 @@ plotProfile <- function(x,
         dipLogR <- x@cnacalling$dipLogR.clusters
     }
     stopifnot(
-        "'data' must be 'allcells' or a valid cluster identifier." =
+        "`data` must be \"allcells\" or a valid cluster identifier." =
             (data == "allcells" || data %in% unique(pos$cluster))
     )
     if (data != "allcells") {
@@ -908,9 +1025,11 @@ plotProfile <- function(x,
     # Layout params ------------------------------------------------------------
     def.par <- par(no.readonly = TRUE)
     layout(matrix(rep(1:4, c(9, 9, 6, 1)), ncol = 1))
-    par(mar = c(0.25, 3, 0.25, 1),
+    par(
+        mar = c(0.25, 3, 0.25, 1),
         mgp = c(1.75, 0.6, 0),
-        oma = c(3, 1, 1.5, 0))
+        oma = c(3, 1, 1.5, 0)
+    )
 
     # 1- Plot the LRR data -----------------------------------------------------
     plot(
@@ -962,10 +1081,8 @@ plotProfile <- function(x,
                  sqrt(abs(segs$mafR)),
                  lwd = 1.75,
                  col = seg.color)
-        segments(segstart,
-                 -sqrt(abs(segs$mafR)),
-                 segend,
-                 -sqrt(abs(segs$mafR)),
+        segments(segstart,-sqrt(abs(segs$mafR)),
+                 segend,-sqrt(abs(segs$mafR)),
                  lwd = 1.75,
                  col = seg.color)
     }
@@ -982,12 +1099,14 @@ plotProfile <- function(x,
             xaxt = "n"
         )
         abline(v = chrbdry, lwd = 0.25)
-        segments(segstart,
-                 segs$vafT.median,
-                 segend,
-                 segs$vafT.median,
-                 lwd = 1.75,
-                 col = seg.color)
+        segments(
+            segstart,
+            segs$vafT.median,
+            segend,
+            segs$vafT.median,
+            lwd = 1.75,
+            col = seg.color
+        )
     }
 
     # 3- Plot the estimated copy numbers and cf --------------------------------
@@ -1012,7 +1131,7 @@ plotProfile <- function(x,
         cex.lab = 1.5,
         xaxt = "n"
     )
-    abline(v=chrbdry, lwd=0.25)
+    abline(v = chrbdry, lwd = 0.25)
     # Add lcn
     segments(segstart,
              segs$lcn.em,
@@ -1047,7 +1166,8 @@ plotProfile <- function(x,
 
     cfpalette <- colorRampPalette(c(cf.colors[1], cf.colors[2]))(10)
     cfcol <- cfpalette[round(10 * segs$cf.em)]
-    cfcol[segs$tcn.em == ploidy & segs$lcn.em == ploidy/2] <- cf.colors[3]
+    cfcol[segs$tcn.em == ploidy &
+              segs$lcn.em == ploidy / 2] <- cf.colors[3]
     rect(segstart, 0, segend, 1, col = cfcol, border = NA)
 
     # Add chromosome ticks on x-axis -------------------------------------------
@@ -1068,7 +1188,13 @@ plotProfile <- function(x,
           cex = 1)
 
     # Add title ----------------------------------------------------------------
-    mtext(title, side = 3, line = 0, outer = TRUE, cex = 1.1)
+    mtext(
+        title,
+        side = 3,
+        line = 0,
+        outer = TRUE,
+        cex = 1.1
+    )
 
     # Reset layout
     par(def.par)
@@ -1111,15 +1237,15 @@ plotProfile <- function(x,
 #' # Plot CNA segments
 #' plot <- plotCNA(muscadet_obj, title = "Copy Number Alterations in Example Data")
 #' print(plot)
-plotCNA <- function(
-        x,
-        title = NULL,
-        cna.colors = c("gain" = "#EF6F6AFF", "loss" = "#6699CCFF", "cnloh" = "#44AA99FF")
-) {
-
+plotCNA <- function(x,
+                    title = NULL,
+                    cna.colors = c(
+                        "gain" = "#EF6F6AFF",
+                        "loss" = "#6699CCFF",
+                        "cnloh" = "#44AA99FF"
+                    )) {
     # Argument checks
-    stopifnot(
-        "Input object 'x' must be of class 'muscadet'." = inherits(x, "muscadet"))
+    stopifnot("Input object `x` must be of class `muscadet`." = inherits(x, "muscadet"))
 
     # Extract genome
     if (x@genome == "hg38") {
@@ -1140,11 +1266,14 @@ plotCNA <- function(
     # Chromosomes start coordinates
     chromStarts <- data.frame(
         chrom = factor(chromSizes$seqnames, levels = unique(chromSizes$seqnames)),
-        chrom.start = c(0, cumsum(as.numeric(chromSizes$width)))[-(nrow(chromSizes) + 1)]
+        chrom.start = c(0, cumsum(as.numeric(
+            chromSizes$width
+        )))[-(nrow(chromSizes) + 1)]
     )
 
     # Ordered chromosomes names
-    chromNames <- factor(unique(chromSizes$seqnames), levels = unique(chromSizes$seqnames))
+    chromNames <- factor(unique(chromSizes$seqnames),
+                         levels = unique(chromSizes$seqnames))
 
     # Extract data table
     data <- x@cnacalling$table
@@ -1153,15 +1282,17 @@ plotCNA <- function(
     ncells <- x@cnacalling$ncells
 
     # Keep only autosomes to display
-    data <- data[!data$chrom %in% c("X", "Y", "M"),]
+    data <- data[!data$chrom %in% c("X", "Y", "M"), ]
 
     # Add chromosomes start and end coordinates on x axis
     df <- dplyr::left_join(data, chromStarts, by = "chrom") %>%
-        dplyr::mutate(start.x = .data$start + .data$chrom.start,
-                      end.x = .data$end + .data$chrom.start)
+        dplyr::mutate(
+            start.x = .data$start + .data$chrom.start,
+            end.x = .data$end + .data$chrom.start
+        )
 
     # Remove consensus segs that have no data in a cluster
-    df <- df[complete.cases(df$cluster),]
+    df <- df[complete.cases(df$cluster), ]
 
     # Compute proportions of cells per cluster for y axis
     prop_clus <- unique(df$prop.cluster[!is.na(df$prop.cluster)])
@@ -1174,8 +1305,7 @@ plotCNA <- function(
 
     # Add clusters coordinates on y axis
     df <- df %>%
-        dplyr::mutate(start.y = prop_starts[as.character(.data$cluster)],
-                      end.y = prop_ends[as.character(.data$cluster)])
+        dplyr::mutate(start.y = prop_starts[as.character(.data$cluster)], end.y = prop_ends[as.character(.data$cluster)])
 
     # Ordered levels for CNA states
     df$cna_state <- factor(df$cna_state, levels = c("gain", "loss", "cnloh"))
@@ -1189,43 +1319,53 @@ plotCNA <- function(
             ymin = .data$start.y,
             ymax = .data$end.y,
             fill = .data$cna_state,
-            alpha = .data$cf.em)) +
+            alpha = .data$cf.em
+        )
+    ) +
         geom_rect() +
         # lines between chromosomes
         geom_vline(
             xintercept = chromStarts$chrom.start,
             colour = "grey",
-            linewidth = 0.2) +
+            linewidth = 0.2
+        ) +
         # lines between clusters
-        geom_hline(yintercept = props,
-                   colour = "black",
-                   linewidth = 0.2) +
+        geom_hline(
+            yintercept = props,
+            colour = "black",
+            linewidth = 0.2
+        ) +
         # chromosomes labels placement in the center of each chromosome
         scale_x_continuous(
             expand = c(0, 0),
-            breaks = chromStarts$chrom.start + (chromSizes$width /2),
-            labels = as.character(chromNames)) +
+            breaks = chromStarts$chrom.start + (chromSizes$width / 2),
+            labels = as.character(chromNames)
+        ) +
         # method labels in the center
         scale_y_continuous(
             expand = c(0, 0),
             trans = "reverse",
             limits = c(1, 0),
             breaks = props_breaks,
-            labels = paste0("cluster ", unique(df$cluster), "\n", ncells, " cells")) +
+            labels = paste0("cluster ", unique(df$cluster), "\n", ncells, " cells")
+        ) +
         # set colors for the calls and remove the name
-        {if (length(cna.colors) > 0)
-            scale_fill_manual(
-                name = "",
-                values = cna.colors,
-                na.value = "white",
-                na.translate = FALSE,
-                drop = FALSE
-            )} +
+        {
+            if (length(cna.colors) > 0)
+                scale_fill_manual(
+                    name = "",
+                    values = cna.colors,
+                    na.value = "white",
+                    na.translate = FALSE,
+                    drop = FALSE
+                )
+        } +
         scale_alpha_continuous(
             name = "cell fraction",
             range = c(0, 1),
             limits = c(0, 1),
-            breaks = c(0.2, 0.4, 0.6, 0.8, 1)) +
+            breaks = c(0.2, 0.4, 0.6, 0.8, 1)
+        ) +
         guides(fill = guide_legend(order = 1), alpha = guide_legend(order = 2)) +
         ## Set axis labels
         labs(title = title) +
@@ -1339,33 +1479,37 @@ plotCNA <- function(
 #'
 #' @export
 #'
-heatmapStep <- function(
-        obj,
-        step,
-        filename,
-        title = NULL,
-        col_quantiles = c(0.1, 0.4, 0.6, 0.9),
-        col_boundaries = c("#00008E", "white", "white", "#630000")) {
-
+heatmapStep <- function(obj,
+                        step,
+                        filename,
+                        title = NULL,
+                        col_quantiles = c(0.1, 0.4, 0.6, 0.9),
+                        col_boundaries = c("#00008E", "white", "white", "#630000")) {
     # Argument checks
     if (!is.list(obj)) {
-        stop("The 'obj' argument must be a list.")
+        stop("The `obj` argument must be a list.")
     }
 
     if (!(step %in% names(obj))) {
-        stop(paste("The specified 'step' ('", step, "') is not found in 'obj'.", sep = ""))
+        stop(paste(
+            "The specified `step` (`",
+            step,
+            "`) is not found in `obj`.",
+            sep = ""
+        ))
     }
 
     if (!grepl(".(png|pdf)$", filename)) {
-        stop("The 'filename' must end with either .png or .pdf.")
+        stop("The `filename` argument must end with either .png or .pdf.")
     }
 
     if (!is.numeric(col_quantiles) || length(col_quantiles) != 4) {
-        stop("The 'col_quantiles' argument should be a numeric vector of length 4.")
+        stop("The `col_quantiles` argument should be a numeric vector of length 4.")
     }
 
-    if (!is.character(col_boundaries) || length(col_boundaries) != 4) {
-        stop("The 'col_boundaries' argument should be a character vector of length 4.")
+    if (!is.character(col_boundaries) ||
+        length(col_boundaries) != 4) {
+        stop("The `col_boundaries` argument should be a character vector of length 4.")
     }
 
     # Extract the tumor and reference matrices
@@ -1380,7 +1524,7 @@ heatmapStep <- function(
 
     # Chromosome factor from coordinates
     coord <- obj$coord
-    chrom <- coord[which(colnames(matTumor) %in% coord$id), "CHROM"]
+    chrom <- coord[which(coord$id %in% colnames(matTumor)), "CHROM"]
     chrom <- factor(chrom, levels = unique(chrom))
 
     # Combine matrices and calculate breaks for color scale
@@ -1448,64 +1592,104 @@ heatmapStep <- function(
     colnames(data_Tum) <- colnames(data_Ref) <- c("Row", "Column", "Value")
 
     # Create bins based on the bin_width and compute frequency for gradient bar
-    data_Tum$Value_bin <- cut(data_Tum$Value,
-                              breaks = seq(floor(min(data_Tum$Value)),
-                                           ceiling(max(data_Tum$Value)),
-                                           by = bin_width),
-                              include.lowest = TRUE,
-                              right = FALSE,
-                              labels = FALSE)
+    data_Tum$Value_bin <- cut(
+        data_Tum$Value,
+        breaks = seq(floor(min(data_Tum$Value)), ceiling(max(data_Tum$Value)), by = bin_width),
+        include.lowest = TRUE,
+        right = FALSE,
+        labels = FALSE
+    )
 
     gradient_data_Tum <- data.frame(
         x_min = seq(min(matTumor), max(matTumor), length.out = 500)[-500],
         x_max = seq(min(matTumor), max(matTumor), length.out = 500)[-1],
-        y_min = rep(-(max(table(data_Tum$Value_bin)) * 0.02), 499),
-        y_max = rep(-(max(table(data_Tum$Value_bin)) * 0.1), 499)
+        y_min = rep(-(max(
+            table(data_Tum$Value_bin)
+        ) * 0.02), 499),
+        y_max = rep(-(max(
+            table(data_Tum$Value_bin)
+        ) * 0.1), 499)
     )
     gradient_data_Tum$fill <- col_fun((gradient_data_Tum$x_min + gradient_data_Tum$x_max) / 2)
 
-    data_Ref$Value_bin <- cut(data_Ref$Value,
-                              breaks = seq(floor(min(data_Ref$Value)),
-                                           ceiling(max(data_Ref$Value)),
-                                           by = bin_width),
-                              include.lowest = TRUE,
-                              right = FALSE,
-                              labels = FALSE)
+    data_Ref$Value_bin <- cut(
+        data_Ref$Value,
+        breaks = seq(floor(min(data_Ref$Value)), ceiling(max(data_Ref$Value)), by = bin_width),
+        include.lowest = TRUE,
+        right = FALSE,
+        labels = FALSE
+    )
 
     gradient_data_Ref <- data.frame(
         x_min = seq(min(matRef), max(matRef), length.out = 500)[-500],
         x_max = seq(min(matRef), max(matRef), length.out = 500)[-1],
-        y_min = rep(-(max(table(data_Ref$Value_bin)) * 0.02), 499),
-        y_max = rep(-(max(table(data_Ref$Value_bin)) * 0.1), 499)
+        y_min = rep(-(max(
+            table(data_Ref$Value_bin)
+        ) * 0.02), 499),
+        y_max = rep(-(max(
+            table(data_Ref$Value_bin)
+        ) * 0.1), 499)
     )
     gradient_data_Ref$fill <- col_fun((gradient_data_Ref$x_min + gradient_data_Ref$x_max) / 2)
 
     # Create histograms
     hist_Tum <- ggplot(data_Tum, aes(x = .data$Value)) +
-        geom_histogram(aes(y = after_stat(.data$count)), binwidth = bin_width, color = "black", fill = "black") +
-        geom_rect(data = gradient_data_Tum,
-                  aes(xmin = .data$x_min, xmax = .data$x_max, ymin = .data$y_min, ymax = .data$y_max, fill = .data$fill),
-                  inherit.aes = FALSE) +
+        geom_histogram(
+            aes(y = after_stat(.data$count)),
+            binwidth = bin_width,
+            color = "black",
+            fill = "black"
+        ) +
+        geom_rect(
+            data = gradient_data_Tum,
+            aes(
+                xmin = .data$x_min,
+                xmax = .data$x_max,
+                ymin = .data$y_min,
+                ymax = .data$y_max,
+                fill = .data$fill
+            ),
+            inherit.aes = FALSE
+        ) +
         scale_fill_identity() +
-        labs(title = paste(name, "distribution in tumor cells"), x = "Value", y = "Frequency") +
+        labs(
+            title = paste(name, "distribution in tumor cells"),
+            x = "Value",
+            y = "Frequency"
+        ) +
         theme_classic()
 
     hist_Ref <- ggplot(data_Ref, aes(x = .data$Value)) +
-        geom_histogram(aes(y = after_stat(.data$count)), binwidth = bin_width, color = "black", fill = "black") +
-        geom_rect(data = gradient_data_Ref,
-                  aes(xmin = .data$x_min, xmax = .data$x_max, ymin = .data$y_min, ymax = .data$y_max, fill = .data$fill),
-                  inherit.aes = FALSE) +
+        geom_histogram(
+            aes(y = after_stat(.data$count)),
+            binwidth = bin_width,
+            color = "black",
+            fill = "black"
+        ) +
+        geom_rect(
+            data = gradient_data_Ref,
+            aes(
+                xmin = .data$x_min,
+                xmax = .data$x_max,
+                ymin = .data$y_min,
+                ymax = .data$y_max,
+                fill = .data$fill
+            ),
+            inherit.aes = FALSE
+        ) +
         scale_fill_identity() +
-        labs(title = paste(name, "distribution in reference cells"), x = "Value", y = "Frequency") +
+        labs(
+            title = paste(name, "distribution in reference cells"),
+            x = "Value",
+            y = "Frequency"
+        ) +
         theme_classic()
 
     # Combine heatmap and histogram plots
     final_plot <- patchwork::wrap_plots(c(list(ht_Tum_grob, ht_Ref_grob), list(hist_Tum, hist_Ref)), ncol = 2) +
         plot_layout(nrow = 2, heights = c(3, 1)) +
-        plot_annotation(
-            title = title,
-            theme = theme(plot.title = element_text(size = 16))
-        )
+        plot_annotation(title = title,
+                        theme = theme(plot.title = element_text(size = 16)))
 
     # Output to file
     if (grepl(".png", basename(filename))) {
@@ -1522,7 +1706,8 @@ heatmapStep <- function(
     } else if (grepl(".pdf", basename(filename))) {
         pdf(
             file = filename,
-            width = (ht_Tum_2@ht_list_param[["width"]] + ht_Ref_2@ht_list_param[["width"]]) / 25.4,  # in inches
+            width = (ht_Tum_2@ht_list_param[["width"]] + ht_Ref_2@ht_list_param[["width"]]) / 25.4,
+            # in inches
             height = (ht_Tum_2@ht_list_param[["height"]] * 1.75) / 25.4  # in inches
         )
         print(final_plot)

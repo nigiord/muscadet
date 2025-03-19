@@ -18,8 +18,8 @@ heatmapMuscadet(
 )
 }
 \arguments{
-\item{x}{A \code{\link{muscadet}} object containing LRR data for all omics (with
-\code{\link[=computeLogRatio]{computeLogRatio()}}) and clustering data (with
+\item{x}{A \code{\link{muscadet}} object containing LRR data for all omics
+(with \code{\link[=computeLogRatio]{computeLogRatio()}}) and clustering data (with
 \code{\link[=clusterMuscadet]{clusterMuscadet()}}) (\code{muscadet}).}
 
 \item{filename}{(Optional) Character string specifying the file path to save
@@ -56,14 +56,14 @@ applied to all omics in the muscadet object. E.g. \code{c(0.3, 0.7)} (default).
 the number of omics in the muscadet object, where each vector element
 applies the white color boundaries for a specific omic. E.g. \code{list(c(0.3, 0.7), c(0.4, 0.6))} uses 0.3 and 0.7 quantiles of LRR ref data for the 1st
 omic heatmap, and 0.4 and 0.6 quantiles for the second.
-}
 
-Values of the vectors must be between 0 and
-1, specifying the quantiles of the LRR reference data that define the
-boundaries for the white color in each heatmap. LRR values falling within
-this range are considered close to the majority of the LRR reference data,
-indicating no significant gain or loss of coverage, and are represented as
-white on the heatmap. Default is \code{c(0.3, 0.7)}.}
+Values of the vectors must be between 0 and 1, specifying the quantiles of
+the LRR reference data that define the boundaries for the white color in
+each heatmap. LRR values falling within this range are considered close to
+the majority of the LRR reference data, indicating no significant gain or
+loss of coverage, and are represented as white on the heatmap. Default is
+\code{c(0.3, 0.7)}.
+}}
 
 \item{colors}{Vector of colors for the cluster annotation (\code{character}
 vector). Default is \code{NULL}, which uses predefined colors.}

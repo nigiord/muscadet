@@ -39,8 +39,8 @@ chromosome colors. Default is \code{c("slategrey", "skyblue")}.}
 
 \item{lor.colors}{A character vector of length 2 for log odds ratio point
 colors depending of variant allele frequency in all cells. Use "none" to
-use the alternating chromosome colors (defined by \code{chrom.colors}). Default is
-\code{c("peachpuff2", "paleturquoise3")}.}
+use the alternating chromosome colors (defined by \code{chrom.colors}). Default
+is \code{c("peachpuff2", "paleturquoise3")}.}
 
 \item{cn.colors}{A character vector of length 2 for total copy number and
 minor allele copy number segment colors. Default is \code{c("black", "brown2")}.}
@@ -61,8 +61,9 @@ A multi-panel plot of CNA profiles is produced.
 }
 \description{
 This function generates a multi-panel plot of copy number alteration (CNA)
-profiles from a \code{\link{muscadet}} object, including: log R ratios values, log odds
-ratio (or variant allele frequency), copy numbers and cell fractions.
+profiles from a \code{\link{muscadet}} object, including: log R ratios
+values, log odds ratio (or variant allele frequency), copy numbers and cell
+fractions.
 }
 \examples{
 # Load example muscadet object
