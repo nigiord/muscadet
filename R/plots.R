@@ -14,7 +14,8 @@
 #'   [muscadet::clusterMuscadet()]) (`muscadet`).
 #'
 #' @param filename (Optional) Character string specifying the file path to save
-#'   the heatmap image in the PNG format (`character` string).
+#'   the heatmap image in the PNG (if it ends by .png) or PDF (if it ends by
+#'   .pdf) format (`character` string).
 #'
 #' @param k (Optional) Integer specifying the cluster number to plot
 #'   (`integer`). It should be within the range of k used for clustering (with
@@ -248,7 +249,7 @@ heatmapMuscadet <- function(x,
     if (!is.null(filename))
         stopifnot("The directory doesn't exist" = file.exists(dirname(filename)))
 
-    if (!grepl(".(png|pdf)$", filename)) {
+    if (!is.null(filename) & !grepl(".(png|pdf)$", filename)) {
         stop("The `filename` argument must end with either .png or .pdf.")
     }
 
@@ -463,14 +464,20 @@ heatmapMuscadet <- function(x,
     }
     dev.off()
 
-    # Save complete plot of heatmaps as PNG
-    if (!is.null(filename)) {
+    # Save complete plot of heatmaps as PNG or PDF
+    if (!is.null(filename) & grepl(".png", basename(filename))) {
         png(
             filename = filename,
             width = ht_all@ht_list_param[["width"]],
             height = ht_all@ht_list_param[["height"]],
             units = "mm",
             res = 300
+        )
+    } else if (!is.null(filename) & grepl(".pdf", basename(filename))) {
+        pdf(
+            file = filename,
+            width = (ht_all@ht_list_param[["width"]]) / 25.4, # from mm to inches
+            height = (ht_all@ht_list_param[["height"]]) / 25.4 # from mm to inches
         )
     } else {
         pdf(file = NULL)

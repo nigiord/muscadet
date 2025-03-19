@@ -23,7 +23,8 @@ heatmapMuscadet(
 \code{\link[=clusterMuscadet]{clusterMuscadet()}}) (\code{muscadet}).}
 
 \item{filename}{(Optional) Character string specifying the file path to save
-the heatmap image in the PNG format (\code{character} string).}
+the heatmap image in the PNG (if it ends by .png) or PDF (if it ends by
+.pdf) format (\code{character} string).}
 
 \item{k}{(Optional) Integer specifying the cluster number to plot
 (\code{integer}). It should be within the range of k used for clustering (with
